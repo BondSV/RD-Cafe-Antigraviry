@@ -1,0 +1,55 @@
+import React, { useState, useEffect } from 'react';
+import TurnHeader from '../game/TurnHeader';
+import CaseDataPanel from '../game/CaseDataPanel';
+import SystemMap from '../game/SystemMap';
+import MetricPanel from '../game/MetricPanel';
+import ActionGrid from '../game/ActionGrid';
+import ResultPanel from '../game/ResultPanel';
+import { useGameStore } from '../../store/useGameStore';
+
+export default function GameLayout() {
+  const history = useGameStore(state => state.history);
+  const [viewingResultFor, setViewingResultFor] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'map' | 'actions' | 'case'>('actions');
+
+  useEffect(() => {
+    if (history.length > 0 && viewingResultFor !== history[history.length - 1].turn) {
+      setViewingResultFor(history[history.length - 1].turn);
+    }
+  }, [history]);
+
+  const closeResult = () => setViewingResultFor(null);
+
+  return (
+    <div className="flex flex-col h-screen min-h-screen relative">
+      <TurnHeader />
+      
+      <div className="flex md:hidden bg-bg-surface border-b border-border-default">
+        <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'map' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => setActiveTab('map')}>Map</button>
+        <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'actions' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => setActiveTab('actions')}>Actions</button>
+        <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'case' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => setActiveTab('case')}>Case</button>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden w-full max-w-[1400px] mx-auto p-0 md:p-4 gap-4">
+        <div className={`w-full md:w-[260px] flex-shrink-0 ${activeTab === 'case' ? 'block hover:overflow-y-auto' : 'hidden md:block'}`}>
+          <CaseDataPanel />
+        </div>
+
+        <div className={`flex-1 flex flex-col min-w-[300px] overflow-y-auto pr-2 ${activeTab === 'map' ? 'block' : 'hidden md:flex'}`}>
+          <SystemMap />
+          <div className="mt-4">
+            <MetricPanel />
+          </div>
+        </div>
+
+        <div className={`w-full md:w-[340px] flex-shrink-0 overflow-y-auto pr-2 pb-8 ${activeTab === 'actions' ? 'block' : 'hidden md:block'}`}>
+          <ActionGrid disabled={viewingResultFor !== null} />
+        </div>
+      </div>
+
+      {viewingResultFor !== null && (
+        <ResultPanel turnRecord={history.find(h => h.turn === viewingResultFor)!} onClose={closeResult} />
+      )}
+    </div>
+  );
+}
