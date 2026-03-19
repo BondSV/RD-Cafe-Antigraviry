@@ -1,12 +1,12 @@
 import { SystemMapNode, SystemMapConnection } from '../types/game';
 
 export const systemNodes: SystemMapNode[] = [
-  { id: 'orderPoint',    label: 'Order Point',    drivingMetrics: ['waitingTime', 'congestion'],         x: 50, y: 15 },
-  { id: 'preparation',   label: 'Preparation',    drivingMetrics: ['throughput', 'backlog'],              x: 82, y: 35 },
-  { id: 'menuStock',     label: 'Menu & Stock',   drivingMetrics: ['stockAvailability', 'serviceConsistency'], x: 82, y: 75 },
-  { id: 'costs',         label: 'Financials',     drivingMetrics: ['financialResults'],                    x: 50, y: 85 },
-  { id: 'staffing',      label: 'Staffing',       drivingMetrics: ['serviceConsistency', 'throughput'],  x: 18, y: 75 },
-  { id: 'customerFlow',  label: 'Customer Flow',  drivingMetrics: ['congestion', 'waitingTime'],         x: 18, y: 35 },
+  { id: 'orderPoint',    label: 'Order Point',    drivingMetrics: ['waitingTime', 'congestion'],         x: 50, y: 25 },
+  { id: 'preparation',   label: 'Preparation',    drivingMetrics: ['throughput', 'backlog'],              x: 82, y: 45 },
+  { id: 'menuStock',     label: 'Menu & Stock',   drivingMetrics: ['stockAvailability', 'serviceConsistency'], x: 82, y: 70 },
+  { id: 'costs',         label: 'Financials',     drivingMetrics: ['financialResults'],                    x: 50, y: 88 },
+  { id: 'staffing',      label: 'Staffing',       drivingMetrics: ['serviceConsistency', 'throughput'],  x: 18, y: 70 },
+  { id: 'customerFlow',  label: 'Customer Flow',  drivingMetrics: ['congestion', 'waitingTime'],         x: 18, y: 45 },
 ];
 
 export const systemConnections: SystemMapConnection[] = [
