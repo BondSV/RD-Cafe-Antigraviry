@@ -8,4 +8,5 @@ export const metricLabels: Record<keyof VisibleMetrics, string> = {
   serviceConsistency: 'Service Consistency',
   stockAvailability: 'Stock Availability',
   financialResults: 'Cost Efficiency',
+  wasteTracker: 'Waste Control',
 };

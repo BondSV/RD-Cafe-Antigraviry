@@ -6,6 +6,7 @@ export type VisibleMetrics = {
   serviceConsistency: number;
   stockAvailability: number;
   financialResults: number;
+  wasteTracker: number;
 };
 
 export type ActionFlags = {
@@ -75,6 +76,7 @@ export type SystemMapNode = {
   drivingMetrics: (keyof VisibleMetrics)[];
   x: number;
   y: number;
+  insight?: string;
 };
 
 export type SystemMapConnection = {

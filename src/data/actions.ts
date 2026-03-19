@@ -112,7 +112,7 @@ export const actions: ActionConfig[] = [
     group: 'menu',
     description: 'Add new sandwich fillings and drink options to broaden the product range and appeal.',
     setFlag: 'expandedMenu',
-    baseEffects: { serviceConsistency: -10, throughput: -10, backlog: 10, stockAvailability: -10, waitingTime: 10, financialResults: -10 }
+    baseEffects: { serviceConsistency: -10, throughput: -10, backlog: 10, stockAvailability: -10, waitingTime: 10, financialResults: -10, wasteTracker: 15 }
   },
   {
     id: 'a6',
@@ -121,7 +121,7 @@ export const actions: ActionConfig[] = [
     group: 'menu',
     description: 'Place a pastry display next to the till for customers to grab while queuing.',
     setFlag: 'selfServicePastries',
-    baseEffects: { congestion: 5, stockAvailability: -5 }
+    baseEffects: { congestion: 5, stockAvailability: -5, wasteTracker: 5 }
   },
   {
     id: 'a11',
@@ -130,7 +130,7 @@ export const actions: ActionConfig[] = [
     group: 'menu',
     description: 'Reduce the range of sandwich fillings, drink variations, and snack options to focus on the most popular items.',
     setFlag: 'menuSimplified',
-    baseEffects: { throughput: 10, backlog: -10, serviceConsistency: 10, stockAvailability: 10, waitingTime: -10 }
+    baseEffects: { throughput: 10, backlog: -10, serviceConsistency: 10, stockAvailability: 10, waitingTime: -10, wasteTracker: -15 }
   },
   {
     id: 'a12',
@@ -148,7 +148,7 @@ export const actions: ActionConfig[] = [
     group: 'menu',
     description: 'Introduce a simple daily checklist for ingredient levels and a fixed reorder schedule tied to delivery days.',
     setFlag: 'stockRoutineEnabled',
-    baseEffects: { stockAvailability: 10, serviceConsistency: 5 }
+    baseEffects: { stockAvailability: 10, serviceConsistency: 5, wasteTracker: -20 }
   },
 
   // PROCESS & PROMOTION

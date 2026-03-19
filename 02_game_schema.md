@@ -142,6 +142,7 @@ type VisibleMetrics = {
   serviceConsistency: number;  // higher is better internally
   stockAvailability: number;   // higher is better internally
   financialResults: number;    // higher is better internally (previously budgetPressure)
+  wasteTracker: number;        // lower is better internally
 };
 ```
 
@@ -169,7 +170,8 @@ Use these labels (not the internal variable names):
 | congestion | Queue Flow |
 | serviceConsistency | Service Consistency |
 | stockAvailability | Stock Availability |
-| financialResults | Financial Results |
+| financialResults | Cost Efficiency |
+| wasteTracker | Waste Control |
 
 ### Per-turn delta display
 After each action, show the precise numeric delta appended to the trend indicator:
@@ -188,6 +190,7 @@ const initialVisibleMetrics: VisibleMetrics = {
   serviceConsistency: 42,  // display: 42 (amber)
   stockAvailability: 48,   // display: 48 (amber)
   financialResults: 28,    // display: 28 (red)
+  wasteTracker: 82,        // display: 18 (red)
 };
 ```
 

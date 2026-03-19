@@ -8,4 +8,5 @@ export const initialMetrics: VisibleMetrics = {
   serviceConsistency: 42,
   stockAvailability: 48,
   financialResults: 28,
+  wasteTracker: 82,
 };

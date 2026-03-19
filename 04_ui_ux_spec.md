@@ -459,7 +459,8 @@ Use Lucide React icons throughout. Suggested icon mapping:
 | Metric: Queue Flow | `Users` |
 | Metric: Service Consistency | `CheckCircle` |
 | Metric: Stock Availability | `Package` |
-| Metric: Budget Pressure | `Wallet` |
+| Metric: Cost Efficiency | `Wallet` |
+| Metric: Waste Control | `Recycle` |
 | Delta improved | `ArrowUp` |
 | Delta worsened | `ArrowDown` |
 | Delta unchanged | `Minus` |
