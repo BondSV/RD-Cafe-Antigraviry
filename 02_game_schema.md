@@ -141,7 +141,7 @@ type VisibleMetrics = {
   congestion: number;          // lower is better internally
   serviceConsistency: number;  // higher is better internally
   stockAvailability: number;   // higher is better internally
-  budgetPressure: number;      // lower is better internally
+  financialResults: number;    // higher is better internally (previously budgetPressure)
 };
 ```
 
@@ -149,7 +149,7 @@ type VisibleMetrics = {
 
 All metrics must be **normalised for display** so that **higher is always better** on the player-facing UI. This removes cognitive load.
 
-For metrics where lower is better internally (waitingTime, backlog, congestion, budgetPressure), the display score should be inverted: `displayScore = 100 - rawValue`.
+For metrics where lower is better internally (waitingTime, backlog, congestion), the display score should be inverted: `displayScore = 100 - rawValue`. (Note: `financialResults` is higher is better internally, so it uses `displayScore = rawValue`).
 
 The player sees a 0–100 score where 100 is always the best possible state, for every metric.
 
@@ -163,18 +163,18 @@ Use these labels (not the internal variable names):
 
 | Internal key | Player-facing label |
 |---|---|
-| waitingTime | Customer Waiting Time |
-| throughput | Orders Completed / Hour |
-| backlog | Order Backlog |
-| congestion | Counter Congestion |
+| waitingTime | Service Speed |
+| throughput | Orders Completed per Hour |
+| backlog | Order Processing |
+| congestion | Queue Flow |
 | serviceConsistency | Service Consistency |
 | stockAvailability | Stock Availability |
-| budgetPressure | Budget Pressure |
+| financialResults | Financial Results |
 
 ### Per-turn delta display
-After each action, show:
-- ↑ Improved (green arrow)
-- ↓ Worsened (red arrow)
+After each action, show the precise numeric delta appended to the trend indicator:
+- ↑ +X Improved (green)
+- ↓ -Y Worsened (red)
 - — Unchanged (grey dash)
 
 ### Recommended starting values (internal, raw)
@@ -187,7 +187,7 @@ const initialVisibleMetrics: VisibleMetrics = {
   congestion: 76,          // display: 24 (red)
   serviceConsistency: 42,  // display: 42 (amber)
   stockAvailability: 48,   // display: 48 (amber)
-  budgetPressure: 72,      // display: 28 (red)
+  financialResults: 28,    // display: 28 (red)
 };
 ```
 
@@ -221,7 +221,7 @@ type ActionFlags = {
   queuePathMarked: boolean;
   pickupSeparated: boolean;
   stockRoutineEnabled: boolean;
-  rotaRedesigned: boolean;
+  clickAndCollectEnabled: boolean;
   peakTaskBoardEnabled: boolean;
 };
 ```
@@ -243,7 +243,7 @@ Use exactly these 20 actions, grouped into 4 categories for the UI.
 | 8 | Move the head barista earlier | core |
 | 9 | Shorten late weekday opening hours | core |
 | 14 | Introduce peak-hour task specialisation | core |
-| 19 | Use hourly sales data to redesign the rota | core |
+| 19 | Launch a Click & Collect app | harmful |
 
 ### Category 2: Layout & Equipment
 | # | Action | Category |
@@ -310,7 +310,7 @@ These descriptions must reference specific details from the RainyDay Café brief
 16. **Mark a clear queue path:** "Use floor markings or barriers to create a visible queue line that separates waiting customers from the counter area."
 17. **Separate the pickup point from the ordering point:** "Move the collection point to the other end of the counter so that customers picking up orders do not block those still queuing."
 18. **Add a basic stock sheet and reorder routine:** "Introduce a simple daily checklist for ingredient levels and a fixed reorder schedule tied to delivery days."
-19. **Use hourly sales data to redesign the rota:** "Analyse till data to identify true peak and quiet periods, then redesign the staff rota to align shifts with actual demand patterns."
+19. **Launch a Click & Collect app:** "Introduce a mobile ordering app to let customers purchase coffee ahead of time and skip the till queue."
 20. **Introduce a simple peak-hour task board:** "Put a whiteboard or printed sheet behind the counter showing who does what during each hour of the morning peak."
 
 ---
@@ -367,16 +367,22 @@ If `secondTillCanActuallyRun === true` but preparation-side improvements are sti
 
 #### 3. Extend weekday opening hours
 **Base effects:**
-- budgetPressure worsens
+- financialResults worsens (-15)
+- serviceConsistency worsens (-5)
 - waitingTime unchanged
-- throughput unchanged or slightly worse due to wider strain
+- throughput unchanged
 
 #### 4. Run a discount promotion
 **Base effects:**
 - backlog worsens
 - congestion worsens
 - waitingTime worsens
-- budgetPressure worsens slightly
+- financialResults worsens slightly (-5)
+
+**Conditional effects:**
+- If `workZonesCreated` OR `extraCoffeeMachineInstalled` OR `menuSimplified` are true (system capacity scaled):
+  - throughput improves significantly
+  - financialResults improves significantly (+15)
 
 #### 5. Expand menu options
 **Base effects:**
@@ -385,12 +391,22 @@ If `secondTillCanActuallyRun === true` but preparation-side improvements are sti
 - backlog worsens
 - stockAvailability worsens
 - waitingTime worsens
+- financialResults worsens (-10)
 
 #### 6. Add self-service pastries near the till
 **Base effects:**
 - congestion worsens slightly
 - stockAvailability worsens slightly
-- may slightly help throughput only in narrow combinations, but never enough to turn a poor run into a full win
+- throughput worsens (-5)
+- waitingTime worsens (+5)
+
+#### 19. Launch a Click & Collect app (Trap)
+**Intent:** Teach that layering digital demand over broken operational flow destroys the physical business.
+**Base effects:**
+- congestion improves initially as people wait outside (-10)
+- backlog cascades instantly (+15)
+- waitingTime worsens (+10)
+- serviceConsistency plummets (-20)
 
 ---
 
@@ -481,9 +497,9 @@ If `secondTillCanActuallyRun === true` but preparation-side improvements are sti
 - congestion improves slightly
 
 **Conditional effects:**
+- Action is only effective if there are 2+ staff members present at peak (`headBaristaMovedEarlier`). If standard 1 barista is on shift, task specialisation is impossible.
 - stronger if combined with `sopsEnabled`
 - stronger if combined with `workZonesCreated`
-- stronger if combined with `headBaristaMovedEarlier`
 
 #### 19. Use hourly sales data to redesign the rota
 **Base effects:**
@@ -555,25 +571,33 @@ The system map must display 6 nodes:
 | Node | Represents | Driven by metrics |
 |---|---|---|
 | Order Point | Front counter, till, queue | waitingTime, congestion |
-| Preparation | Shared prep space, coffee machines, food assembly | throughput, backlog |
-| Customer Flow | Queue movement, congestion, pickup experience | congestion, waitingTime |
-| Staffing | Who is present, when, how allocated | serviceConsistency, throughput |
-| Menu & Stock | Product range, ingredient availability, supply chain | stockAvailability, serviceConsistency |
-| Costs | Budget pressure, labour costs, waste | budgetPressure |
+| Preparation | Shared prep space, food assembly | throughput, backlog |
+| Staff Efficiency | Who is present, when, how allocated | serviceConsistency, throughput |
+| Inventory & Supply | Raw material availability, supply chain | stockAvailability |
+| Product & Quality | Recipe execution, standardisation | serviceConsistency, stockAvailability |
+| Financials | Costs, sales volume, waste | financialResults, throughput, waitingTime |
 
 ### 11.2 Map connections
 
-Draw visible lines between connected nodes:
+Draw explicit SVG directional lines. Forward lines are purely operational causality. Inverse lines are backward-flowing stress/panic loops (shown in different colours and bounding geometries to prevent overlap).
 
 ```
-Order Point ↔ Preparation
-Order Point ↔ Customer Flow
-Order Point ↔ Costs
-Preparation ↔ Staffing
-Preparation ↔ Menu & Stock
-Staffing ↔ Costs
-Menu & Stock ↔ Costs
-Customer Flow ↔ Staffing
+// Core Flow
+Staff Efficiency ➔ Order Point
+Staff Efficiency ➔ Preparation
+Inventory & Supply ➔ Preparation
+Product & Quality ➔ Preparation
+Order Point ➔ Preparation
+
+// Secondary Links
+Inventory & Supply ➔ Product & Quality
+Product & Quality ➔ Order Point
+
+// Financials
+Order Point ➔ Financials
+Preparation ➔ Financials
+Staff Efficiency ➔ Financials
+Inventory & Supply ➔ Financials
 ```
 
 ### 11.3 Node health derivation

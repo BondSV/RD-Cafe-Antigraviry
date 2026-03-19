@@ -4,15 +4,14 @@
 
 This game must look like a **professional product**, not a student project or a text-heavy prototype. Students will play this on their phones during a lecture session. If it looks cheap or broken, they will disengage immediately.
 
-The visual style should be: **clean, dark, data-rich, subtly atmospheric**. Think of a well-designed dashboard crossed with a minimal strategy game. The aesthetic should feel like a Bloomberg terminal for a café, not a children's board game and not a generic Bootstrap page.
+The visual style should be: **clean, light, data-rich, subtly atmospheric**. Think of a well-designed dashboard crossed with a minimal strategy game. The aesthetic should feel like a Bloomberg terminal for a café, not a children's board game and not a generic Bootstrap page.
 
 ### Key aesthetic principles
-- Dark background with high-contrast content
-- Muted colour palette with strategic use of traffic-light colours (red, amber, green) as the only saturated accents
+- Flat `#F2F2F2` background with high-contrast distinct content panes
+- Semantic use of traffic-light colours for metrics, and distinct category accents (Burgundy, Blue, Green, Amber) for actions
 - Clean typography with clear hierarchy
-- Generous spacing, not cramped
-- Subtle animations that communicate system state, never decorative
-- No gradients, no drop shadows deeper than 1–2px, no rounded corners larger than 12px
+- Drop shadows for interactive elements to elevate them off the flat background
+- Subtle animations that communicate system causality, never purely decorative
 - No emojis anywhere in the UI (use Lucide icons instead)
 - No stock photography or illustrations
 
@@ -23,27 +22,28 @@ The visual style should be: **clean, dark, data-rich, subtly atmospheric**. Thin
 Define as CSS custom properties / Tailwind config:
 
 ```
---bg-primary:      #0B0F19        /* deep navy-black, main background */
---bg-surface:      #141C2E        /* card/panel background */
---bg-surface-alt:  #1A2540        /* slightly lighter surface for nested elements */
---bg-hover:        #1E2D4A        /* hover state for interactive elements */
+--bg-primary:      #F2F2F2        /* clean light-grey, main background */
+--bg-surface:      #FFFFFF        /* card/panel background */
+--bg-surface-alt:  #F1F5F9        /* slightly distinct surface for nested elements */
+--bg-hover:        #E2E8F0        /* hover state for interactive elements */
 
---border-default:  #2A3654        /* subtle borders */
---border-focus:    #3B5998        /* focused/active borders */
+--border-default:  #E2E8F0        /* subtle borders */
+--border-focus:    #CBD5E1        /* focused/active borders */
 
---text-primary:    #E8ECF4        /* main text */
---text-secondary:  #8899B8        /* labels, descriptions, secondary info */
---text-muted:      #556682        /* disabled states, timestamps */
+--text-primary:    #0F172A        /* main text */
+--text-secondary:  #475569        /* labels, descriptions, secondary info */
+--text-muted:      #94A3B8        /* disabled states, timestamps */
 
---accent-green:    #22C55E        /* improved / good / green traffic light */
---accent-amber:    #F59E0B        /* moderate / amber traffic light */
---accent-red:      #EF4444        /* worsened / bad / red traffic light */
+--accent-green:    #16A34A        /* improved / good / green traffic light */
+--accent-amber:    #D97706        /* moderate / amber traffic light */
+--accent-red:      #DC2626        /* worsened / bad / red traffic light */
 --accent-blue:     #3B82F6        /* interactive elements, links, focus rings */
 
---green-glow:      rgba(34, 197, 94, 0.15)
---amber-glow:      rgba(245, 158, 11, 0.15)
---red-glow:        rgba(239, 68, 68, 0.15)
---blue-glow:       rgba(59, 130, 246, 0.15)
+/* Action Category Accents */
+--accent-staffing: #8B0000        /* Burgundy */
+--accent-layout:   #2563EB        /* Crisp Blue */
+--accent-menu:     #16A34A        /* Green */
+--accent-process:  #D97706        /* Amber */
 ```
 
 ### Usage rules
@@ -130,9 +130,7 @@ The main game screen uses a **3-column layout**:
 
 ## 5. Layout: tablet (768px–1023px)
 
-- Drop the case data panel to a slide-out drawer (hamburger icon, left edge)
-- 2-column layout: system map + metrics on the left, actions on the right
-- System map takes roughly 55% width, actions 45%
+Tablet explicitly uses the **Mobile single-column tab layout** to prevent the 3-panel UI from crushing or cutting off content on narrower screens.
 
 ---
 
@@ -177,18 +175,16 @@ The main game screen uses a **3-column layout**:
 └──────────────────────────────────────────────┘
 ```
 
-- Background: `--bg-surface-alt`
-- Border: 1.5px solid `--border-default`
-- Border radius: 10px
+- Background: `--bg-surface` (white) with subtle shadow.
+- Border: 1.5px solid `--border-default` with a thick 4px left-border coloured dynamically based on the action's category group (Staffing = Burgundy, Layout = Blue, Menu = Green, Process = Amber).
+- Border radius: 12px
 - Padding: 14px 16px
-- Hover: border becomes `--accent-blue`, subtle lift (`transform: translateY(-1px)`, `box-shadow: 0 4px 12px rgba(59,130,246,0.12)`)
+- Hover: border becomes the category accent colour, card visually lifts (`transform: translateY(-4px)`, shadow intensifies)
 - Title: DM Sans 600, `--text-md` size, `--text-primary`
 - Description: DM Sans 400, `--text-sm` size, `--text-secondary`, line-height 1.5
-- Icon: Lucide icon, 18px, `--text-secondary`, right-aligned in title row
-- Used state: opacity 0.3, pointer-events none, strikethrough on title
-- Category tag: small pill in bottom-right, `--text-xs`, uppercase, `letter-spacing: 0.08em`
-  - No colour coding by harmful/core/support (this would reveal the answer)
-  - Use the group label: "Staffing", "Layout", "Menu", "Process" in `--text-muted` on `--bg-surface` background
+- Icon: Lucide icon, 18px, coloured via dynamic category accent, right-aligned in title row
+- Used state: opacity 0.4, border grey, pointer-events none, strikethrough on title
+- Category tag: small pill in bottom-right explicitly styled with the dynamic category background (opacity 10%) and text colour.
 
 ### 7.2 Category accordion
 
@@ -203,7 +199,7 @@ The main game screen uses a **3-column layout**:
 
 ```
 ┌────────────────────────────────────────────┐
-│  ● Customer Waiting Time        22   ↓     │
+│  ● Service Speed                88   ↑     │
 │  ▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░       │
 └────────────────────────────────────────────┘
 ```
@@ -225,37 +221,24 @@ The main game screen uses a **3-column layout**:
 The map is the centrepiece visual of the game. It must be implemented as **SVG** for clean scaling.
 
 #### Node rendering
-- Each node is a rounded rectangle: 120px × 64px, border-radius 10px
-- Fill: `--bg-surface-alt`
+- Each node is a pure HTML absolutely positioned `div` floating above the SVG graph.
+- Size: 120px × 64px (snaps down to 96px wide on mobile to prevent overlapping).
+- Border radius 10px
+- Fill: White/Surface
 - Border: 2px solid, colour matches traffic light state
-- Box shadow (via SVG filter): subtle glow matching traffic light colour
-- Label: DM Sans 600, `--text-sm`, centred
-- Small health score below label: JetBrains Mono 500, `--text-xs`, colour matches traffic light
 
-#### Connection rendering
-- Lines between nodes: 1.5px stroke, `--border-default` colour
-- Affected connections after a turn: pulse animation (glow in `--accent-blue`, 300ms ease-in-out, fade back)
+#### Connection rendering (SVG)
+- Background SVG uses a `ResizeObserver` listener to dynamically calculate precise exact-pixel Bezier Curve paths pointing exactly at the centre of each dynamic HTML node.
+- Forward causality lines are Slate Grey. Reverse "stress" loops are Indigo. Bidirectional nodes bow curved paths outward so they don't overlap.
+- Animation: Every path features a physical Green Arrowhead explicitly tracing the path continuously forever in a physical flow animation via `<animateMotion>`.
+- Affected connections after a turn: The active line pulses bright blue and the arrowhead accelerates briefly (800ms) to spotlight the immediate system throughput.
 
 #### Node position
-Use the x/y percentage coordinates from `nodeMap.ts`. The map should be laid out roughly like this:
-
-```
-            [Order Point]
-           /             \
-    [Customer]          [Preparation]
-      Flow    \        /      |
-               [Staffing]     |
-              /         \     |
-         [Costs]     [Menu & Stock]
-```
-
-This is a suggestion, not an exact diagram. The nodes should be positioned so that connections don't overlap badly and the overall shape is readable at both desktop and mobile sizes.
-
-#### Animations
-- Node health change: colour transition on border and glow, 400ms
-- Node worsened: CSS `@keyframes` shake animation, 250ms, translateX ±3px
-- Node improved: brief glow intensify (200ms brighter, then fade to normal over 400ms)
-- Connection pulse: opacity 0 → 0.7 → 0 over 600ms, stroke changes to `--accent-blue`
+Hexagonal symmetry mathematically mapped across Y-offsets:
+- Layer 1 (y=25): Order Point (x=50)
+- Layer 2 (y=45): Staff Efficiency (x=18) / Preparation (x=82)
+- Layer 3 (y=70): Product & Quality (x=18) / Inventory & Supply (x=82)
+- Layer 4 (y=88): Financials (x=50)
 
 ### 7.5 Case data panel
 
@@ -278,7 +261,7 @@ This is a suggestion, not an exact diagram. The nodes should be positioned so th
 - Staff roster: small table with role, schedule, hours columns
   - Use JetBrains Mono for the hours
   - Highlight the 7–9 AM gap visually: the row for Assistant Barista #1 (7 AM–3 PM) should have full opacity, while the Manager (10 AM) and Head Barista (9 AM) rows could have a subtle amber left-border indicating they're absent during early peak, but **do not** add explanatory text about why this matters
-- Key numbers: simple key-value pairs
+- Key numbers: 4 explicit stats (Weekday Footfall & Transactions, Weekend Footfall & Transactions) + average £ transaction value.
 - Customer feedback: compact bullet list (Lucide icons: `ThumbsDown` for complaints, `ThumbsUp` for positives)
 
 ### 7.6 Result panel (turn result)
@@ -385,31 +368,8 @@ This is a suggestion, not an exact diagram. The nodes should be positioned so th
 
 ---
 
-## 9. Background and atmosphere
-
-### Grid overlay
-Apply a subtle grid pattern to the body:
-
-```css
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(59,130,246,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59,130,246,0.025) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-  z-index: 0;
-}
-```
-
-This adds a very faint engineering-grid feel without being distracting.
-
-### Noise texture (optional, subtle)
-If the implementation supports it, add a very faint noise texture overlay at 2–3% opacity to prevent the dark backgrounds from feeling completely flat. Use a CSS pseudo-element with a base64-encoded tiny noise PNG tiled across the surface.
-
-If this is too complex to implement, skip it. The grid alone is sufficient.
+### Background Flat Slate
+The base background uses a completely flat `#F2F2F2` (`bg-bg-primary`) style. The interface uses drop-shadows rather than background ornaments/grids to elevate interactivity. No geometric shapes, dots, or gradients should clutter the foundation.
 
 ---
 
@@ -493,10 +453,10 @@ Use Lucide React icons throughout. Suggested icon mapping:
 | Category: Layout & Equipment | `LayoutGrid` |
 | Category: Menu & Inventory | `UtensilsCrossed` |
 | Category: Process & Promotion | `ClipboardList` |
-| Metric: Customer Waiting Time | `Clock` |
-| Metric: Orders Completed / Hour | `TrendingUp` |
-| Metric: Order Backlog | `Layers` |
-| Metric: Counter Congestion | `Users` |
+| Metric: Service Speed | `Clock` |
+| Metric: Orders Completed per Hour | `TrendingUp` |
+| Metric: Order Processing | `Layers` |
+| Metric: Queue Flow | `Users` |
 | Metric: Service Consistency | `CheckCircle` |
 | Metric: Stock Availability | `Package` |
 | Metric: Budget Pressure | `Wallet` |
