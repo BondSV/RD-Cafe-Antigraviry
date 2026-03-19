@@ -26,7 +26,7 @@ export const defaultFlags: ActionFlags = {
   queuePathMarked: false,
   pickupSeparated: false,
   stockRoutineEnabled: false,
-  rotaRedesigned: false,
+  clickAndCollectEnabled: false,
   peakTaskBoardEnabled: false,
 };
 

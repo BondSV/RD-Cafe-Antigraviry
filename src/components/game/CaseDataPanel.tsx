@@ -18,9 +18,9 @@ export default function CaseDataPanel() {
   }
 
   return (
-    <div className="h-full w-full bg-bg-surface md:border-r border-border-default flex flex-col pb-4 px-4 overflow-y-auto">
-      <div className="sticky top-0 bg-bg-surface z-10 py-4 flex justify-between items-center border-b border-border-default mb-4">
-        <h3 className="font-sans text-xs font-semibold text-text-secondary uppercase tracking-[0.12em] flex items-center">
+    <div className="h-full w-full bg-transparent flex flex-col pb-4 px-4 overflow-y-auto">
+      <div className="sticky top-0 bg-bg-primary z-10 py-4 flex justify-between items-center border-b border-border-default mb-4">
+        <h3 className="font-sans text-xs font-semibold text-text-muted uppercase tracking-[0.12em] flex items-center">
           <FileText className="w-4 h-4 mr-2" />
           Case Data
         </h3>
@@ -40,9 +40,12 @@ export default function CaseDataPanel() {
 
         <section>
           <h4 className="font-sans font-semibold text-sm text-text-primary mb-2">Key Metrics</h4>
-          <div className="text-sm font-sans text-text-secondary">
+          <div className="text-sm font-sans text-text-secondary space-y-1">
+            <div className="flex justify-between"><span>Footfall (Wkdy):</span> <span className="font-mono text-text-primary">{caseData.footfall.weekdays}</span></div>
             <div className="flex justify-between"><span>Transactions (Wkdy):</span> <span className="font-mono text-text-primary">{caseData.transactions.weekdays}</span></div>
-            <div className="flex justify-between"><span>Average £:</span> <span className="font-mono text-text-primary">{caseData.averageTransaction}</span></div>
+            <div className="flex justify-between mt-1"><span>Footfall (Wknd):</span> <span className="font-mono text-text-primary">{caseData.footfall.weekends}</span></div>
+            <div className="flex justify-between"><span>Transactions (Wknd):</span> <span className="font-mono text-text-primary">{caseData.transactions.weekends}</span></div>
+            <div className="flex justify-between mt-2 pt-2 border-t border-border-default"><span>Average £:</span> <span className="font-mono text-text-primary">{caseData.averageTransaction}</span></div>
           </div>
         </section>
 
@@ -50,7 +53,7 @@ export default function CaseDataPanel() {
           <h4 className="font-sans font-semibold text-sm text-text-primary mb-2">Staff Roster</h4>
           <div className="space-y-2">
             {caseData.staffRoster.map((staff, i) => (
-              <div key={i} className={`p-2 rounded bg-bg-surface-alt border-l-2 ${staff.hours.includes('7 AM') ? 'border-accent-amber' : 'border-border-default'}`}>
+              <div key={i} className={`p-2 rounded bg-white/70 border border-border-default`}>
                 <div className="font-sans text-sm font-medium text-text-primary">{staff.role}</div>
                 <div className="flex justify-between items-center mt-1">
                   <span className="font-sans text-xs text-text-secondary">{staff.schedule}</span>

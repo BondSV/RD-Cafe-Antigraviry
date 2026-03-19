@@ -14,7 +14,7 @@ export function applyConditionalRules(
 
   // 1. Add another till
   if (action.id === 'a1') {
-    const secondTillCanRun = currentFlags.tempStaffAdded || currentFlags.rotaRedesigned || (currentFlags.managerMovedEarlier && currentFlags.headBaristaMovedEarlier);
+    const secondTillCanRun = currentFlags.tempStaffAdded || (currentFlags.managerMovedEarlier && currentFlags.headBaristaMovedEarlier);
     const prepSideImproved = currentFlags.extraCoffeeMachineInstalled || currentFlags.menuSimplified || currentFlags.prepAheadEnabled || currentFlags.workZonesCreated || currentFlags.peakTaskSpecialisation;
 
     if (secondTillCanRun) {
@@ -41,30 +41,38 @@ export function applyConditionalRules(
         update('congestion', 10);
       }
     }
-    if (!currentFlags.rotaRedesigned && !currentFlags.lateHoursShortened) {
-      update('budgetPressure', 5);
+    if (!currentFlags.lateHoursShortened) {
+      update('financialResults', -5);
+    }
+  }
+
+  // 4. Discount Promotion
+  if (action.id === 'a4') {
+    const capacityUpgraded = currentFlags.extraCoffeeMachineInstalled && currentFlags.workZonesCreated && currentFlags.menuSimplified;
+    if (capacityUpgraded) {
+      update('financialResults', 20); // Net +15
+      update('backlog', -5); // Reduce penalty
+      update('waitingTime', -5); // Reduce penalty
+      update('throughput', 10); // Increase throughput slightly
     }
   }
 
   // 7. Manager earlier
   if (action.id === 'a7') {
-    if (currentFlags.rotaRedesigned) { update('serviceConsistency', 5); update('waitingTime', -5); }
     if (currentFlags.headBaristaMovedEarlier) { update('throughput', 5); update('congestion', -5); }
-    if (!currentFlags.lateHoursShortened) { update('budgetPressure', 5); }
+    if (!currentFlags.lateHoursShortened) { update('financialResults', -5); }
   }
 
   // 8. Head Barista earlier
   if (action.id === 'a8') {
-    if (currentFlags.rotaRedesigned) { update('throughput', 5); update('waitingTime', -5); }
     if (currentFlags.prepAheadEnabled) { update('throughput', 5); update('backlog', -5); }
     if (currentFlags.menuSimplified) { update('backlog', -5); update('waitingTime', -5); }
   }
 
   // 9. Shorten late hours
   if (action.id === 'a9') {
-    if (currentFlags.managerMovedEarlier) { update('budgetPressure', -5); update('serviceConsistency', 5); }
-    if (currentFlags.headBaristaMovedEarlier) { update('budgetPressure', -5); update('serviceConsistency', 5); }
-    if (currentFlags.rotaRedesigned) { update('budgetPressure', -10); }
+    if (currentFlags.managerMovedEarlier) { update('financialResults', 5); update('serviceConsistency', 5); }
+    if (currentFlags.headBaristaMovedEarlier) { update('financialResults', 5); update('serviceConsistency', 5); }
   }
 
   // 10. Extra coffee machine
@@ -129,11 +137,12 @@ export function applyConditionalRules(
     if (currentFlags.menuSimplified) { update('stockAvailability', 5); update('serviceConsistency', 5); }
   }
 
-  // 19. Rota redesigned
+  // 19. Click and Collect
   if (action.id === 'a19') {
-    if (currentFlags.managerMovedEarlier) { update('serviceConsistency', 5); update('waitingTime', -5); }
-    if (currentFlags.headBaristaMovedEarlier) { update('throughput', 5); update('waitingTime', -5); }
-    if (currentFlags.lateHoursShortened) { update('budgetPressure', -5); update('throughput', 5); }
+    if (currentFlags.extraCoffeeMachineInstalled && currentFlags.workZonesCreated) {
+      update('backlog', -5); // Less severe backlog since prep space is better
+      update('waitingTime', -5); // Less severe wait time
+    }
   }
 
   // 20. Task board

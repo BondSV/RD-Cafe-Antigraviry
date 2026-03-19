@@ -7,5 +7,5 @@ export const initialMetrics: VisibleMetrics = {
   congestion: 76,
   serviceConsistency: 42,
   stockAvailability: 48,
-  budgetPressure: 72,
+  financialResults: 28,
 };

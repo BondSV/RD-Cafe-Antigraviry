@@ -25,7 +25,7 @@ export function evaluateRun(
     cong: normaliseForDisplay('congestion', finalMetrics.congestion),
     svcc: normaliseForDisplay('serviceConsistency', finalMetrics.serviceConsistency),
     stock: normaliseForDisplay('stockAvailability', finalMetrics.stockAvailability),
-    cost: normaliseForDisplay('budgetPressure', finalMetrics.budgetPressure)
+    cost: normaliseForDisplay('financialResults', finalMetrics.financialResults)
   };
 
   let actualLevel = 0;

@@ -8,31 +8,35 @@ export default {
     extend: {
       colors: {
         bg: {
-          primary: '#0B0F19',
-          surface: '#141C2E',
-          'surface-alt': '#1A2540',
-          hover: '#1E2D4A',
+          primary: '#F2F2F2',
+          surface: '#FFFFFF',
+          'surface-alt': '#F1F5F9',
+          hover: '#E2E8F0',
         },
         border: {
-          default: '#2A3654',
-          focus: '#3B5998',
+          default: '#CBD5E1',
+          focus: '#3B82F6',
         },
         text: {
-          primary: '#E8ECF4',
-          secondary: '#8899B8',
-          muted: '#556682',
+          primary: '#0F172A',
+          secondary: '#334155',
+          muted: '#64748B',
         },
         accent: {
-          green: '#22C55E',
-          amber: '#F59E0B',
-          red: '#EF4444',
-          blue: '#3B82F6',
+          green: '#16A34A',
+          amber: '#D97706',
+          red: '#DC2626',
+          blue: '#2563EB',
+          indigo: '#6366F1',
+          burgundy: '#8B0000',
         },
         glow: {
-          green: 'rgba(34, 197, 94, 0.15)',
-          amber: 'rgba(245, 158, 11, 0.15)',
-          red: 'rgba(239, 68, 68, 0.15)',
-          blue: 'rgba(59, 130, 246, 0.15)',
+          green: 'rgba(22, 163, 74, 0.25)',
+          amber: 'rgba(217, 119, 6, 0.25)',
+          red: 'rgba(220, 38, 38, 0.25)',
+          blue: 'rgba(37, 99, 235, 0.25)',
+          indigo: 'rgba(99, 102, 241, 0.25)',
+          burgundy: 'rgba(139, 0, 0, 0.25)',
         }
       },
       fontFamily: {

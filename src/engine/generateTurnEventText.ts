@@ -7,11 +7,19 @@ export function generateTurnEventText(
   metricsAfter: VisibleMetrics
 ): string {
   if (action.id === 'a1') {
-    if (!flags.tempStaffAdded && !flags.rotaRedesigned && !(flags.managerMovedEarlier && flags.headBaristaMovedEarlier)) {
+    if (!flags.tempStaffAdded && !(flags.managerMovedEarlier && flags.headBaristaMovedEarlier)) {
       return "A second till is now in place at the counter. During the morning rush, it sat mostly unused and the area felt more cramped.";
     }
     return "The second till is now staffed. The front line moves quicker, but cups build up fast by the espresso machine.";
   }
+  
+  if (action.id === 'a4') {
+    if (flags.extraCoffeeMachineInstalled && flags.workZonesCreated && flags.menuSimplified) {
+      return "The discount drives a massive crowd! Thanks to the upgraded prep capacity, the staff absorb the volume. Sales soar, though the line is still heavily loaded.";
+    }
+    return "The 20% discount pulled a massive crowd into the doorway. Staff look overwhelmed trying to keep up with the tickets.";
+  }
+
   if (action.id === 'a2') {
     return "An extra team member bumps up staffing from 7 to 10 AM. It looks busy behind the counter, but the wage bill is visibly higher.";
   }
@@ -24,16 +32,12 @@ export function generateTurnEventText(
   }
   
   if (action.id === 'a19') {
-    if (flags.lateHoursShortened) {
-      return "By cutting the quiet evening hours, the new schedule comfortably supports the morning rush without blowing the budget.";
-    }
-    return "The new schedule better aligns shifts with the morning rush. The peak is less stressful, but the overall wage bill hasn't dropped.";
+    return "Operations moved from bad to worse. Customers arrive expecting their order to be ready, only to find a massive backlog of digital tickets. Satisfaction has completely tanked.";
   }
   
   const texts: Record<string, string> = {
-    a3: "The café stays open until 10 PM. Sales dropped off heavily after sunset, leaving staff wiping empty tables.",
-    a4: "The 20% discount pulled a massive crowd into the doorway. Staff look overwhelmed trying to keep up with the tickets.",
-    a5: "The new sandwich and drink variants are on display. Customers spend more time staring at the menu, and orders take longer to assemble.",
+    a3: "The café stays open until 10 PM. Sales dropped off heavily after sunset. Staff are tired and the wage bill is wasted on empty tables.",
+    a5: "The new sandwich and drink variants are on display. Customers stare at the menu, assembly is slower, and without a good inventory system, ingredients are spoiling.",
     a6: "A pastry stand sits near the till. Customers occasionally grab one, but the queue path feels a bit more pinched.",
     a7: "The manager is now on the floor at 8 AM. Staff seem more coordinated, though the early peak at 7 AM is still tight.",
     a8: "The head barista starts pulling shots at 7 AM. Drinks are coming out noticeably faster and the queue moves more steadily.",
@@ -47,7 +51,6 @@ export function generateTurnEventText(
     a16: "A rope barrier guides the queue away from the pickup area. Waiting customers are no longer standing on top of people eating.",
     a17: "The collection point moved to the far end of the counter. The knot of people waiting for lattes has shifted away from the till.",
     a18: "A clipboard tracks daily ingredient counts. The fridge was fully stocked this morning before the rush.",
-    a19: "The new rota matches bodies to peak transaction times. 8 AM feels fully staffed, while the slow afternoons are running lean.",
     a20: "A whiteboard shows everyone's role for each hour of the morning. Nobody is left guessing what they should be doing."
   };
 

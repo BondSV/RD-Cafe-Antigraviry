@@ -36,7 +36,7 @@ export default function MetricPanel() {
         {renderMetric('congestion')}
         {renderMetric('serviceConsistency')}
         {renderMetric('stockAvailability')}
-        {renderMetric('budgetPressure')}
+        {renderMetric('financialResults')}
       </div>
     </div>
   );

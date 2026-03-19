@@ -5,7 +5,7 @@ export type VisibleMetrics = {
   congestion: number;
   serviceConsistency: number;
   stockAvailability: number;
-  budgetPressure: number;
+  financialResults: number;
 };
 
 export type ActionFlags = {
@@ -27,7 +27,7 @@ export type ActionFlags = {
   queuePathMarked: boolean;
   pickupSeparated: boolean;
   stockRoutineEnabled: boolean;
-  rotaRedesigned: boolean;
+  clickAndCollectEnabled: boolean;
   peakTaskBoardEnabled: boolean;
 };
 

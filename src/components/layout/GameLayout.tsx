@@ -24,25 +24,25 @@ export default function GameLayout() {
     <div className="flex flex-col h-screen min-h-screen relative">
       <TurnHeader />
       
-      <div className="flex md:hidden bg-bg-surface border-b border-border-default">
+      <div className="flex lg:hidden bg-bg-surface border-b border-border-default">
         <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'map' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => setActiveTab('map')}>Map</button>
         <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'actions' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => setActiveTab('actions')}>Actions</button>
         <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'case' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => setActiveTab('case')}>Case</button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden w-full max-w-[1400px] mx-auto p-0 md:p-4 gap-4">
-        <div className={`w-full md:w-[260px] flex-shrink-0 ${activeTab === 'case' ? 'block hover:overflow-y-auto' : 'hidden md:block'}`}>
+      <div className="flex flex-1 overflow-hidden w-full max-w-[1400px] mx-auto p-0 lg:p-4 gap-4">
+        <div className={`w-full lg:w-[260px] xl:w-[280px] flex-shrink-0 ${activeTab === 'case' ? 'block hover:overflow-y-auto' : 'hidden lg:block'}`}>
           <CaseDataPanel />
         </div>
 
-        <div className={`flex-1 flex flex-col min-w-[300px] overflow-y-auto pr-2 ${activeTab === 'map' ? 'block' : 'hidden md:flex'}`}>
+        <div className={`flex-1 flex flex-col min-w-[300px] overflow-y-auto pt-4 lg:pt-0 pr-2 px-4 lg:px-0 ${activeTab === 'map' ? 'block' : 'hidden lg:flex'}`}>
           <SystemMap />
           <div className="mt-4">
             <MetricPanel />
           </div>
         </div>
 
-        <div className={`w-full md:w-[340px] flex-shrink-0 overflow-y-auto pr-2 pb-8 ${activeTab === 'actions' ? 'block' : 'hidden md:block'}`}>
+        <div className={`w-full lg:w-[340px] xl:w-[380px] flex-shrink-0 overflow-y-auto pt-4 lg:pt-0 pr-2 px-4 lg:px-0 pb-8 ${activeTab === 'actions' ? 'block' : 'hidden lg:block'}`}>
           <ActionGrid disabled={viewingResultFor !== null} />
         </div>
       </div>

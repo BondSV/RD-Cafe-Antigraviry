@@ -1,7 +1,7 @@
 import { VisibleMetrics } from '../types/game';
 
 const LOWER_IS_BETTER: (keyof VisibleMetrics)[] = [
-  'waitingTime', 'backlog', 'congestion', 'budgetPressure'
+  'waitingTime', 'backlog', 'congestion'
 ];
 
 export function normaliseForDisplay(

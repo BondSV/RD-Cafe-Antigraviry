@@ -71,7 +71,7 @@ export default function FinalSummary() {
             {renderMetric('congestion')}
             {renderMetric('serviceConsistency')}
             {renderMetric('stockAvailability')}
-            {renderMetric('budgetPressure')}
+            {renderMetric('financialResults')}
           </div>
         </div>
 

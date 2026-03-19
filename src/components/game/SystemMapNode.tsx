@@ -32,24 +32,21 @@ export default function SystemMapNode({ node }: { node: NodeType }) {
                    'rgba(239, 68, 68, 0.15)';
 
   return (
-    <foreignObject 
-      x={`${node.x}%`} 
-      y={`${node.y}%`} 
-      width="120" 
-      height="64"
-      style={{ overflow: 'visible', transform: 'translate(-60px, -32px)' }}
+    <div 
+      className="absolute pointer-events-auto"
+      style={{ left: `${node.x}%`, top: `${node.y}%`, transform: 'translate(-50%, -50%)' }}
     >
       <div 
-        className={`w-[120px] h-[64px] bg-bg-surface-alt border-2 rounded-[10px] flex flex-col items-center justify-center system-node ${colorClass} ${animClass}`}
+        className={`w-[96px] md:w-[120px] h-[52px] md:h-[64px] bg-bg-surface-alt border-2 rounded-lg md:rounded-[10px] flex flex-col items-center justify-center system-node ${colorClass} ${animClass}`}
         style={{ '--glow-green': glowVar } as React.CSSProperties}
       >
-        <div className="font-sans font-semibold text-sm text-text-primary text-center leading-tight px-1">
+        <div className="font-sans font-semibold text-[10px] md:text-sm text-text-primary text-center leading-tight px-1 break-words">
           {node.label}
         </div>
-        <div className="font-mono font-medium text-xs mt-1">
+        <div className="font-mono font-medium text-[10px] md:text-xs mt-0.5 md:mt-1">
           {Math.round(health)}
         </div>
       </div>
-    </foreignObject>
+    </div>
   );
 }

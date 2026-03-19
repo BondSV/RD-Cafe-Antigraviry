@@ -9,7 +9,7 @@ export const actions: ActionConfig[] = [
     group: 'staffing',
     description: 'Bring in an extra team member for the 7–10 AM window to add capacity during the busiest hours.',
     setFlag: 'tempStaffAdded',
-    baseEffects: { budgetPressure: 15, serviceConsistency: -5 }
+    baseEffects: { financialResults: -15, serviceConsistency: -5 }
   },
   {
     id: 'a7',
@@ -36,7 +36,7 @@ export const actions: ActionConfig[] = [
     group: 'staffing',
     description: 'The café currently stays open until 9 PM on weekdays. Close at 7 PM instead and reallocate the saved hours and cost.',
     setFlag: 'lateHoursShortened',
-    baseEffects: { budgetPressure: -15 }
+    baseEffects: { financialResults: 15 }
   },
   {
     id: 'a14',
@@ -49,12 +49,12 @@ export const actions: ActionConfig[] = [
   },
   {
     id: 'a19',
-    title: 'Use hourly sales data to redesign the rota',
-    category: 'core',
-    group: 'staffing',
-    description: 'Analyse till data to identify true peak and quiet periods, then redesign the staff rota to align shifts with actual demand patterns.',
-    setFlag: 'rotaRedesigned',
-    baseEffects: { waitingTime: -5, throughput: 5, serviceConsistency: 5 }
+    title: 'Launch a Click & Collect app',
+    category: 'harmful',
+    group: 'process',
+    description: 'Allow customers to order and pay on their phones to avoid the till queue, sending tickets straight to the barista.',
+    setFlag: 'clickAndCollectEnabled',
+    baseEffects: { congestion: -10, backlog: 15, waitingTime: 10, serviceConsistency: -20 }
   },
 
   // LAYOUT & EQUIPMENT
@@ -65,7 +65,7 @@ export const actions: ActionConfig[] = [
     group: 'layout',
     description: 'Install a second till at the counter to handle ordering during busy periods.',
     setFlag: 'extraTillInstalled',
-    baseEffects: { budgetPressure: 5, congestion: 5 }
+    baseEffects: { financialResults: -5, congestion: 5 }
   },
   {
     id: 'a10',
@@ -112,7 +112,7 @@ export const actions: ActionConfig[] = [
     group: 'menu',
     description: 'Add new sandwich fillings and drink options to broaden the product range and appeal.',
     setFlag: 'expandedMenu',
-    baseEffects: { serviceConsistency: -10, throughput: -10, backlog: 10, stockAvailability: -10, waitingTime: 10 }
+    baseEffects: { serviceConsistency: -10, throughput: -10, backlog: 10, stockAvailability: -10, waitingTime: 10, financialResults: -10 }
   },
   {
     id: 'a6',
@@ -159,7 +159,7 @@ export const actions: ActionConfig[] = [
     group: 'process',
     description: 'Keep the café open until 10 PM on weekdays instead of 9 PM to capture more evening trade.',
     setFlag: 'extendedHours',
-    baseEffects: { budgetPressure: 15 }
+    baseEffects: { financialResults: -15, serviceConsistency: -5 }
   },
   {
     id: 'a4',
@@ -168,7 +168,7 @@ export const actions: ActionConfig[] = [
     group: 'process',
     description: 'Launch a 20% off promotion to attract customers back and boost transaction volume.',
     setFlag: 'discountPromotion',
-    baseEffects: { backlog: 10, congestion: 10, waitingTime: 10, budgetPressure: 5 }
+    baseEffects: { backlog: 10, congestion: 10, waitingTime: 10, financialResults: -5 }
   },
   {
     id: 'a15',

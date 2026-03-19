@@ -7,5 +7,5 @@ export const metricLabels: Record<keyof VisibleMetrics, string> = {
   congestion: 'Counter Congestion',
   serviceConsistency: 'Service Consistency',
   stockAvailability: 'Stock Availability',
-  budgetPressure: 'Budget Pressure',
+  financialResults: 'Financial Results',
 };
