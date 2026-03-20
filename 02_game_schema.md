@@ -141,23 +141,35 @@ type VisibleMetrics = {
   congestion: number;          // lower is better internally
   serviceConsistency: number;  // higher is better internally
   stockAvailability: number;   // higher is better internally
-  financialResults: number;    // higher is better internally (previously budgetPressure)
+  financialResults: number;    // higher is better internally 
   wasteTracker: number;        // lower is better internally
 };
 ```
+
+### Physical Meaning of Each Metric (CRITICAL CONTEXT)
+These variables map to exact physical realities in the café operation:
+
+* **Service Speed** (internal: `waitingTime`): Represents the average physical time a customer spends standing and waiting for their order after paying. *(Inverted: higher UI score = wait is shorter).*
+* **Orders Completed per Hour** (internal: `throughput`): Represents raw production volume; the total number of orders successfully handed over to customers per hour. *(Higher UI score = more total output).*
+* **Order Processing** (internal: `backlog`): Represents the backlog of unmade tickets piling up in the shared prep space. *(Inverted: higher UI score = ticket backlog is smaller).*
+* **Queue Flow** (internal: `congestion`): Represents physical crowding and congestion strictly on the **customer side** of the counter (e.g., at the till and waiting area). *(Inverted: higher UI score = space is clearer).*
+* **Service Consistency** (internal: `serviceConsistency`): Represents recipe execution, standardisation, and product quality errors by the staff making the food/drinks. *(Higher UI score = fewer mistakes made).*
+* **Stock Availability** (internal: `stockAvailability`): Represents raw material availability and supply chain reliability. *(Higher UI score = ingredients are in stock).*
+* **Cost Efficiency** (internal: `financialResults`): Represents the financial budget health, balancing the staff wage bill and costs against incoming sales volume. *(Higher UI score = better financial efficiency).*
+* **Waste Control** (internal: `wasteTracker`): Represents physical waste of spoiling or unused ingredients at the end of the day. *(Inverted: higher UI score = less food wasted).*
 
 ### Display normalisation rule (CRITICAL)
 
 All metrics must be **normalised for display** so that **higher is always better** on the player-facing UI. This removes cognitive load.
 
-For metrics where lower is better internally (waitingTime, backlog, congestion), the display score should be inverted: `displayScore = 100 - rawValue`. (Note: `financialResults` is higher is better internally, so it uses `displayScore = rawValue`).
+For metrics where lower is better internally (waitingTime, backlog, congestion, wasteTracker), the display score should be inverted: `displayScore = 100 - rawValue`. 
 
-The player sees a 0–100 score where 100 is always the best possible state, for every metric.
+The player sees a 0–100 score where 100 is always the best possible physical state, for every metric.
 
 ### Traffic-light thresholds
-- **Red:** display score 0–39
-- **Amber:** display score 40–69
-- **Green:** display score 70–100
+- **Red:** display score 0–44
+- **Amber:** display score 45–79
+- **Green:** display score 80–100
 
 ### Player-facing labels
 Use these labels (not the internal variable names):

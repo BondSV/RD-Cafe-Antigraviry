@@ -45,10 +45,22 @@ export default function SystemMapNode({ node }: { node: NodeType }) {
                    health > 39 ? 'rgba(245, 158, 11, 0.15)' : 
                    'rgba(239, 68, 68, 0.15)';
 
-  // Positioning logic for tooltip to prevent clipping at the bottom
-  const tooltipClass = node.y > 60 
-    ? "bottom-full mb-3" // Show above node if it's placed low on the map
-    : "top-full mt-3";   // Show below node otherwise
+  // Position logic to prevent clipping at edges
+  let tooltipX = 'left-1/2 -translate-x-1/2';
+  let arrowX = 'before:left-1/2 before:-translate-x-1/2';
+  
+  if (node.x < 25) {
+    tooltipX = 'left-0';
+    arrowX = 'before:left-[48px] md:before:left-[60px] before:-translate-x-1/2';
+  } else if (node.x > 75) {
+    tooltipX = 'right-0';
+    arrowX = 'before:right-[48px] md:before:right-[60px] before:translate-x-1/2';
+  }
+
+  const tooltipY = node.y > 60 ? 'bottom-full mb-3' : 'top-full mt-3';
+  const arrowY = node.y > 60 
+    ? 'before:-bottom-2 before:border-[8px] before:border-transparent before:border-t-border-default' 
+    : 'before:-top-2 before:border-[8px] before:border-transparent before:border-b-border-default';
 
   return (
     <div 
@@ -72,7 +84,7 @@ export default function SystemMapNode({ node }: { node: NodeType }) {
       </div>
       
       {showTooltip && node.insight && (
-        <div className={`absolute left-1/2 -translate-x-1/2 ${tooltipClass} w-[260px] md:w-72 bg-bg-surface border border-border-default rounded-xl shadow-xl p-4 cursor-default text-left pointer-events-none before:content-[''] before:absolute before:left-1/2 before:-translate-x-1/2 ${node.y > 60 ? 'before:-bottom-2 before:border-[8px] before:border-transparent before:border-t-border-default' : 'before:-top-2 before:border-[8px] before:border-transparent before:border-b-border-default'}`}>
+        <div className={`absolute ${tooltipX} ${tooltipY} w-[260px] md:w-72 bg-bg-surface border border-border-default rounded-xl shadow-xl p-4 cursor-default text-left pointer-events-none before:content-[''] before:absolute ${arrowX} ${arrowY}`}>
           <div className="mb-3">
             <span className="text-[11px] font-bold text-text-muted uppercase tracking-[0.1em]">Driven By:</span>
             <ul className="text-xs text-text-secondary mt-1 ml-1 space-y-0.5">

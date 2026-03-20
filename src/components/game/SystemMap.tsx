@@ -19,7 +19,7 @@ export default function SystemMap() {
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full relative min-h-[350px] md:min-h-[400px] h-[50vh] max-h-[600px] bg-white rounded-xl border border-border-default overflow-hidden flex-shrink-0 shadow-md">
+    <div ref={containerRef} className="w-full relative min-h-[350px] md:min-h-[400px] h-[50vh] max-h-[600px] bg-white rounded-xl border border-border-default flex-shrink-0 shadow-md">
       <h3 className="absolute top-4 left-4 font-sans text-xs font-semibold text-text-muted uppercase tracking-[0.12em] z-20 bg-white/90 px-2 py-1 rounded backdrop-blur border border-border-default/50">
         System Overview
       </h3>
