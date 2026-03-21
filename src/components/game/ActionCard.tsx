@@ -1,34 +1,36 @@
 import React from 'react';
 import { ActionConfig } from '../../types/game';
-import { Users, LayoutGrid, UtensilsCrossed, ClipboardList } from 'lucide-react';
+import { Users, Wrench, UtensilsCrossed, ClipboardList, PoundSterling } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 
 export default function ActionCard({ action, disabled }: { action: ActionConfig, disabled: boolean }) {
   const applyAction = useGameStore(state => state.applyAction);
   const actionsTaken = useGameStore(state => state.actionsTaken);
-  
+
   const isUsed = actionsTaken.includes(action.id);
   const isInteractive = !isUsed && !disabled;
 
-  const Icon = action.group === 'staffing' ? Users : 
-               action.group === 'layout' ? LayoutGrid : 
-               action.group === 'menu' ? UtensilsCrossed : ClipboardList;
+  const Icon = action.group === 'space' ? Wrench :
+               action.group === 'staff' ? Users :
+               action.group === 'menu' ? UtensilsCrossed :
+               action.group === 'org' ? ClipboardList : PoundSterling;
 
   const colorMap: Record<string, { border: string; bg: string; text: string; hover: string }> = {
-    staffing: { border: 'border-l-accent-burgundy', bg: 'bg-accent-burgundy/10', text: 'text-accent-burgundy', hover: 'hover:border-accent-burgundy' },
-    layout: { border: 'border-l-accent-blue', bg: 'bg-accent-blue/10', text: 'text-accent-blue', hover: 'hover:border-accent-blue' },
+    space: { border: 'border-l-accent-burgundy', bg: 'bg-accent-burgundy/10', text: 'text-accent-burgundy', hover: 'hover:border-accent-burgundy' },
+    staff: { border: 'border-l-accent-blue', bg: 'bg-accent-blue/10', text: 'text-accent-blue', hover: 'hover:border-accent-blue' },
     menu: { border: 'border-l-accent-green', bg: 'bg-accent-green/10', text: 'text-accent-green', hover: 'hover:border-accent-green' },
-    process: { border: 'border-l-accent-amber', bg: 'bg-accent-amber/10', text: 'text-accent-amber', hover: 'hover:border-accent-amber' },
+    org: { border: 'border-l-accent-amber', bg: 'bg-accent-amber/10', text: 'text-accent-amber', hover: 'hover:border-accent-amber' },
+    revenue: { border: 'border-l-accent-indigo', bg: 'bg-accent-indigo/10', text: 'text-accent-indigo', hover: 'hover:border-accent-indigo' },
   };
-  const colors = colorMap[action.group] || colorMap.staffing;
+  const colors = colorMap[action.group] || colorMap.space;
 
   return (
     <button
       onClick={() => isInteractive && applyAction(action.id)}
       disabled={!isInteractive}
       className={`w-full text-left bg-white border-y-[1.5px] border-r-[1.5px] border-l-[4px] rounded-xl p-4 my-2 transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary focus-visible:ring-accent-blue shadow-sm
-        ${isUsed ? 'opacity-40 cursor-not-allowed border-border-default shadow-none bg-bg-surface-alt/50 border-l-border-default' : 
-          disabled ? 'opacity-50 cursor-not-allowed border-border-default shadow-none border-l-border-default' : 
+        ${isUsed ? 'opacity-40 cursor-not-allowed border-border-default shadow-none bg-bg-surface-alt/50 border-l-border-default' :
+          disabled ? 'opacity-50 cursor-not-allowed border-border-default shadow-none border-l-border-default' :
           `border-border-default ${colors.border} ${colors.hover} hover:-translate-y-1 hover:shadow-lg cursor-pointer`
         }`}
     >

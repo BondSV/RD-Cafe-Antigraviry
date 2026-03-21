@@ -28,14 +28,29 @@ export const defaultFlags: ActionFlags = {
   stockRoutineEnabled: false,
   clickAndCollectEnabled: false,
   peakTaskBoardEnabled: false,
+  // New cards (a21-a33)
+  deliveryAppLaunched: false,
+  socialMediaCampaign: false,
+  premiumGrinderInstalled: false,
+  interiorRedesigned: false,
+  freeWifiOffered: false,
+  digitalMenuInstalled: false,
+  loyaltyCardIntroduced: false,
+  baristaTrainingDone: false,
+  feedbackTabletInstalled: false,
+  cheaperSupplier: false,
+  bulkBuyEnabled: false,
+  erpImplemented: false,
+  rolesRemapped: false,
 };
 
 const initialState: GameState = {
   turn: 1,
-  maxTurns: 5,
+  maxTurns: 7,
   actionsTaken: [],
   flags: defaultFlags,
   metrics: initialMetrics,
+  breakdown: null,
   history: [],
 };
 

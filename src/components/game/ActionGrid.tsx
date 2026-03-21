@@ -4,10 +4,11 @@ import ActionCard from './ActionCard';
 import { actions } from '../../data/actions';
 
 export default function ActionGrid({ disabled }: { disabled: boolean }) {
-  const staffingActions = actions.filter(a => a.group === 'staffing');
-  const layoutActions = actions.filter(a => a.group === 'layout');
+  const spaceActions = actions.filter(a => a.group === 'space');
+  const staffActions = actions.filter(a => a.group === 'staff');
   const menuActions = actions.filter(a => a.group === 'menu');
-  const processActions = actions.filter(a => a.group === 'process');
+  const orgActions = actions.filter(a => a.group === 'org');
+  const revenueActions = actions.filter(a => a.group === 'revenue');
 
   return (
     <div className="flex flex-col h-full bg-bg-primary pt-2 md:pt-0">
@@ -15,17 +16,20 @@ export default function ActionGrid({ disabled }: { disabled: boolean }) {
         Interventions
       </h2>
       <div className="flex-1 overflow-y-auto px-4 md:px-0">
-        <ActionCategoryAccordion title="Staffing & Scheduling" defaultOpen={true}>
-          {staffingActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
+        <ActionCategoryAccordion title="Space & Equipment" defaultOpen={true}>
+          {spaceActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
         </ActionCategoryAccordion>
-        <ActionCategoryAccordion title="Layout & Equipment" defaultOpen={false}>
-          {layoutActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
+        <ActionCategoryAccordion title="Staff & Processes" defaultOpen={false}>
+          {staffActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
         </ActionCategoryAccordion>
-        <ActionCategoryAccordion title="Menu & Inventory" defaultOpen={false}>
+        <ActionCategoryAccordion title="Menu & Stock" defaultOpen={false}>
           {menuActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
         </ActionCategoryAccordion>
-        <ActionCategoryAccordion title="Process & Promotion" defaultOpen={false}>
-          {processActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
+        <ActionCategoryAccordion title="Organisational" defaultOpen={false}>
+          {orgActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
+        </ActionCategoryAccordion>
+        <ActionCategoryAccordion title="Revenue" defaultOpen={false}>
+          {revenueActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
         </ActionCategoryAccordion>
       </div>
     </div>
