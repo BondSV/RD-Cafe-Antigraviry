@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActionConfig } from '../../types/game';
-import { Users, Wrench, UtensilsCrossed, ClipboardList, PoundSterling } from 'lucide-react';
+import { Users, Hammer, UtensilsCrossed, ClipboardList, PoundSterling } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 
 export default function ActionCard({ action, disabled }: { action: ActionConfig, disabled: boolean }) {
@@ -10,7 +10,7 @@ export default function ActionCard({ action, disabled }: { action: ActionConfig,
   const isUsed = actionsTaken.includes(action.id);
   const isInteractive = !isUsed && !disabled;
 
-  const Icon = action.group === 'space' ? Wrench :
+  const Icon = action.group === 'space' ? Hammer :
                action.group === 'staff' ? Users :
                action.group === 'menu' ? UtensilsCrossed :
                action.group === 'org' ? ClipboardList : PoundSterling;

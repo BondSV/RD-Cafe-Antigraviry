@@ -73,7 +73,7 @@ export const actions: ActionConfig[] = [
     title: 'Hire a part-time barista',
     category: 'harmful',
     group: 'staff',
-    description: 'Bring in an extra team member for the 7–10 AM window to add capacity during the busiest hours.',
+    description: 'Bring in an extra team member to increase capacity during the 7–11 AM window.',
     setFlag: 'tempStaffAdded',
   },
   {
@@ -81,7 +81,7 @@ export const actions: ActionConfig[] = [
     title: 'Move the café manager earlier',
     category: 'core',
     group: 'staff',
-    description: 'The café manager currently starts at 10 AM. Move them to start at 8 AM to provide leadership during the morning peak.',
+    description: 'The café manager currently starts at 10 AM. Move them to start at 8 AM.',
     setFlag: 'managerMovedEarlier',
   },
   {
@@ -89,7 +89,7 @@ export const actions: ActionConfig[] = [
     title: 'Move the head barista earlier',
     category: 'core',
     group: 'staff',
-    description: 'The head barista currently starts at 9 AM, an hour after the café opens. Move them to start at 8 AM to overlap with the morning peak.',
+    description: 'The head barista currently starts at 9 AM. Move them to start at 8 AM.',
     setFlag: 'headBaristaMovedEarlier',
   },
   {
@@ -97,7 +97,7 @@ export const actions: ActionConfig[] = [
     title: 'Introduce peak-hour task specialisation',
     category: 'core',
     group: 'staff',
-    description: 'Instead of floating between all tasks, assign each staff member a fixed role during peak hours: one on till, one on coffee, one on food.',
+    description: 'Instead of floating between all tasks, assign each staff member a fixed role (till, coffee prep, food prep, etc.) during peak hours.',
     setFlag: 'peakTaskSpecialisation',
   },
   {
@@ -105,7 +105,7 @@ export const actions: ActionConfig[] = [
     title: 'Introduce SOPs for core tasks',
     category: 'core',
     group: 'staff',
-    description: 'Write and post simple step-by-step procedures for the most common drink and food orders so that every team member follows the same sequence.',
+    description: 'Write and implement simple step-by-step procedures for the most common drink and food orders so that every team member follows the same sequence.',
     setFlag: 'sopsEnabled',
   },
   {
@@ -113,7 +113,7 @@ export const actions: ActionConfig[] = [
     title: 'Introduce a simple peak-hour task board',
     category: 'support',
     group: 'staff',
-    description: 'Put a whiteboard or printed sheet behind the counter showing who does what during each hour of the morning peak.',
+    description: 'Put a whiteboard or printed sheet behind the counter showing who does what during peak hours.',
     setFlag: 'peakTaskBoardEnabled',
   },
   {
@@ -163,7 +163,7 @@ export const actions: ActionConfig[] = [
     title: 'Prep popular ingredients ahead of peak hours',
     category: 'core',
     group: 'menu',
-    description: 'Pre-portion and partially prepare the most commonly ordered sandwich fillings and snack items before the morning rush begins.',
+    description: 'Pre-portion and partially prepare the most commonly ordered sandwich fillings and snack items before rush hours.',
     setFlag: 'prepAheadEnabled',
   },
   {
@@ -171,7 +171,7 @@ export const actions: ActionConfig[] = [
     title: 'Implement stock tracking and reorder routines',
     category: 'support',
     group: 'menu',
-    description: 'Introduce a simple daily checklist for ingredient levels and a fixed reorder schedule tied to delivery days.',
+    description: 'Introduce automated stock tracking and set reorder points based on sales data analysis and demand forecasting.',
     setFlag: 'stockRoutineEnabled',
   },
   {
@@ -195,7 +195,7 @@ export const actions: ActionConfig[] = [
     title: 'Implement an Enterprise Resource Planning (ERP) system',
     category: 'harmful',
     group: 'menu',
-    description: 'Install enterprise-grade software to manage inventory, supplier orders, staff scheduling, and financial reporting in one integrated platform.',
+    description: 'Implement an integrated software platform to manage inventory, supplier orders, staff scheduling, and financial reporting across the business.',
     setFlag: 'erpImplemented',
   },
 
