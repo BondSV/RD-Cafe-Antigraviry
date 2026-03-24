@@ -216,28 +216,48 @@ The game should track only a **small set of hidden flags**, not a deep simulatio
 
 ```ts
 type ActionFlags = {
+  // Space & Equipment
   extraTillInstalled: boolean;
-  tempStaffAdded: boolean;
-  extendedHours: boolean;
-  discountPromotion: boolean;
-  expandedMenu: boolean;
-  selfServicePastries: boolean;
-
-  managerMovedEarlier: boolean;
-  headBaristaMovedEarlier: boolean;
-  lateHoursShortened: boolean;
   extraCoffeeMachineInstalled: boolean;
-  menuSimplified: boolean;
-  prepAheadEnabled: boolean;
   workZonesCreated: boolean;
-  peakTaskSpecialisation: boolean;
-
-  sopsEnabled: boolean;
   queuePathMarked: boolean;
   pickupSeparated: boolean;
-  stockRoutineEnabled: boolean;
-  clickAndCollectEnabled: boolean;
+  premiumGrinderInstalled: boolean;
+  interiorRedesigned: boolean;
+  digitalMenuInstalled: boolean;
+
+  // Staff & Processes
+  tempStaffAdded: boolean;
+  managerMovedEarlier: boolean;
+  headBaristaMovedEarlier: boolean;
+  peakTaskSpecialisation: boolean;
+  sopsEnabled: boolean;
   peakTaskBoardEnabled: boolean;
+  baristaTrainingDone: boolean;
+  rolesRemapped: boolean;
+
+  // Menu & Stock
+  expandedMenu: boolean;
+  selfServicePastries: boolean;
+  menuSimplified: boolean;
+  prepAheadEnabled: boolean;
+  stockRoutineEnabled: boolean;
+  cheaperSupplier: boolean;
+  bulkBuyEnabled: boolean;
+  erpImplemented: boolean;
+
+  // Organisational
+  extendedHours: boolean;
+  lateHoursShortened: boolean;
+  clickAndCollectEnabled: boolean;
+  freeWifiOffered: boolean;
+  loyaltyCardIntroduced: boolean;
+  feedbackTabletInstalled: boolean;
+
+  // Revenue
+  discountPromotion: boolean;
+  deliveryAppLaunched: boolean;
+  socialMediaCampaign: boolean;
 };
 ```
 
@@ -248,60 +268,76 @@ These are **internal flags only**. The player does not see them directly.
 
 ## 8. Action catalogue
 
-Use exactly these 20 actions, grouped into 4 categories for the UI.
+33 actions grouped into 5 navigable groups. Categories: `harmful` | `core` | `support` | `flex`.
 
-### Category 1: Staffing & Scheduling
-| # | Action | Category |
+### Group 1: Space & Equipment
+| ID | Action | Category |
 |---|---|---|
-| 2 | Hire temporary staff for morning peak | harmful |
-| 7 | Move the café manager earlier | core |
-| 8 | Move the head barista earlier | core |
-| 9 | Shorten late weekday opening hours | core |
-| 14 | Introduce peak-hour task specialisation | core |
-| 19 | Launch a Click & Collect app | harmful |
+| a1 | Buy another till | harmful |
+| a10 | Buy another coffee machine | core |
+| a13 | Create fixed work zones behind the counter | core |
+| a16 | Mark a clear queue path | support |
+| a17 | Separate the pickup point from the ordering point | support |
+| a23 | Upgrade to a premium coffee grinder | harmful |
+| a24 | Redesign the café interior | harmful |
+| a26 | Install a digital menu board | harmful |
 
-### Category 2: Layout & Equipment
-| # | Action | Category |
+### Group 2: Staff & Processes
+| ID | Action | Category |
 |---|---|---|
-| 1 | Add another till | harmful |
-| 10 | Add another coffee machine | core |
-| 13 | Create fixed work zones behind the counter | core |
-| 16 | Mark a clear queue path | support |
-| 17 | Separate the pickup point from the ordering point | support |
+| a2 | Hire a part-time barista | harmful |
+| a7 | Move the café manager earlier | core |
+| a8 | Move the head barista earlier | core |
+| a14 | Introduce peak-hour task specialisation | core |
+| a15 | Introduce SOPs for core tasks | core |
+| a20 | Introduce a simple peak-hour task board | support |
+| a28 | Send staff on a barista training course | harmful |
+| a33 | Remap the head barista and café manager roles | flex |
 
-### Category 3: Menu & Inventory
-| # | Action | Category |
+### Group 3: Menu & Stock
+| ID | Action | Category |
 |---|---|---|
-| 5 | Expand menu options | harmful |
-| 6 | Add self-service pastries near the till | harmful |
-| 11 | Simplify the menu | core |
-| 12 | Prep popular ingredients before peak | core |
-| 18 | Add a basic stock sheet and reorder routine | support |
+| a5 | Expand menu options | harmful |
+| a6 | Add self-service pastries near the till | harmful |
+| a11 | Simplify the menu | core |
+| a12 | Prep popular ingredients ahead of peak hours | core |
+| a18 | Implement stock tracking and reorder routines | support |
+| a30 | Switch to a cheaper ingredient supplier | harmful |
+| a31 | Bulk-buy ingredients for volume discount | harmful |
+| a32 | Implement an ERP system | harmful |
 
-### Category 4: Process & Promotion
-| # | Action | Category |
+### Group 4: Organisational
+| ID | Action | Category |
 |---|---|---|
-| 3 | Extend weekday opening hours | harmful |
-| 4 | Run a discount promotion | harmful |
-| 15 | Introduce SOPs for core tasks | support |
-| 20 | Introduce a simple peak-hour task board | support |
+| a3 | Extend weekday opening hours | harmful |
+| a9 | Shorten late weekday opening hours | core |
+| a19 | Launch a Click & Collect app | harmful |
+| a25 | Offer free Wi-Fi to customers | harmful |
+| a27 | Introduce a loyalty stamp card | harmful |
+| a29 | Install a customer feedback tablet | harmful |
 
-**Important:** The category labels (Staffing & Scheduling, Layout & Equipment, etc.) must **not** signal which actions are good or bad. Categories are purely for navigation.
+### Group 5: Revenue
+| ID | Action | Category |
+|---|---|---|
+| a4 | Run a discount promotion | harmful |
+| a21 | Partner with a delivery app service | harmful |
+| a22 | Run a social media marketing campaign | harmful |
+
+**Important:** Group labels must **not** signal which actions are good or bad. Groups are purely for navigation.
 
 ---
 
 ## 9. Action definitions
 
-Each action should define:
+Each action defines:
 - `id`
 - `title`
-- `category`: `"harmful" | "core" | "support"`
-- `group`: `"staffing" | "layout" | "menu" | "process"`
+- `category`: `"harmful" | "core" | "support" | "flex"`
+- `group`: `"space" | "staff" | "menu" | "org" | "revenue"`
 - `description`: 1–2 sentences referencing specific case data
 - `setFlag`
-- `baseEffects`
-- `conditionalEffects`
-- `eventTemplates`
+
+Effects and event text are handled entirely by the rule engine (`applyAction.ts`), not stored on the action config.
 
 ### Action descriptions (case-grounded)
 
@@ -668,8 +704,8 @@ type DeltaStatus = "improved" | "worsened" | "unchanged";
 type MetricDeltaView = {
   key: keyof VisibleMetrics;
   label: string;
-  displayBefore: number;  // normalised 0-100, higher = better
-  displayAfter: number;   // normalised 0-100, higher = better
+  displayAfter: number;  // normalised 0-100, higher = better
+  deltaValue: number;    // signed integer, positive = improved display score
   status: DeltaStatus;
 };
 ```
@@ -696,11 +732,27 @@ Recommended central game state:
 ```ts
 type GameState = {
   turn: number;
+  maxTurns: number;        // default 5
   actionsTaken: string[];
   flags: ActionFlags;
   metrics: VisibleMetrics;
+  breakdown: MetricBreakdown | null;
   history: TurnRecord[];
+  outcome?: OutcomeCategory;
 };
+
+type OutcomeCategory =
+  | "collapse"
+  | "dead-end"
+  | "near-miss"
+  | "strong-improvement"
+  | "full-win";
+
+type MetricBreakdown = Record<keyof VisibleMetrics, {
+  initial: number;
+  contributions: { cardId: string; cardTitle: string; delta: number }[];
+  total: number;
+}>;
 ```
 
 Recommended turn record:
@@ -833,7 +885,8 @@ The end screen may include conceptual reflection.
 ## 18. Summary
 
 Build the game as:
-- 20 actions grouped into 4 navigable categories
+- 33 actions grouped into 5 navigable groups (space, staff, menu, org, revenue)
+- categories: harmful | core | support | flex
 - 5 turns
 - deterministic
 - replayable
