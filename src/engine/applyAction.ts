@@ -30,8 +30,8 @@ export function applyActionEngine(
     return {
       key: k,
       label: metricLabels[k],
-      displayAfter: afterDisp,
-      deltaValue: afterDisp - beforeDisp,
+      displayAfter: Math.round(afterDisp),
+      deltaValue: Math.round(afterDisp) - Math.round(beforeDisp),
       status: getMetricDeltaStatus(k, beforeDisp, afterDisp)
     };
   });

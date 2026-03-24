@@ -20,9 +20,9 @@ export default function ResultPanel({ turnRecord, onClose }: { turnRecord: TurnR
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-0 bg-black/60 md:bg-transparent md:backdrop-blur-none transition-opacity">
-      <div className="bg-bg-surface border border-border-default rounded-2xl w-full max-w-md md:max-w-[440px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        
-        <div className="p-6">
+      <div className="bg-bg-surface border border-border-default rounded-2xl w-full max-w-md md:max-w-[440px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+
+        <div className="p-6 overflow-y-auto flex-1">
           <div className="font-mono text-xs text-text-muted uppercase tracking-wider mb-2">
             TURN {turnRecord.turn} RESULT
           </div>

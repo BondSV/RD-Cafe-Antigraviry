@@ -40,12 +40,13 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
   let deltaIcon = null;
   let deltaText = null;
   if (previousValue !== undefined) {
-    const delta = displayValue - previousValue;
-    if (displayValue > previousValue) {
+    // Use rawValue directly (not delayed displayValue) for accurate delta computation
+    const delta = Math.round(rawValue - previousValue);
+    if (rawValue > previousValue) {
       deltaIcon = <ArrowUp className="w-3 h-3 text-accent-green ml-1" />;
       deltaText = <span className="text-[10px] text-accent-green ml-1 leading-none font-mono">+{delta}</span>;
     }
-    else if (displayValue < previousValue) {
+    else if (rawValue < previousValue) {
       deltaIcon = <ArrowDown className="w-3 h-3 text-accent-red ml-1" />;
       deltaText = <span className="text-[10px] text-accent-red ml-1 leading-none font-mono">{delta}</span>;
     }
@@ -73,7 +74,7 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
             )}
           </div>
           <div className="flex items-center">
-            <span className={`font-mono font-bold text-sm ${colorClass}`}>{displayValue}</span>
+            <span className={`font-mono font-bold text-sm ${colorClass}`}>{Math.round(displayValue)}</span>
             {deltaText}
             {deltaIcon && <div className="ml-0.5 flex justify-end">{deltaIcon}</div>}
           </div>
@@ -81,7 +82,7 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
         <div className="w-full h-1 bg-white/5 rounded-sm overflow-hidden">
           <div
             className={`h-full metric-fill ${bgClass}`}
-            style={{ width: `${displayValue}%` }}
+            style={{ width: `${Math.round(displayValue)}%` }}
           />
         </div>
       </div>
@@ -101,7 +102,7 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
                 <div key={c.cardId} className="flex justify-between items-center">
                   <span className="text-xs text-text-secondary truncate mr-2">{c.cardTitle}</span>
                   <span className={`text-xs font-mono font-semibold ${deltaColor} shrink-0`}>
-                    {sign}{displayDelta}
+                    {sign}{Math.round(displayDelta)}
                   </span>
                 </div>
               );
