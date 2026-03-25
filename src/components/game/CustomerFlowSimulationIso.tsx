@@ -219,9 +219,22 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
   if (!state) return null;
   console.log("3D Diorama render triggered normally.");
 
-  const { tokens, staffTokens, backlog, rates } = state;
+  const { tokens, staffTokens, backlog, rates, completedTicks, lostTicks } = state;
   const showMachine2 = rates.staffConfig.machines >= 2;
   const showTill2 = rates.staffConfig.tills >= 2;
+
+  // Orders and lost per sim-hour (moving average, display after 10 sim-minutes)
+  const SIM_HOUR = 9600;
+  const MIN_DISPLAY_TICKS = 1600; // 10 sim-minutes
+  let ordersPerHourText = '';
+  let lostPerHourText = '';
+  if (state.tick >= MIN_DISPLAY_TICKS) {
+    const windowTicks = Math.min(state.tick, SIM_HOUR);
+    const recentCount = completedTicks.filter((t: number) => t > state.tick - SIM_HOUR).length;
+    ordersPerHourText = ` | ORDERS/HR: ${Math.round(recentCount * SIM_HOUR / windowTicks)}`;
+    const recentLost = lostTicks.filter((t: number) => t > state.tick - SIM_HOUR).length;
+    lostPerHourText = ` | LOST/HR: ${Math.round(recentLost * SIM_HOUR / windowTicks)}`;
+  }
 
   // We skew the background grid coordinates smoothly to map to Image 1's architecture.
   
@@ -351,10 +364,10 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
            <text x="0" y="24" fontSize="14" fontWeight="600" fill="#64748B" letterSpacing="2px" className="uppercase">Peak Hour Simulation</text>
         </g>
         
-        <g transform={`translate(${VB_W - 450}, -10)`}>
-           <rect x="0" y="-20" width="410" height="50" rx="8" fill="#F8FAFC" fillOpacity="0.8" stroke="#E2E8F0" strokeWidth="1" />
-           <text x="205" y="8" textAnchor="middle" fontSize="15" fontWeight="600" fill="#334155" fontFamily="monospace">
-             QUEUE: {tokens.filter(t => t.state === 'queuing').length}  |  WAITING: {tokens.filter(t => t.state === 'waiting').length}  |  BACKLOG: {backlog.length}
+        <g transform={`translate(${VB_W - 650}, -10)`}>
+           <rect x="0" y="-20" width="610" height="50" rx="8" fill="#F8FAFC" fillOpacity="0.8" stroke="#E2E8F0" strokeWidth="1" />
+           <text x="305" y="8" textAnchor="middle" fontSize="13" fontWeight="600" fill="#334155" fontFamily="monospace">
+             QUEUE: {tokens.filter(t => t.state === 'queuing').length}  |  WAITING: {tokens.filter(t => t.state === 'waiting').length} {ordersPerHourText} {lostPerHourText}
            </text>
         </g>
         

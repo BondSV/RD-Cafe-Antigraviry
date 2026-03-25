@@ -39,7 +39,6 @@ export default function MetricPanel() {
       </h3>
       <div className="flex flex-col gap-0.5">
         {renderMetric('waitingTime')}
-        {renderMetric('throughput')}
         {renderMetric('backlog')}
         {renderMetric('congestion')}
         {renderMetric('serviceConsistency')}
