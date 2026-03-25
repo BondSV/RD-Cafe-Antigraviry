@@ -127,40 +127,58 @@ function BlockCounter({ x, y, width, depth, zHeight, topColor, frontColor, showW
        {/* Top Face inner bevel */}
        <rect x="1" y="1" width={Math.max(0, width-2)} height={Math.max(0, depth-2)} rx="2" fill="url(#glossHighlight)" />
        <rect width={Math.max(0, width)} height={Math.max(0, depth)} rx={2} fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" />
+       <rect x={x} y={y} width={width} height={depth} rx={4} fill={topColor} />
        
-       {/* Optional Label floating on front face */}
+       {/* Premium Bevel Line connecting top to front */}
+       <line x1={x} y1={y + depth - 2} x2={x + width} y2={y + depth - 2} stroke="#FFFFFF" strokeWidth={1} opacity={0.5} />
+       
+       {/* Front Face Extrusion */}
+       <rect x={x} y={y + depth - 2} width={width} height={zHeight} fill={frontColor} />
+       
+       {/* Internal Shadow for depth on front face */}
+       <rect x={x} y={y + depth - 2} width={width} height={8} fill="url(#gradientShadow)" />
+
+       {/* Optional Wood Panel inset */}
+       {showWood && (
+         <rect x={x + 4} y={y + depth} width={width - 8} height={zHeight - 4} rx={2} fill="#A16207" />
+       )}
+
+       {/* Elegant integrated typography (replaces PhysicalBadge) */}
        {label && (
-         <g transform={`translate(${width/2}, ${depth + zHeight/2})`}>
-            <rect x="-30" y="-12" width="60" height="24" rx="12" fill="rgba(0,0,0,0.4)" />
-            <text textAnchor="middle" dominantBaseline="middle" fontSize="12" fontWeight="bold" fill="#FFF">{label}</text>
-         </g>
+         <text x={x + width / 2} y={y + depth + zHeight / 2} textAnchor="middle" dominantBaseline="middle" fontSize={11} fontWeight="700" fill={showWood ? "#FEF3C7" : "#0F172A"} opacity={0.8} letterSpacing="1px" className="uppercase">{label}</text>
        )}
     </g>
   );
 }
 
-// 3D Chrome Espresso Machine (Image 1 replica)
+// Sleek Premium Espresso Machine (Silver & Matte Black)
 function EspressoMachine3D({ x, y, width, depth }: any) {
   return (
     <g transform={`translate(${x}, ${y})`}>
-       {/* Main Chrome Body */}
-       <rect x={10} y={15} width={Math.max(0, width-40)} height={Math.max(0, depth-25)} rx={4} fill="#E2E8F0" filter="url(#dropShadowSmooth)" />
-       <rect x={10} y={15} width={Math.max(0, width-40)} height={Math.max(0, depth-25)} rx={4} fill="url(#glossHighlight)" />
-       {/* Front Panel */}
-       <rect x={12} y={17} width={Math.max(0, width-44)} height={12} rx={2} fill="#334155" />
-       <rect x={12} y={30} width={Math.max(0, width-44)} height={Math.max(1, depth-32)} rx={2} fill="#94A3B8" />
+       {/* Machine Base Shadow */}
+       <rect x={2} y={15} width={width-4} height={12} rx={2} fill="rgba(0,0,0,0.3)" filter="url(#dropShadowSmooth)" />
        
-       {/* Group heads directly dropping down */}
-       <rect x={20} y={depth-12} width={12} height={12} rx={2} fill="#1E293B" filter="url(#dropShadowSmooth)" />
-       <circle cx={26} cy={depth} r={3} fill="#E2E8F0" />
+       {/* Shiny Metallic Body */}
+       <rect x={0} y={10} width={width} height={depth-10} rx={4} fill="#94A3B8" />
        
-       <rect x={width-50} y={depth-12} width={12} height={12} rx={2} fill="#1E293B" filter="url(#dropShadowSmooth)" />
-       <circle cx={width-44} cy={depth} r={3} fill="#E2E8F0" />
+       {/* Top Heating Tray (Matte Black) */}
+       <rect x={2} y={10} width={width-4} height={depth-16} fill="#334155" />
        
-       {/* Tall Black Coffee Grinder (Hopper) */}
-       <rect x={width-25} y={5} width={16} height={18} rx={2} fill="#0F172A" filter="url(#dropShadowSmooth)" />
-       <polygon points={`${width-25},23 ${width-9},23 ${width-13},35 ${width-21},35`} fill="#0F172A" />
-       <rect x={width-20} y={35} width={10} height={10} rx={1} fill="#E2E8F0" />
+       {/* Front Chrome Panel */}
+       <rect x={0} y={depth-2} width={width} height={16} rx={2} fill="#CBD5E1" />
+       <rect x={0} y={depth-2} width={width} height={4} fill="rgba(255,255,255,0.4)" />
+       
+       {/* Group Heads */}
+       <rect x={20} y={depth+2} width={12} height={8} rx={2} fill="#0F172A" />
+       <circle cx={26} cy={depth+12} r={3} fill="#64748B" />
+       
+       <rect x={width-32} y={depth+2} width={12} height={8} rx={2} fill="#0F172A" />
+       <circle cx={width-26} cy={depth+12} r={3} fill="#64748B" />
+       
+       {/* Matte Black Grinder Tower */}
+       <rect x={width-60} y={0} width={16} height={20} rx={2} fill="#1E293B" filter="url(#dropShadowSmooth)" />
+       <polygon points={`${width-60},20 ${width-50},20 ${width-54},32 ${width-56},32`} fill="#0F172A" />
+       <rect x={width-58} y={32} width={12} height={8} rx={1} fill="#64748B" />
     </g>
   );
 }
@@ -205,160 +223,119 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
   const showMachine2 = rates.staffConfig.machines >= 2;
   const showTill2 = rates.staffConfig.tills >= 2;
 
-  // Sorting strictly by Y for beautiful 2.5D overlap (painters algorithm)
-  const allEntities = [
-    ...tokens.map(t => ({ ...t, sortY: t.y, typeCat: 'token' })),
-    ...staffTokens.map(s => ({ ...s, sortY: s.y, typeCat: 'staff' })),
-    ...backlog.map((b: any) => ({ ...b, sortY: b.y, typeCat: 'ticket' })),
-  ].sort((a, b) => a.sortY - b.sortY);
-
   // We skew the background grid coordinates smoothly to map to Image 1's architecture.
-  // Image 1 has: Prep (left, green top outline), Till (center, blue top outline), Coffee (right, yellow top outline, wood front).
-  // I will adjust POS bounds softly here for the 3D diorama render without breaking engine logic.
   
   const COUNTER_Z = 35; // How tall the counters are
+  // Pushing path +100 brings the inbound queue (y=270) right behind the counters (y=295), 
+  // and the return path (y=150) comfortably into the playing field.
+  const PATH_Y_OFFSET = 100;
+
+  // Sorting strictly by physical visual baseline Y for flawless 2.5D occlusion
+  const allEntities = [
+    // Customers visual feet: y + 50 + 100 = y + 150
+    ...tokens.map(t => ({ ...t, sortY: t.y + 50 + PATH_Y_OFFSET, typeCat: 'token' })),
+    // Staff visual feet: y + 60
+    ...staffTokens.map(s => ({ ...s, sortY: s.y + 60, typeCat: 'staff' })),
+    // Backlog ticket visual baseline: y + 50 + 100 = y + 150
+    ...backlog.map((b: any) => ({ ...b, sortY: b.y + 50 + PATH_Y_OFFSET, typeCat: 'ticket' })),
+    // Counters conceptual baseline is y + depth (depth is 50, POS.y - 15 + 50 = POS.y + 35)
+    { id: 'prep', sortY: POS.foodPrep.y + 35, typeCat: 'counter' },
+    { id: 'till1', sortY: POS.tillStation.y + 35, typeCat: 'counter' },
+    { id: 'coffee1', sortY: POS.machine1.y + 35, typeCat: 'counter' },
+    ...(showTill2 ? [{ id: 'till2', sortY: POS.tillStation2.y + 35, typeCat: 'counter' }] : []),
+    ...(showMachine2 ? [{ id: 'coffee2', sortY: POS.machine2.y + 35, typeCat: 'counter' }] : []),
+  ].sort((a, b) => a.sortY - b.sortY);
 
   return (
-    <div className="w-full bg-[#1A1A1A] p-2 rounded-3xl mt-6 relative" style={{ borderRadius: '24px' }}>
+    <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
       <svg
-        viewBox={`0 0 ${VB_W} ${VB_H}`}
-        className="w-full h-full rounded-2xl"
-        style={{ height: 'auto', minHeight: 450, maxHeight: 650, backgroundColor: '#D4D4D4' }} // Smooth grey background matching Image 1
+        viewBox={`0 -60 ${VB_W} ${VB_H + 110}`}
+        className="w-full h-auto block"
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
-          {/* Studio Vignette Floor */}
-          <radialGradient id="floorVignette" cx="50%" cy="50%" r="70%" fx="50%" fy="50%">
-            <stop offset="0%" stopColor="#E5E5E5" stopOpacity="1" />
-            <stop offset="100%" stopColor="#A3A3A3" stopOpacity="1" />
-          </radialGradient>
+          {/* Simple crisp architectural solid floor */}
+          <linearGradient id="floorVignette" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#F8FAFC" />
+            <stop offset="100%" stopColor="#E2E8F0" />
+          </linearGradient>
 
-          {/* Lit 3D effect optimized for upright characters */}
-          <filter id="clayLighting" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-            <feSpecularLighting in="blur" surfaceScale="2" specularConstant="0.8" specularExponent="30" lightingColor="#ffffff" result="specOut">
-              <fePointLight x="-50" y="-100" z="200" />
-            </feSpecularLighting>
-            <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
-            <feBlend in="specOut" in2="SourceGraphic" mode="screen" result="lit" />
-          </filter>
-
+          {/* Core shadows */}
           <filter id="heavyShadow" x="-20%" y="-20%" width="150%" height="150%">
-            <feDropShadow dx="-5" dy="10" stdDeviation="6" floodColor="#000" floodOpacity="0.4" />
+            <feDropShadow dx="-2" dy="8" stdDeviation="5" floodColor="#000" floodOpacity="0.2" />
           </filter>
 
           <filter id="dropShadowSmooth" x="-20%" y="-20%" width="150%" height="150%">
-            <feDropShadow dx="-2" dy="5" stdDeviation="3" floodColor="#000" floodOpacity="0.3" />
+            <feDropShadow dx="-1" dy="3" stdDeviation="2" floodColor="#000" floodOpacity="0.15" />
           </filter>
-
-          <linearGradient id="glossHighlight" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
-            <stop offset="20%" stopColor="rgba(255,255,255,0)" />
-            <stop offset="100%" stopColor="rgba(0,0,0,0.1)" />
-          </linearGradient>
-          
-          <clipPath id="frontClip"><rect width="800" height="200" rx="4" /></clipPath>
         </defs>
 
-        {/* Gray Studio Backdrop (Replaces concrete) */}
-        <rect x="0" y="0" width="100%" height="100%" fill="url(#floorVignette)" />
+        {/* Crisp Studio Backdrop */}
+        <rect x="-20%" y="-20%" width="140%" height="140%" fill="url(#floorVignette)" />
 
-        {/* Pathing - Double lines replicating Image 1 exactly */}
-        {/* Shadow under path */}
-        <path
-          d={`M${POS.enter.x},${POS.enter.y} L${POS.waiting.x},${POS.waiting.y} L${POS.waiting.x},${POS.exit.y} L${POS.exit.x},${POS.exit.y}`}
-          stroke="rgba(0,0,0,0.1)" strokeWidth={12} strokeLinecap="round" strokeLinejoin="round" fill="none" transform="translate(0, 3)"
-        />
-        {/* Solid white thick path */}
-        <path
-          d={`M${POS.enter.x},${POS.enter.y} L${POS.waiting.x},${POS.waiting.y} L${POS.waiting.x},${POS.exit.y} L${POS.exit.x},${POS.exit.y}`}
-          stroke="#F8FAFC" strokeWidth={12} strokeLinecap="round" strokeLinejoin="round" fill="none"
-        />
-        {/* Thin dashed line running alongside it */}
-        <path
-          d={`M${POS.enter.x},${POS.enter.y - 12} L${POS.waiting.x + 12},${POS.waiting.y - 12} L${POS.waiting.x + 12},${POS.exit.y + 12} L${POS.exit.x},${POS.exit.y + 12}`}
-          stroke="#475569" strokeWidth={2} strokeDasharray="8 8" fill="none" opacity={0.6}
-        />
-
-        {/* 3D COUNTERS (Drawn BEFORE entities because avatars stand IN FRONT or ON TOP of flooring, waiting behind) */}
-        
-        {/* Food Prep (Green Outline Top, Wood Front) */}
-        <g id="prep">
-           <BlockCounter 
-             x={POS.foodPrep.x - 70} y={POS.foodPrep.y - 15} width={150} depth={45} zHeight={COUNTER_Z}
-             topColor="#F8FAFC" frontColor="#D4D4D4" showWood={true}
-           />
-           {/* Top Face Outline (Green base) */}
-           <rect x={POS.foodPrep.x - 70} y={POS.foodPrep.y - 15} width={150} height={45} rx="2" fill="none" stroke="#22C55E" strokeWidth="3" />
-           {/* Veggies */}
-           <circle cx={POS.foodPrep.x - 40} cy={POS.foodPrep.y + 5} r={8} fill="#22C55E" filter="url(#dropShadowSmooth)" />
-           <circle cx={POS.foodPrep.x - 20} cy={POS.foodPrep.y + 10} r={6} fill="#EF4444" filter="url(#dropShadowSmooth)" />
-           <rect x={POS.foodPrep.x} y={POS.foodPrep.y} width={30} height={15} rx={2} fill="#FDE68A" filter="url(#dropShadowSmooth)" />
-           
-           <PhysicalBadge x={POS.foodPrep.x + 120} y={POS.foodPrep.y + 5} width={80} height={30} text="Food Prep" />
-        </g>
-        
-        {/* Till (Blue Outline Top, Solid Front) */}
-        <g id="till1">
-           <BlockCounter 
-             x={POS.tillStation.x - 50} y={POS.tillStation.y - 15} width={100} depth={45} zHeight={COUNTER_Z}
-             topColor="#F8FAFC" frontColor="#BFDBFE" showWood={false}
-           />
-           <rect x={POS.tillStation.x - 50} y={POS.tillStation.y - 15} width={100} height={45} rx="2" fill="none" stroke="#3B82F6" strokeWidth="3" />
-           {/* Monitor */}
-           <rect x={POS.tillStation.x-10} y={POS.tillStation.y-10} width={20} height={15} rx={1} fill="#1E293B" filter="url(#dropShadowSmooth)" />
-           
-           <PhysicalBadge x={POS.tillStation.x} y={POS.tillStation.y + 5} width={60} height={30} text="Till" />
-        </g>
-        
-        {/* Coffee (Yellow Top, Wood Front) */}
-        <g id="coffee1">
-           <BlockCounter 
-             x={POS.machine1.x - 60} y={POS.machine1.y - 15} width={140} depth={45} zHeight={COUNTER_Z}
-             topColor="#FEF08A" frontColor="#D4D4D4" showWood={true}
-           />
-           <rect x={POS.machine1.x - 60} y={POS.machine1.y - 15} width={140} height={45} rx="2" fill="none" stroke="#EAB308" strokeWidth="3" />
-           
-           <EspressoMachine3D x={POS.machine1.x - 40} y={POS.machine1.y - 25} width={90} depth={40} />
-           
-           <text x={POS.machine1.x + 10} y={POS.machine1.y + 40} textAnchor="middle" fontWeight="bold" fontSize="14" fill="#78350F">Coffee 1</text>
+        {/* Pathing - Shifted so queue lines up behind counters */}
+        <g transform={`translate(0, ${PATH_Y_OFFSET})`}>
+          <path
+            d={`M${POS.enter.x},${POS.enter.y} L${POS.waiting.x},${POS.waiting.y} L${POS.waiting.x},${POS.exit.y} L${POS.exit.x},${POS.exit.y}`}
+            stroke="rgba(0,0,0,0.1)" strokeWidth={12} strokeLinecap="round" strokeLinejoin="round" fill="none" transform="translate(0, 3)"
+          />
+          <path
+            d={`M${POS.enter.x},${POS.enter.y} L${POS.waiting.x},${POS.waiting.y} L${POS.waiting.x},${POS.exit.y} L${POS.exit.x},${POS.exit.y}`}
+            stroke="#F8FAFC" strokeWidth={12} strokeLinecap="round" strokeLinejoin="round" fill="none"
+          />
+          <path
+            d={`M${POS.enter.x},${POS.enter.y - 12} L${POS.waiting.x + 12},${POS.waiting.y - 12} L${POS.waiting.x + 12},${POS.exit.y + 12} L${POS.exit.x},${POS.exit.y + 12}`}
+            stroke="#475569" strokeWidth={2} strokeDasharray="8 8" fill="none" opacity={0.6}
+          />
+          
+          <PhysicalBadge x={POS.enter.x} y={POS.enter.y + 35} width={80} height={30} text="ENTER" />
+          <PhysicalBadge x={POS.exit.x} y={POS.exit.y - 35} width={80} height={30} text="EXIT" />
         </g>
 
-        {showTill2 && (
-          <g id="till2">
-             <BlockCounter 
-               x={POS.tillStation2.x - 50} y={POS.tillStation2.y - 15} width={100} depth={45} zHeight={COUNTER_Z}
-               topColor="#F8FAFC" frontColor="#BFDBFE" showWood={false}
-             />
-             <rect x={POS.tillStation2.x - 50} y={POS.tillStation2.y - 15} width={100} height={45} rx="2" fill="none" stroke="#3B82F6" strokeWidth="3" />
-             <rect x={POS.tillStation2.x-10} y={POS.tillStation2.y-10} width={20} height={15} rx={1} fill="#1E293B" filter="url(#dropShadowSmooth)" />
-             <PhysicalBadge x={POS.tillStation2.x} y={POS.tillStation2.y + 5} width={60} height={30} text="Till 2" />
-          </g>
-        )}
-        
-        {showMachine2 && (
-          <g id="coffee2">
-             <BlockCounter 
-               x={POS.machine2.x - 60} y={POS.machine2.y - 15} width={140} depth={45} zHeight={COUNTER_Z}
-               topColor="#FEF08A" frontColor="#D4D4D4" showWood={true}
-             />
-             <rect x={POS.machine2.x - 60} y={POS.machine2.y - 15} width={140} height={45} rx="2" fill="none" stroke="#EAB308" strokeWidth="3" />
-             <EspressoMachine3D x={POS.machine2.x - 40} y={POS.machine2.y - 25} width={90} depth={40} />
-             <text x={POS.machine2.x + 10} y={POS.machine2.y + 40} textAnchor="middle" fontWeight="bold" fontSize="14" fill="#78350F">Coffee 2</text>
-          </g>
-        )}
-
-        {/* ==================== Z-SORTED ENTITIES ==================== */}
+        {/* ==================== UNITY Z-SORTED ENTITIES & COUNTERS ==================== */}
         {allEntities.map((ent: any) => {
-          if (ent.typeCat === 'staff') {
+          if (ent.typeCat === 'counter') {
+             if (ent.id === 'prep') return (
+                <g key={ent.id} id="prep">
+                   <BlockCounter x={POS.foodPrep.x - 70} y={POS.foodPrep.y - 15} width={150} depth={50} zHeight={COUNTER_Z} topColor="#F8FAFC" frontColor="#D4D4D4" showWood={true} label="Food Prep" />
+                   <circle cx={POS.foodPrep.x - 40} cy={POS.foodPrep.y + 5} r={8} fill="#22C55E" filter="url(#dropShadowSmooth)" />
+                   <circle cx={POS.foodPrep.x - 20} cy={POS.foodPrep.y + 10} r={6} fill="#EF4444" filter="url(#dropShadowSmooth)" />
+                   <rect x={POS.foodPrep.x} y={POS.foodPrep.y} width={30} height={15} rx={2} fill="#FDE68A" filter="url(#dropShadowSmooth)" />
+                </g>
+             );
+             if (ent.id === 'till1') return (
+                <g key={ent.id} id="till1">
+                   <BlockCounter x={POS.tillStation.x - 50} y={POS.tillStation.y - 15} width={100} depth={50} zHeight={COUNTER_Z} topColor="#F8FAFC" frontColor="#DBEAFE" label="Checkout" />
+                   <rect x={POS.tillStation.x-10} y={POS.tillStation.y-10} width={20} height={15} rx={2} fill="#1E293B" filter="url(#dropShadowSmooth)" />
+                </g>
+             );
+             if (ent.id === 'till2') return (
+                <g key={ent.id} id="till2">
+                   <BlockCounter x={POS.tillStation2.x - 50} y={POS.tillStation2.y - 15} width={100} depth={50} zHeight={COUNTER_Z} topColor="#F8FAFC" frontColor="#DBEAFE" label="Checkout II" />
+                   <rect x={POS.tillStation2.x-10} y={POS.tillStation2.y-10} width={20} height={15} rx={2} fill="#1E293B" filter="url(#dropShadowSmooth)" />
+                </g>
+             );
+             if (ent.id === 'coffee1') return (
+                <g key={ent.id} id="coffee1">
+                   <BlockCounter x={POS.machine1.x - 60} y={POS.machine1.y - 15} width={140} depth={50} zHeight={COUNTER_Z} topColor="#F8FAFC" frontColor="#D4D4D4" showWood={true} label="Espresso I" />
+                   <EspressoMachine3D x={POS.machine1.x - 40} y={POS.machine1.y - 25} width={80} depth={35} />
+                </g>
+             );
+             if (ent.id === 'coffee2') return (
+                <g key={ent.id} id="coffee2">
+                   <BlockCounter x={POS.machine2.x - 60} y={POS.machine2.y - 15} width={140} depth={50} zHeight={COUNTER_Z} topColor="#F8FAFC" frontColor="#D4D4D4" showWood={true} label="Espresso II" />
+                   <EspressoMachine3D x={POS.machine2.x - 40} y={POS.machine2.y - 25} width={80} depth={35} />
+                </g>
+             );
+          } else if (ent.typeCat === 'staff') {
              // Offset staff Y downwards so they stand correctly behind / inside the counter zones
              return <StandingAvatar key={`s-${ent.id}`} token={{...ent, y: ent.y + 60}} isStaff={true} />;
           } else if (ent.typeCat === 'token') {
-             // Offset tokens so their feet align with the path
-             return <StandingAvatar key={`t-${ent.id}`} token={{...ent, y: ent.y + 50}} isStaff={false} />;
+             // Offset tokens so their feet align with the shifted path
+             return <StandingAvatar key={`t-${ent.id}`} token={{...ent, y: ent.y + 50 + PATH_Y_OFFSET}} isStaff={false} />;
           } else if (ent.typeCat === 'ticket') {
              return (
-              <g key={`b-${ent.id}`} opacity={ent.opacity} transform={`translate(${ent.x}, ${ent.y + 50})`}>
+              <g key={`b-${ent.id}`} opacity={ent.opacity} transform={`translate(${ent.x}, ${ent.y + 50 + PATH_Y_OFFSET})`}>
                 <rect x={-8} y={-10} width={16} height={20} fill="#FFF" filter="url(#dropShadowSmooth)" />
                 <line x1={-4} y1={-6} x2={4} y2={-6} stroke="#CBD5E1" strokeWidth={1} />
                 <line x1={-4} y1={-2} x2={4} y2={-2} stroke="#CBD5E1" strokeWidth={1} />
@@ -368,30 +345,16 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
           return null;
         })}
 
-        {/* UI Stage Badges (3D Physical Pills sitting ON TOP of the avatars bounding path) */}
-        {/* We push them down visually so avatars can walk *behind* them securely if needed */}
-        <PhysicalBadge x={POS.enter.x} y={POS.enter.y + 65} width={70} height={30} text="Enter" />
-        <PhysicalBadge x={POS.decision.x} y={POS.decision.y + 65} width={80} height={30} text="Decision" />
-        <PhysicalBadge x={POS.queue.x} y={POS.queue.y + 65} width={70} height={30} text="Queue" />
-        <PhysicalBadge x={POS.tillStation.x + 25} y={POS.tillStation.y + 65} width={60} height={30} text="Till" />
-        <PhysicalBadge x={POS.waiting.x} y={POS.waiting.y + 65} width={80} height={30} text="Pickup" />
-        <PhysicalBadge x={POS.exit.x} y={POS.exit.y + 65} width={70} height={30} text="Exit" />
-
-
-        {/* Image 1 EXACT HUD REPLICA */}
+        {/* Sleek Minimalist Top Header (replaces clunky pill/badges) */}
+        <g transform="translate(40, -10)">
+           <text x="0" y="0" fontSize="24" fontWeight="800" fill="#0F172A" letterSpacing="1px" className="uppercase">Customer Flow</text>
+           <text x="0" y="24" fontSize="14" fontWeight="600" fill="#64748B" letterSpacing="2px" className="uppercase">Peak Hour Simulation</text>
+        </g>
         
-        {/* Top-Left Floating Title */}
-        <text x="3%" y="7%" dominantBaseline="middle" fontSize="22" fontWeight="800" fill="none" stroke="#E2E8F0" strokeWidth="1" letterSpacing="2px" filter="drop-shadow(2px 2px 2px rgba(0,0,0,0.5))">CUSTOMER FLOW — PEAK HOUR</text>
-        <text x="3%" y="7%" dominantBaseline="middle" fontSize="22" fontWeight="800" fill="#FFF8F1" letterSpacing="2px" opacity={0.9}>CUSTOMER FLOW — PEAK HOUR</text>
-        
-        {/* Top-Right Pill Panel */}
-        <g transform={`translate(${VB_W - 550}, 15)`}>
-           {/* Floating glassy pill */}
-           <rect width="530" height="40" rx="20" fill="#E2E8F0" opacity="0.9" filter="url(#heavyShadow)" />
-           {/* Inner border */}
-           <rect x="2" y="2" width="526" height="36" rx="18" fill="none" stroke="#FFF" strokeWidth="2" />
-           <text x="265" y="20" textAnchor="middle" dominantBaseline="middle" fontSize="18" fontWeight="600" fill="#0F172A" fontFamily="monospace">
-             Queue: {tokens.filter(t => t.state === 'queuing').length}  |  Waiting: {tokens.filter(t => t.state === 'waiting').length}  |  Backlog: {backlog.length}
+        <g transform={`translate(${VB_W - 450}, -10)`}>
+           <rect x="0" y="-20" width="410" height="50" rx="8" fill="#F8FAFC" fillOpacity="0.8" stroke="#E2E8F0" strokeWidth="1" />
+           <text x="205" y="8" textAnchor="middle" fontSize="15" fontWeight="600" fill="#334155" fontFamily="monospace">
+             QUEUE: {tokens.filter(t => t.state === 'queuing').length}  |  WAITING: {tokens.filter(t => t.state === 'waiting').length}  |  BACKLOG: {backlog.length}
            </text>
         </g>
         

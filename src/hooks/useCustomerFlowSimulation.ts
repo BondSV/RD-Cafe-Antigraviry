@@ -113,7 +113,7 @@ export const POS = {
   till:     { x: 460, y: 170 },
   till2:    { x: 530, y: 170 },       // second till customer position
   waiting:  { x: 616, y: 170 },
-  exit:     { x: 70,  y: 50 },
+  exit:     { x: 70,  y: 0 },
   foodPrep:    { x: 340, y: 310 },
   tillStation: { x: 460, y: 310 },
   tillStation2:{ x: 530, y: 310 },    // second till station

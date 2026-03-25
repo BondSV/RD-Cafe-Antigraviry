@@ -14,3 +14,224 @@
 3:56:31 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
 3:56:46 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
 4:59:57 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+12:23:57 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+12:23:57 PM [vite] Internal server error: /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/src/components/game/CustomerFlowSimulationIso.tsx: Unexpected token (240:2)
+
+  238 |
+  239 |   return (
+> 240 |   return (
+      |   ^
+  241 |     <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
+  242 |       <svg
+  243 |         viewBox={`0 0 ${VB_W} ${VB_H}`}
+  Plugin: vite:react-babel
+  File: /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/src/components/game/CustomerFlowSimulationIso.tsx:240:2
+  238|  
+  239|    return (
+  240|    return (
+     |    ^
+  241|      <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
+  242|        <svg
+      at constructor (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:365:19)
+      at TypeScriptParserMixin.raise (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:6599:19)
+      at TypeScriptParserMixin.unexpected (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:6619:16)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11442:22)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9786:20)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10784:23)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12421:16)
+      at TypeScriptParserMixin.parseExpression (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10780:17)
+      at TypeScriptParserMixin.parseReturnStatement (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13142:28)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12798:21)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12100:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12086:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9172:18)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13445:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12403:14)
+      at TypeScriptParserMixin.parseFunction (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13444:10)
+      at TypeScriptParserMixin.parseFunctionStatement (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13125:17)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12791:21)
+12:29:36 PM [vite] Pre-transform error: /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/src/components/game/CustomerFlowSimulationIso.tsx: Unexpected token (240:2)
+
+  238 |
+  239 |   return (
+> 240 |   return (
+      |   ^
+  241 |     <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
+  242 |       <svg
+  243 |         viewBox={`0 0 ${VB_W} ${VB_H}`}
+12:29:36 PM [vite] Internal server error: /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/src/components/game/CustomerFlowSimulationIso.tsx: Unexpected token (240:2)
+
+  238 |
+  239 |   return (
+> 240 |   return (
+      |   ^
+  241 |     <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
+  242 |       <svg
+  243 |         viewBox={`0 0 ${VB_W} ${VB_H}`}
+  Plugin: vite:react-babel
+  File: /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/src/components/game/CustomerFlowSimulationIso.tsx:240:2
+  238|  
+  239|    return (
+  240|    return (
+     |    ^
+  241|      <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
+  242|        <svg
+      at constructor (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:365:19)
+      at TypeScriptParserMixin.raise (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:6599:19)
+      at TypeScriptParserMixin.unexpected (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:6619:16)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11442:22)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9786:20)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10784:23)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12421:16)
+      at TypeScriptParserMixin.parseExpression (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10780:17)
+      at TypeScriptParserMixin.parseReturnStatement (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13142:28)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12798:21)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12100:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12086:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9172:18)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13445:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12403:14)
+      at TypeScriptParserMixin.parseFunction (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13444:10)
+      at TypeScriptParserMixin.parseFunctionStatement (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13125:17)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12791:21)
+12:29:37 PM [vite] Internal server error: /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/src/components/game/CustomerFlowSimulationIso.tsx: Unexpected token (240:2)
+
+  238 |
+  239 |   return (
+> 240 |   return (
+      |   ^
+  241 |     <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
+  242 |       <svg
+  243 |         viewBox={`0 0 ${VB_W} ${VB_H}`}
+  Plugin: vite:react-babel
+  File: /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/src/components/game/CustomerFlowSimulationIso.tsx:240:2
+  238|  
+  239|    return (
+  240|    return (
+     |    ^
+  241|      <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
+  242|        <svg
+      at constructor (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:365:19)
+      at TypeScriptParserMixin.raise (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:6599:19)
+      at TypeScriptParserMixin.unexpected (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:6619:16)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11442:22)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9786:20)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10784:23)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12421:16)
+      at TypeScriptParserMixin.parseExpression (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:10780:17)
+      at TypeScriptParserMixin.parseReturnStatement (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13142:28)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12798:21)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12100:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12086:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:9172:18)
+      at /Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13445:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12403:14)
+      at TypeScriptParserMixin.parseFunction (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13444:10)
+      at TypeScriptParserMixin.parseFunctionStatement (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:13125:17)
+      at TypeScriptParserMixin.parseStatementContent (/Users/SBondarenko/Downloads/Vibe Coding Projects/Systems Thinking Game/RD Version/RD Cafe Antigraviry/node_modules/@babel/parser/lib/index.js:12791:21)
+12:30:17 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+12:34:50 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+12:35:24 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+12:59:45 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+1:00:05 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+1:07:11 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+1:07:46 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+1:18:31 PM [vite] hmr update /src/components/layout/GameLayout.tsx, /src/index.css
+1:18:56 PM [vite] hmr update /src/index.css, /src/components/game/CustomerFlowSimulation.tsx, /src/components/game/CustomerFlowSimulationTopDown.tsx, /src/components/game/CustomerFlowSimulationIso.tsx
+1:18:58 PM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
