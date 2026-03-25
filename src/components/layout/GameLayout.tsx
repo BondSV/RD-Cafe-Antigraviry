@@ -6,6 +6,8 @@ import MetricPanel from '../game/MetricPanel';
 import ActionGrid from '../game/ActionGrid';
 import ResultPanel from '../game/ResultPanel';
 import CustomerFlowSimulation from '../game/CustomerFlowSimulation';
+import CustomerFlowSimulationIso from '../game/CustomerFlowSimulationIso';
+import CustomerFlowSimulationTopDown from '../game/CustomerFlowSimulationTopDown';
 import { useGameStore } from '../../store/useGameStore';
 
 export default function GameLayout() {
@@ -60,8 +62,10 @@ export default function GameLayout() {
 
         <div className={`flex-1 flex flex-col min-w-[300px] overflow-y-auto pt-4 lg:pt-0 pr-2 px-4 lg:px-0 ${activeTab === 'map' ? 'block' : 'hidden lg:flex'}`}>
           <SystemMap />
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
             <CustomerFlowSimulation metrics={metrics} flags={flags} triggerKey={simTrigger} />
+            <CustomerFlowSimulationIso metrics={metrics} flags={flags} triggerKey={simTrigger} />
+            <CustomerFlowSimulationTopDown metrics={metrics} flags={flags} triggerKey={simTrigger} />
           </div>
           <div className="mt-4">
             <MetricPanel />

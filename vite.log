@@ -1,0 +1,16 @@
+
+> fix-rainyday-cafe@0.0.1 dev
+> vite --host
+
+
+  VITE v5.4.21  ready in 308 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.1.111:5173/
+  ➜  press h + enter to show help
+2:53:15 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+3:22:39 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+3:37:47 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+3:56:31 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+3:56:46 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
+4:59:57 AM [vite] hmr update /src/components/game/CustomerFlowSimulationIso.tsx, /src/index.css
