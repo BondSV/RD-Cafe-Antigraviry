@@ -33,8 +33,30 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
   
   // Hash string IDs (staff) or use numeric IDs (customers) to create a consistent deterministic seed
   const numId = typeof token.id === 'string' ? token.id.split('').reduce((sum: number, char: string) => sum + char.charCodeAt(0), 0) : token.id;
-  const seed = numId % (isStaff ? 4 : 78);
-  const spritePath = isStaff ? `/assets/sprites/staff-${seed}.png` : `/assets/sprites/customer-${seed}.png`;
+  // Deterministic avatar selection based on ID
+  let spritePath = '';
+  if (isStaff) {
+     const role = String(token.id).toLowerCase();
+     let staffIndex = 1;
+     // The provided staff-avatars.png order left to right:
+     // 1: Assistant Barista 1
+     // 2: Assistant Barista 2 (Part Timer)
+     // 3: Head Barista
+     // 4: Cafe Manager
+     if (role.includes('ab1')) staffIndex = 1;
+     else if (role.includes('ab2') || role.includes('pt')) staffIndex = 2;
+     else if (role.includes('hb')) staffIndex = 3;
+     else if (role.includes('mgr')) staffIndex = 4;
+     else staffIndex = (numId % 4) + 1; // Fallback pseudorandom
+     
+     spritePath = `/assets/sprites/staff-${staffIndex}.png`;
+  } else if (token.type === 'courier') {
+    const seed = numId % 12; // 12 GoGusto courier variations
+    spritePath = `/assets/sprites/courier-${seed}.png`;
+  } else {
+    const seed = numId % 78; // Customers use a larger pool
+    spritePath = `/assets/sprites/customer-${seed}.png`;
+  }
   
   const isBusy = isStaff && (token.animState === 'serving' || token.animState === 'making');
 
@@ -42,12 +64,14 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
   const prevX = React.useRef(token.x);
   const isFlipped = React.useRef(false);
 
-  if (token.x < prevX.current - 0.1) {
-    // Moving Left
-    isFlipped.current = isStaff ? false : true; // Staff faces Top-Left naturally. Customers face Bottom-Right naturally.
-  } else if (token.x > prevX.current + 0.1) {
-    // Moving Right
-    isFlipped.current = isStaff ? true : false;
+  if (token.state !== 'deciding') {
+    if (token.x < prevX.current - 0.1) {
+      // Moving Left
+      isFlipped.current = isStaff ? false : true; // Staff faces Top-Left naturally. Customers face Bottom-Right naturally.
+    } else if (token.x > prevX.current + 0.1) {
+      // Moving Right
+      isFlipped.current = isStaff ? true : false;
+    }
   }
   prevX.current = token.x;
 
@@ -59,21 +83,68 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
       
       {/* Sprite Image wrapped in foreignObject for reliable rendering */}
       <foreignObject x={-20} y={-85} width={40} height={90}>
-        <img 
-           src={spritePath} 
-           alt="sprite"
+        <div 
+           className="w-full h-full relative" 
            style={{
-             width: '100%',
-             height: '100%',
-             objectFit: 'contain',
-             objectPosition: 'bottom center',
-             // Mirror based on active frame velocity
+             transformOrigin: 'bottom center',
+             // Mirror based on active frame velocity only
              transform: isFlipped.current ? 'scaleX(-1)' : 'none'
            }}
-        />
+        >
+          <img 
+             src={spritePath} 
+             alt="sprite"
+             className="w-full h-full object-contain filter drop-shadow-md"
+             style={{ pointerEvents: 'none' }}
+          />
+        </div>
       </foreignObject>
-      
-      {/* Badges/Moods hovering over head */}
+
+      {isStaff && (
+        <text x={0} y={-70} textAnchor="middle" fontSize={10} fill="#FFF" fontWeight="bold" filter="drop-shadow(0px 1px 2px rgba(0,0,0,0.8))">
+          {token.label}
+        </text>
+      )}
+
+      {/* Thought Bubble for Decision Scanning and Bouncing */}
+      {(token.state === 'deciding' || token.state === 'bouncing') && token.decidingProgress !== undefined && (
+         <g transform={`translate(25, -95)`}>
+            {/* Bubble backing */}
+            <ellipse cx={0} cy={0} rx={18} ry={13} fill="#FFF" filter="url(#dropShadowSmooth)" stroke="#E2E8F0" strokeWidth={1} />
+            <circle cx={-10} cy={16} r={3} fill="#FFF" />
+            <circle cx={-16} cy={22} r={1.5} fill="#FFF" />
+            
+            {/* Animated internals */}
+            {token.state === 'bouncing' ? (
+              // Big Red Cross for rejected queue at the door
+              <g transform="translate(0, 1)">
+                <path d="M-4,-4 L4,4 M4,-4 L-4,4" stroke="#EF4444" strokeWidth={3} strokeLinecap="round" />
+              </g>
+            ) : token.willLeave && token.decidingProgress! >= 0.65 ? (
+              // 3 Overlapping figures representing a crowd check (Only shows if they plan to bounce)
+              <g transform="translate(-5, -6) scale(0.9)">
+                <path d="M-6,9 A4,4 0 0,1 2,9 Z M-2,3 A2.5,2.5 0 1,1 -2,-2 A2.5,2.5 0 1,1 -2,3 Z" fill="#94A3B8" />
+                <path d="M-1,10 A4.5,4.5 0 0,1 9,10 Z M4,4 A3,3 0 1,1 4,-2 A3,3 0 1,1 4,4 Z" fill="#64748B" />
+                <path d="M5,11 A5,5 0 0,1 15,11 Z M10,5 A3.5,3.5 0 1,1 10,-2 A3.5,3.5 0 1,1 10,5 Z" fill="#475569" />
+              </g>
+            ) : (
+              // Scanning Eyes (Default for deciding, perfectly scaled so it fills the wait time)
+              <g transform="translate(0, -1)">
+                {/* Whites of the eyes with distinct dark outlines to pop off the white bubble */}
+                <circle cx={-5} cy={0} r={4.5} fill="#F8FAFC" stroke="#CBD5E1" strokeWidth={1} />
+                <circle cx={5} cy={0} r={4.5} fill="#F8FAFC" stroke="#CBD5E1" strokeWidth={1} />
+                
+                {/* Darting pupils */}
+                <g transform={`translate(${Math.sin((token.decidingProgress || 0) * (Math.PI * 4 / (token.willLeave ? 0.65 : 1))) * 2}, 0)`}>
+                  <circle cx={-5} cy={0} r={2} fill="#0F172A" />
+                  <circle cx={5} cy={0} r={2} fill="#0F172A" />
+                </g>
+              </g>
+            )}
+         </g>
+      )}
+
+      {/* Legacy Badges/Moods hovering over head */}
       {!isStaff && token.face && (
         <circle cx={-12} cy={-60} r={5} fill={FACE_COLORS[token.face as Face]} />
       )}
@@ -84,13 +155,7 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
       {!isStaff && token.type === 'courier' && (
         <rect x={-10} y={-68} width={20} height={10} rx={2} fill="#8B5CF6" />
       )}
-
-      {isStaff && (
-        <text x={0} y={-70} textAnchor="middle" fontSize={10} fill="#FFF" fontWeight="bold" filter="drop-shadow(0px 1px 2px rgba(0,0,0,0.8))">
-          {token.label}
-        </text>
-      )}
-
+      
       {isBusy && (
         <g transform="translate(-15, 12)">
           <rect x={0} y={0} width={30} height={4} rx={2} fill="#E2E8F0" stroke="#94A3B8" strokeWidth={1} />

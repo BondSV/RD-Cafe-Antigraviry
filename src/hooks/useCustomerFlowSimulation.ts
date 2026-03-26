@@ -36,6 +36,8 @@ export interface Token {
   arrivedAtStage: boolean;
   prepDoneAt: number;       // tick when this token's prep finishes
   waitTicks: number;        // accumulated ticks spent in queuing + waiting states
+  decidingProgress?: number;// tracks 0.0 to 1.0 of the decision timer
+  willLeave?: boolean;      // explicitly pre-calculated decision to bounce
 }
 
 export type StaffAnimState = 'idle' | 'serving' | 'traveling-to-machine' | 'making' | 'traveling-to-till' | 'wandering';
@@ -709,6 +711,10 @@ export function tickSimulation(state: SimState): SimState {
             } else {
               t.state = 'deciding';
               t.stageStart = tick;
+              // Pre-calculate the bounce decision so the UI thought-bubble can foreshadow it accurately
+              const combinedQ = tokens.filter((tok: any) => tok.state === 'queuing' || tok.state === 'waiting').length;
+              const effBounce = computeLinearBounce(combinedQ);
+              t.willLeave = Math.random() < effBounce;
             }
           }
         }
@@ -717,13 +723,11 @@ export function tickSimulation(state: SimState): SimState {
 
       case 'deciding': {
         const decidingTime = tick - t.stageStart;
-        // Micro-animation: look left and right
-        const lookOffset = Math.sin(decidingTime * 0.15) * 6;
-        t.x = POS.decision.x + lookOffset;
+        t.decidingProgress = decidingTime / DECIDING_TICKS;
+        t.x = POS.decision.x;
 
         if (decidingTime >= DECIDING_TICKS) {
-          const effectiveBounce = computeLinearBounce(combinedQueueCount);
-          if (Math.random() < effectiveBounce) {
+          if (t.willLeave) {
             t.face = 'sad';
             t.state = 'bouncing';
             t.stageStart = tick;
