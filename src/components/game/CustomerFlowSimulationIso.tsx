@@ -249,8 +249,8 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
     ...tokens.map(t => ({ ...t, sortY: t.y + 50 + PATH_Y_OFFSET, typeCat: 'token' })),
     // Staff visual feet: y + 60
     ...staffTokens.map(s => ({ ...s, sortY: s.y + 60, typeCat: 'staff' })),
-    // Backlog ticket visual baseline: y + 50 + 100 = y + 150
-    ...backlog.map((b: any) => ({ ...b, sortY: b.y + 50 + PATH_Y_OFFSET, typeCat: 'ticket' })),
+    // Backlog ticket visual baseline: y + 50
+    ...backlog.map((b: any) => ({ ...b, sortY: b.y + 50, typeCat: 'ticket' })),
     // Counters conceptual baseline is y + depth (depth is 50, POS.y - 15 + 50 = POS.y + 35)
     { id: 'prep', sortY: POS.foodPrep.y + 35, typeCat: 'counter' },
     { id: 'till1', sortY: POS.tillStation.y + 35, typeCat: 'counter' },
@@ -348,7 +348,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
              return <StandingAvatar key={`t-${ent.id}`} token={{...ent, y: ent.y + 50 + PATH_Y_OFFSET}} isStaff={false} />;
           } else if (ent.typeCat === 'ticket') {
              return (
-              <g key={`b-${ent.id}`} opacity={ent.opacity} transform={`translate(${ent.x}, ${ent.y + 50 + PATH_Y_OFFSET})`}>
+              <g key={`b-${ent.id}`} opacity={ent.opacity} transform={`translate(${ent.x}, ${ent.y + 50})`}>
                 <rect x={-8} y={-10} width={16} height={20} fill="#FFF" filter="url(#dropShadowSmooth)" />
                 <line x1={-4} y1={-6} x2={4} y2={-6} stroke="#CBD5E1" strokeWidth={1} />
                 <line x1={-4} y1={-2} x2={4} y2={-2} stroke="#CBD5E1" strokeWidth={1} />
