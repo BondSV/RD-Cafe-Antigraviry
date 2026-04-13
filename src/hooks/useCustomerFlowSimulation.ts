@@ -10,6 +10,7 @@ export type TokenType = 'walkin' | 'cnc' | 'courier';
 export type TokenState =
   | 'entering'
   | 'deciding'
+  | 'approaching_queue'
   | 'queuing'
   | 'ordering'
   | 'waiting'
@@ -38,6 +39,7 @@ export interface Token {
   waitTicks: number;        // accumulated ticks spent in queuing + waiting states
   decidingProgress?: number;// tracks 0.0 to 1.0 of the decision timer
   willLeave?: boolean;      // explicitly pre-calculated decision to bounce
+  curveT?: number;          // 0..1 progress along current Bézier curve
 }
 
 export type StaffAnimState = 'idle' | 'serving' | 'traveling-to-machine' | 'making' | 'traveling-to-till' | 'wandering';
@@ -106,33 +108,39 @@ export interface SimRates {
 // ============================================================
 
 export const VB_W = 900;
-export const VB_H = 450;
+export const VB_H = 900;
 
 export const POS = {
-  enter:    { x: 70,  y: 170 },
-  decision: { x: 170, y: 170 },
-  queue:    { x: 370, y: 170 },
-  till:     { x: 460, y: 170 },
-  till2:    { x: 530, y: 170 },       // second till customer position
-  waiting:  { x: 616, y: 170 },
-  exit:     { x: 70,  y: 0 },
-  foodPrep:    { x: 340, y: 310 },
-  tillStation: { x: 460, y: 310 },
-  tillStation2:{ x: 530, y: 310 },    // second till station
-  machine1:    { x: 670, y: 310 },
-  machine2:    { x: 750, y: 310 },
-  counterY: 245,
-  backlogBase: { x: 620, y: 380 },
-  staffBelowY: 350,                   // staff operate below station rects
+  // Customer journey positions — exact Bézier curve coordinates
+  enter:    { x: 390, y: 70 },       // entrance/exit at top
+  decision: { x: 200, y: 160 },      // decision point, upper-left
+  queue:    { x: 320, y: 560 },      // end of left-approach curve (queue start)
+  till:     { x: 420, y: 570 },      // Till 1 at counter edge
+  till2:    { x: 255, y: 570 },      // Till 2 at counter edge
+  waiting:  { x: 700, y: 565 },      // pickup zone, at right end of Coffee 1 counter
+  exit:     { x: 390, y: 70 },       // same as enter
+
+  // Bézier control points for curved paths
+  bounceCP:   { x: 280, y: 220 },    // bounce path sags down before swooping up
+  leftCP1:    { x: 40,  y: 300 },    // left approach — pulls wide left
+  leftCP2:    { x: 80,  y: 620 },    // left approach — pulls deep into bottom-left hook
+  rightCP:    { x: 880, y: 350 },    // right exit sweep — bows wide right
+  exitCorner: { x: 740, y: 150 },    // top-right corner before diagonal return
+
+  // Staff stations (behind counter) — centered within each counter block
+  foodPrep:    { x: 85,  y: 660 },
+  tillStation2:{ x: 255, y: 660 },
+  tillStation: { x: 425, y: 660 },
+  machine1:    { x: 607, y: 660 },
+  machine2:    { x: 802, y: 660 },
+
+  counterY: 585,                     // top edge of counter blocks
+  backlogBase: { x: 700, y: 790 },
+  staffBelowY: 720,
 };
 
-// Till and Pickup are rendered separately with dynamic sizing
-export const STAGE_LABELS = [
-  { pos: POS.enter,    label: 'Enter' },
-  { pos: POS.decision, label: 'Decision' },
-  { pos: POS.queue,    label: 'Queue' },
-  { pos: POS.exit,     label: 'Exit' },
-];
+// Stage labels (kept for backward compat with top-down views)
+export const STAGE_LABELS: { pos: { x: number; y: number }; label: string }[] = [];
 
 // Token / staff sizes — customers match staff size
 export const TOKEN_R = 14;
@@ -151,10 +159,10 @@ const BASE_PREP_TIME = 480;      // 3 sim-minutes — order preparation (75%), i
 const CNC_SPAWN_INTERVAL = 400;
 const COURIER_SPAWN_INTERVAL = 500;
 const TRANSITION_DURATION = 900;
-const TOKEN_SPEED = 0.91;         // 30% faster visually (was 0.7)
+const TOKEN_SPEED = 1.3;          // scaled up for larger layout distances
 const FADE_SPEED = 0.007;
 const DECIDING_TICKS = 120;      // ~2 seconds looking around
-const STAFF_SPEED = 9;            // 40% slower visually (was 15); all staff same speed
+const STAFF_SPEED = 13;           // scaled up for larger layout distances
 const ANIM_TRAVEL_TICKS = 20;     // visual travel at STAFF_SPEED=9: ~180px/9 = 20 ticks
 
 // Face thresholds based on accumulated wait time (queuing + waiting states)
@@ -489,54 +497,86 @@ function moveToward(current: number, target: number, speed: number): number {
   return current + Math.sign(diff) * speed;
 }
 
-// Queue layout: first 5 in single line left of till, then overflow rows go UP
-const QUEUE_SPACING = TOKEN_R * 2 + 4; // 32px between tokens
-const QUEUE_GAP = 40;                   // visible gap between ordering customer and queue front
-const QUEUE_PER_ROW = 5;
-const QUEUE_ROW_HEIGHT = TOKEN_R * 2 + 6; // 34px between rows
-
-function getQueuePosition(index: number): { x: number; y: number } {
-  const frontX = POS.till.x - QUEUE_GAP - TOKEN_R;
-  if (index < QUEUE_PER_ROW) {
-    // First 5: single horizontal line going LEFT
-    return {
-      x: frontX - index * QUEUE_SPACING,
-      y: POS.till.y,
-    };
-  }
-  // Overflow: rows go UP (lower y), fill RIGHT-to-LEFT
-  // Start overflow at position 2's x (not position 0) so rows build above middle/tail
-  const overflowIdx = index - QUEUE_PER_ROW;
-  const row = Math.floor(overflowIdx / QUEUE_PER_ROW) + 1;
-  const col = overflowIdx % QUEUE_PER_ROW;
-  const overflowStartX = frontX - 2 * QUEUE_SPACING; // aligned with position 2
-  const x = overflowStartX - col * QUEUE_SPACING;
-  const y = POS.till.y - row * QUEUE_ROW_HEIGHT;
-  // Clamp so queue never reaches Decision area
-  return { x: Math.max(POS.decision.x + 50, x), y };
+// Move toward a point in a straight line (normalized direction, constant speed)
+function moveTowardPoint(cx: number, cy: number, tx: number, ty: number, speed: number): {x: number, y: number} {
+  const dx = tx - cx;
+  const dy = ty - cy;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < speed) return { x: tx, y: ty };
+  const ratio = speed / dist;
+  return { x: cx + dx * ratio, y: cy + dy * ratio };
 }
 
-// Waiting/pickup layout: first 4 in line, then rows go UP
-const WAITING_SPACING = TOKEN_R * 2 + 4; // 32px
-const WAITING_PER_ROW = 4;
-const WAITING_ROW_HEIGHT = TOKEN_R * 2 + 6;
+// Quadratic Bézier: B(t) = (1-t)²·P0 + 2(1-t)t·CP + t²·P1
+function quadBezier(t: number, p0: {x:number,y:number}, cp: {x:number,y:number}, p1: {x:number,y:number}) {
+  const u = 1 - t;
+  return {
+    x: u*u*p0.x + 2*u*t*cp.x + t*t*p1.x,
+    y: u*u*p0.y + 2*u*t*cp.y + t*t*p1.y,
+  };
+}
+
+// Quadratic Bézier derivative: B'(t) = 2(1-t)(CP-P0) + 2t(P1-CP)
+function quadBezierSpeed(t: number, p0: {x:number,y:number}, cp: {x:number,y:number}, p1: {x:number,y:number}): number {
+  const u = 1 - t;
+  const dx = 2 * u * (cp.x - p0.x) + 2 * t * (p1.x - cp.x);
+  const dy = 2 * u * (cp.y - p0.y) + 2 * t * (p1.y - cp.y);
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Cubic Bézier: B(t) = (1-t)³·P0 + 3(1-t)²t·CP1 + 3(1-t)t²·CP2 + t³·P1
+function cubicBezier(t: number, p0: {x:number,y:number}, cp1: {x:number,y:number}, cp2: {x:number,y:number}, p1: {x:number,y:number}) {
+  const u = 1 - t;
+  return {
+    x: u*u*u*p0.x + 3*u*u*t*cp1.x + 3*u*t*t*cp2.x + t*t*t*p1.x,
+    y: u*u*u*p0.y + 3*u*u*t*cp1.y + 3*u*t*t*cp2.y + t*t*t*p1.y,
+  };
+}
+
+// Cubic Bézier derivative: B'(t) = 3(1-t)²(CP1-P0) + 6(1-t)t(CP2-CP1) + 3t²(P1-CP2)
+function cubicBezierSpeed(t: number, p0: {x:number,y:number}, cp1: {x:number,y:number}, cp2: {x:number,y:number}, p1: {x:number,y:number}): number {
+  const u = 1 - t;
+  const dx = 3*u*u*(cp1.x-p0.x) + 6*u*t*(cp2.x-cp1.x) + 3*t*t*(p1.x-cp2.x);
+  const dy = 3*u*u*(cp1.y-p0.y) + 6*u*t*(cp2.y-cp1.y) + 3*t*t*(p1.y-cp2.y);
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Constant-speed Bézier stepping: adjusts dt so pixel-speed stays at `pixelSpeed`
+const CURVE_WALK_SPEED = 1.3; // pixels per tick — matches TOKEN_SPEED
+
+// Queue layout: horizontal line going LEFT, then staggered/checkered curve upward
+function getQueuePosition(index: number, showTill2: boolean): { x: number; y: number } {
+  const startX = showTill2 ? POS.queue.x - 60 : POS.queue.x;
+  const startY = POS.queue.y - 10; // slightly further from counter
+
+  if (index < 3) {
+    // First 3: horizontal line going LEFT with good spacing
+    return { x: startX - index * 52, y: startY };
+  }
+  // Positions 3+: staggered/checkered curve upward-left with breathing room
+  const curveIdx = index - 3;
+  const isOdd = curveIdx % 2 === 1; // checkered offset
+  const layer = Math.floor(curveIdx / 2); // 2 people per "row" of the curve
+  const jitterX = ((index * 7) % 11) - 5;
+  const jitterY = ((index * 13) % 9) - 4;
+  return {
+    x: startX - 3 * 52 - layer * 44 + (isOdd ? -20 : 20) + jitterX,
+    y: startY - (layer + 1) * 50 + (isOdd ? -15 : 0) + jitterY,
+  };
+}
+
+// Waiting/pickup layout: first customer at inflection point, others stack LEFT and UP
+const WAITING_SPACING_X = 44;
+const WAITING_SPACING_Y = 44;
+const WAITING_PER_ROW = 3;
 
 function getWaitingPosition(index: number): { x: number; y: number } {
-  if (index < WAITING_PER_ROW) {
-    // First 4: fill RIGHT-to-LEFT from pickup label
-    // Position 0 (earliest) = rightmost, position 3 (newest) = leftmost
-    return {
-      x: POS.waiting.x + (WAITING_PER_ROW - 1 - index) * WAITING_SPACING,
-      y: POS.waiting.y,
-    };
-  }
-  // Overflow rows go UP (lower y), fill right-to-left
-  const overflowIdx = index - WAITING_PER_ROW;
-  const row = Math.floor(overflowIdx / WAITING_PER_ROW) + 1;
-  const col = overflowIdx % WAITING_PER_ROW;
+  // First customer at POS.waiting (the inflection point), others go left and up
+  const row = Math.floor(index / WAITING_PER_ROW);
+  const col = index % WAITING_PER_ROW;
   return {
-    x: POS.waiting.x + (WAITING_PER_ROW - 1 - col) * WAITING_SPACING,
-    y: POS.waiting.y - row * WAITING_ROW_HEIGHT,
+    x: POS.waiting.x - col * WAITING_SPACING_X,
+    y: POS.waiting.y - row * WAITING_SPACING_Y,
   };
 }
 
@@ -674,13 +714,14 @@ export function tickSimulation(state: SimState): SimState {
 
   // --- Queue stats ---
   const queueCount = tokens.filter(t => t.state === 'queuing').length;
-  const combinedQueueCount = tokens.filter(t => t.state === 'queuing' || t.state === 'waiting').length;
+  const approachingCount = tokens.filter(t => t.state === 'approaching_queue').length;
+  const combinedQueueCount = tokens.filter(t => t.state === 'queuing' || t.state === 'waiting' || t.state === 'approaching_queue').length;
 
   // --- Update each token ---
   tokens = tokens.map(token => {
     let t = { ...token, age: token.age + 1 };
-    // Accumulate wait time when queuing, at till, or at pickup
-    if (t.state === 'queuing' || t.state === 'ordering' || t.state === 'waiting') {
+    // Accumulate wait time when approaching queue, queuing, at till, or at pickup
+    if (t.state === 'approaching_queue' || t.state === 'queuing' || t.state === 'ordering' || t.state === 'waiting') {
       t.waitTicks = token.waitTicks + 1;
     }
 
@@ -691,9 +732,11 @@ export function tickSimulation(state: SimState): SimState {
           t.state = 'fast_tracking';
           t.stageStart = tick;
         } else {
-          t.x = moveToward(t.x, POS.decision.x, TOKEN_SPEED);
-          t.y = moveToward(t.y, POS.decision.y, TOKEN_SPEED);
-          if (Math.abs(t.x - POS.decision.x) < 2) {
+          // Move in a straight line from entrance to decision point
+          const np = moveTowardPoint(t.x, t.y, POS.decision.x, POS.decision.y, TOKEN_SPEED);
+          t.x = np.x;
+          t.y = np.y;
+          if (Math.abs(t.x - POS.decision.x) < 2 && Math.abs(t.y - POS.decision.y) < 2) {
             // Item 10: skip decision animation when combined queue < 3
             if (combinedQueueCount < 3) {
               // Go straight through — no deciding wobble
@@ -702,11 +745,13 @@ export function tickSimulation(state: SimState): SimState {
                 t.face = 'sad';
                 t.state = 'bouncing';
                 t.stageStart = tick;
+                t.curveT = 0;
                 lostTicks.push(tick);
               } else {
-                t.state = 'queuing';
+                t.state = 'approaching_queue';
                 t.stageStart = tick;
-                t.queueIndex = queueCount;
+                t.curveT = 0;
+                t.queueIndex = queueCount + approachingCount;
               }
             } else {
               t.state = 'deciding';
@@ -725,26 +770,50 @@ export function tickSimulation(state: SimState): SimState {
         const decidingTime = tick - t.stageStart;
         t.decidingProgress = decidingTime / DECIDING_TICKS;
         t.x = POS.decision.x;
+        t.y = POS.decision.y;
 
         if (decidingTime >= DECIDING_TICKS) {
           if (t.willLeave) {
             t.face = 'sad';
             t.state = 'bouncing';
             t.stageStart = tick;
+            t.curveT = 0;
             lostTicks.push(tick);
           } else {
-            t.state = 'queuing';
+            t.state = 'approaching_queue';
             t.stageStart = tick;
-            t.queueIndex = queueCount;
+            t.curveT = 0;
+            t.queueIndex = queueCount + approachingCount;
           }
         }
         break;
       }
 
+      case 'approaching_queue': {
+        // Follow cubic Bézier at constant pixel speed to queue entry point
+        if (!t.curveT) t.curveT = 0;
+        if (t.curveT < 1) {
+          const spd = cubicBezierSpeed(t.curveT, POS.decision, POS.leftCP1, POS.leftCP2, POS.queue);
+          const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
+          t.curveT = Math.min(1, t.curveT + dt);
+          const curvePos = cubicBezier(t.curveT, POS.decision, POS.leftCP1, POS.leftCP2, POS.queue);
+          t.x = curvePos.x;
+          t.y = curvePos.y;
+        }
+        if (t.curveT >= 1) {
+          t.state = 'queuing';
+          t.stageStart = tick;
+          t.queueIndex = queueCount;
+          t.curveT = 0;
+        }
+        break;
+      }
+
       case 'queuing': {
-        const qPos = getQueuePosition(t.queueIndex);
-        t.x = moveToward(t.x, qPos.x, TOKEN_SPEED);
-        t.y = moveToward(t.y, qPos.y, TOKEN_SPEED);
+        const qPos = getQueuePosition(t.queueIndex, rates.staffConfig.tills >= 2);
+        const qp = moveTowardPoint(t.x, t.y, qPos.x, qPos.y, TOKEN_SPEED);
+        t.x = qp.x;
+        t.y = qp.y;
 
         if (t.queueIndex === 0) {
           const freeLane = tillBusyUntil.findIndex(u => u <= tick);
@@ -763,11 +832,14 @@ export function tickSimulation(state: SimState): SimState {
       }
 
       case 'ordering': {
-        t.x = moveToward(t.x, POS.till.x, TOKEN_SPEED);
-        t.y = moveToward(t.y, POS.till.y, TOKEN_SPEED);
+        // Move to the correct till based on lane assignment
+        const tillTarget = t.laneIndex === 1 ? POS.till2 : POS.till;
+        const op = moveTowardPoint(t.x, t.y, tillTarget.x, tillTarget.y, TOKEN_SPEED);
+        t.x = op.x;
+        t.y = op.y;
 
         // Only start till timer after arriving at till position
-        const atTill = Math.abs(t.x - POS.till.x) < 2 && Math.abs(t.y - POS.till.y) < 2;
+        const atTill = Math.abs(t.x - tillTarget.x) < 2 && Math.abs(t.y - tillTarget.y) < 2;
         if (atTill && !t.arrivedAtStage) {
           t.arrivedAtStage = true;
           t.stageStart = tick;
@@ -807,8 +879,9 @@ export function tickSimulation(state: SimState): SimState {
       case 'waiting': {
         const waitingTokens = tokens.filter(tk => tk.state === 'waiting' && tk.id < t.id);
         const wPos = getWaitingPosition(waitingTokens.length);
-        t.x = moveToward(t.x, wPos.x, TOKEN_SPEED);
-        t.y = moveToward(t.y, wPos.y, TOKEN_SPEED);
+        const wp = moveTowardPoint(t.x, t.y, wPos.x, wPos.y, TOKEN_SPEED);
+        t.x = wp.x;
+        t.y = wp.y;
 
         const prepDone = t.prepDoneAt > 0 && t.prepDoneAt <= tick;
         const timeWaited = tick - t.stageStart;
@@ -828,7 +901,7 @@ export function tickSimulation(state: SimState): SimState {
       case 'fast_tracking': {
         t.opacity = Math.min(1, t.opacity + FADE_SPEED * 2);
         const targetX = POS.waiting.x + 20;
-        const targetY = POS.waiting.y - 30;
+        const targetY = POS.waiting.y - 50;  // approach from above
         t.x = moveToward(t.x, targetX, TOKEN_SPEED * 1.5);
         t.y = moveToward(t.y, targetY, TOKEN_SPEED * 1.5);
         if (Math.abs(t.x - targetX) < 3 && Math.abs(t.y - targetY) < 3) {
@@ -853,9 +926,16 @@ export function tickSimulation(state: SimState): SimState {
       }
 
       case 'bouncing': {
-        t.x = moveToward(t.x, POS.exit.x, TOKEN_SPEED * 1.8);
-        t.y = moveToward(t.y, POS.exit.y, TOKEN_SPEED * 1.8);
-        if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
+        // Follow quadratic Bézier at constant pixel speed
+        if (!t.curveT) t.curveT = 0;
+        if (t.curveT < 1) {
+          const spd = quadBezierSpeed(t.curveT, POS.decision, POS.bounceCP, POS.exit);
+          const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
+          t.curveT = Math.min(1, t.curveT + dt);
+          const bouncePos = quadBezier(t.curveT, POS.decision, POS.bounceCP, POS.exit);
+          t.x = bouncePos.x;
+          t.y = bouncePos.y;
+        } else {
           t.opacity -= FADE_SPEED * 4;
           if (t.opacity <= 0) t.state = 'exited';
         }
@@ -863,27 +943,52 @@ export function tickSimulation(state: SimState): SimState {
       }
 
       case 'stock_bouncing': {
-        t.x = moveToward(t.x, POS.exit.x, TOKEN_SPEED * 1.8);
-        t.y = moveToward(t.y, POS.exit.y, TOKEN_SPEED * 1.8);
-        if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
-          t.opacity -= FADE_SPEED * 4;
-          if (t.opacity <= 0) t.state = 'exited';
+        // Move right to pickup zone first, then follow right exit sweep
+        if (t.x < POS.waiting.x - 5) {
+          const sp = moveTowardPoint(t.x, t.y, POS.waiting.x, POS.waiting.y, TOKEN_SPEED * 1.2);
+          t.x = sp.x;
+          t.y = sp.y;
+        } else {
+          if (!t.curveT) t.curveT = 0;
+          if (t.curveT < 1) {
+            const spd = quadBezierSpeed(t.curveT, POS.waiting, POS.rightCP, POS.exitCorner);
+            const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
+            t.curveT = Math.min(1, t.curveT + dt);
+            const sbPos = quadBezier(t.curveT, POS.waiting, POS.rightCP, POS.exitCorner);
+            t.x = sbPos.x;
+            t.y = sbPos.y;
+          } else {
+            const sp2 = moveTowardPoint(t.x, t.y, POS.exit.x, POS.exit.y, TOKEN_SPEED * 1.2);
+            t.x = sp2.x;
+            t.y = sp2.y;
+            if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
+              t.opacity -= FADE_SPEED * 4;
+              if (t.opacity <= 0) t.state = 'exited';
+            }
+          }
         }
         break;
       }
 
       case 'leaving': {
-        // Two-phase: UP from waiting area, then LEFT to exit
-        if (t.y > POS.exit.y + 5) {
-          t.y = moveToward(t.y, POS.exit.y, TOKEN_SPEED);
-          t.x = moveToward(t.x, POS.waiting.x, TOKEN_SPEED * 0.3);
+        // Phase 1: Follow quadratic Bézier at constant pixel speed
+        if (!t.curveT) t.curveT = 0;
+        if (t.curveT < 1) {
+          const spd = quadBezierSpeed(t.curveT, POS.waiting, POS.rightCP, POS.exitCorner);
+          const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
+          t.curveT = Math.min(1, t.curveT + dt);
+          const leavePos = quadBezier(t.curveT, POS.waiting, POS.rightCP, POS.exitCorner);
+          t.x = leavePos.x;
+          t.y = leavePos.y;
         } else {
-          t.x = moveToward(t.x, POS.exit.x, TOKEN_SPEED * 1.2);
-          t.y = moveToward(t.y, POS.exit.y, TOKEN_SPEED * 0.3);
-        }
-        if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
-          t.opacity -= FADE_SPEED * 3;
-          if (t.opacity <= 0) t.state = 'exited';
+          // Phase 2: Straight diagonal from exitCorner(740,150) to exit(390,70)
+          const ep = moveTowardPoint(t.x, t.y, POS.exit.x, POS.exit.y, TOKEN_SPEED * 1.3);
+          t.x = ep.x;
+          t.y = ep.y;
+          if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
+            t.opacity -= FADE_SPEED * 3;
+            if (t.opacity <= 0) t.state = 'exited';
+          }
         }
         break;
       }
