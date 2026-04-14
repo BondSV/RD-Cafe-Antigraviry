@@ -5,6 +5,7 @@ import { actions } from '../../data/actions';
 import MetricRow from '../game/MetricRow';
 import { metricLabels } from '../../data/labels';
 import { normaliseForDisplay } from '../../engine/normaliseForDisplay';
+import { getSystemScore } from '../../engine/getSystemScore';
 import { VisibleMetrics } from '../../types/game';
 
 export default function FinalSummary() {
@@ -12,6 +13,7 @@ export default function FinalSummary() {
   const metrics = useGameStore(state => state.metrics);
   const actionsTaken = useGameStore(state => state.actionsTaken);
   const resetGame = useGameStore(state => state.resetGame);
+  const systemScore = getSystemScore(metrics);
 
   const getOutcomeDetails = () => {
     switch(outcome) {
@@ -84,6 +86,10 @@ export default function FinalSummary() {
           <OutcomeIcon className="w-16 h-16 mb-4" />
           <h1 className="text-3xl font-bold font-sans mb-2 text-center">{title}</h1>
           <p className="text-center font-sans text-sm opacity-90">{text}</p>
+          <div className="mt-5 px-4 py-2 rounded-full bg-white/70 border border-current/15">
+            <span className="font-mono text-xs uppercase tracking-[0.12em] opacity-70">System Score:</span>
+            <span className="font-mono font-bold text-lg ml-2">{systemScore.toFixed(1)}</span>
+          </div>
         </div>
 
         <div className="w-full mb-8">
