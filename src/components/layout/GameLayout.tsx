@@ -61,11 +61,13 @@ export default function GameLayout() {
         </div>
 
         <div className={`flex-1 flex flex-col min-w-[300px] overflow-y-auto pt-4 lg:pt-0 pr-2 px-4 lg:px-0 ${activeTab === 'map' ? 'block' : 'hidden lg:flex'}`}>
-          <SystemMap />
-          <div className="mt-4 space-y-4">
+          <div className="space-y-4">
             {/* <CustomerFlowSimulation metrics={metrics} flags={flags} triggerKey={simTrigger} /> */}
             <CustomerFlowSimulationIso metrics={metrics} flags={flags} triggerKey={simTrigger} />
             {/* <CustomerFlowSimulationTopDown metrics={metrics} flags={flags} triggerKey={simTrigger} /> */}
+          </div>
+          <div className="mt-4">
+            <SystemMap />
           </div>
           <div className="mt-4">
             <MetricPanel />

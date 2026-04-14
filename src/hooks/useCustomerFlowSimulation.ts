@@ -88,6 +88,9 @@ export interface StaffConfig {
   serialised: boolean;
   prepLanes: number;
   managerWandering: boolean;
+  hasPT: boolean;  // Part-time barista hired
+  hasHB: boolean;  // Head barista moved to earlier shift
+  hasMGR: boolean; // Cafe manager moved to earlier shift
 }
 
 export interface SimRates {
@@ -239,7 +242,12 @@ export function deriveStaffConfig(flags: ActionFlags): StaffConfig {
     }
   }
 
-  return { totalStaff, tills, machines, specialised, model, tillLanes, serialised, prepLanes, managerWandering };
+  return {
+    totalStaff, tills, machines, specialised, model, tillLanes, serialised, prepLanes, managerWandering,
+    hasPT: !!flags.tempStaffAdded,
+    hasHB: !!flags.headBaristaMovedEarlier,
+    hasMGR: !!flags.managerMovedEarlier,
+  };
 }
 
 function lerp(a: number, b: number, t: number): number {
@@ -328,110 +336,66 @@ export function deriveSimRates(metrics: VisibleMetrics, flags: ActionFlags): Sim
 
 export function initStaffTokens(config: StaffConfig): StaffToken[] {
   const tokens: StaffToken[] = [];
-  const sY = POS.staffBelowY; // staff operate below station rects
+  const sY = POS.staffBelowY;
+  const { hasHB, hasMGR, hasPT, tills, machines } = config;
 
-  if (config.model === 'solo') {
-    // Solo: AB1 starts at till, event-driven animation will move them
-    tokens.push({
-      id: 'ab1', label: 'AB1',
-      x: POS.tillStation.x, y: sY,
-      targetX: POS.tillStation.x, targetY: sY,
-      station: 'till', busy: false,
-      animState: 'idle', animStart: 0, animProgress: 0,
-    });
-  } else if (config.model === 'duo-parallel') {
-    // Two serialised lanes — each cycles between their till and machine
-    tokens.push({
-      id: 'ab1', label: 'AB1',
-      x: POS.tillStation.x, y: sY,
-      targetX: POS.tillStation.x, targetY: sY,
-      station: 'till', busy: false,
-      animState: 'idle', animStart: 0, animProgress: 0,
-    });
-    tokens.push({
-      id: 'hb', label: 'HB',
-      x: POS.tillStation2.x, y: sY,
-      targetX: POS.tillStation2.x, targetY: sY,
-      station: 'till2', busy: false,
-      animState: 'idle', animStart: 0, animProgress: 0,
-    });
-  } else if (config.totalStaff >= 3 && config.machines >= 2 && !config.specialised) {
-    // 3+ staff with 2 machines (not specialised): MGR→till, HB→machine1, AB1→machine2
-    tokens.push({
-      id: 'mgr', label: 'MGR',
-      x: POS.tillStation.x, y: sY,
-      targetX: POS.tillStation.x, targetY: sY,
-      station: 'till', busy: false,
-      animState: 'idle', animStart: 0, animProgress: 0,
-    });
-    tokens.push({
-      id: 'hb', label: 'HB',
-      x: POS.machine1.x, y: sY,
-      targetX: POS.machine1.x, targetY: sY,
-      station: 'machine', busy: false,
-      animState: 'idle', animStart: 0, animProgress: 0,
-    });
-    tokens.push({
-      id: 'ab1', label: 'AB1',
-      x: POS.machine2.x, y: sY,
-      targetX: POS.machine2.x, targetY: sY,
-      station: 'machine2', busy: false,
-      animState: 'idle', animStart: 0, animProgress: 0,
-    });
-    if (config.totalStaff >= 4) {
-      tokens.push({
-        id: 'pt', label: 'PT',
-        x: POS.foodPrep.x, y: sY + 30,
-        targetX: POS.foodPrep.x + 40, targetY: sY + 30,
-        station: 'wandering', busy: false,
-        animState: 'wandering', animStart: 0, animProgress: 0,
-      });
+  if (!hasHB) {
+    // === NO HEAD BARISTA ===
+    // AB1 alone or with PT/MGR (no dedicated machine operator)
+    if (hasPT || hasMGR) {
+      // PT/MGR takes the till, AB1 moves to the machine
+      tokens.push({ id: 'ab1', label: 'AB1', x: POS.machine1.x, y: sY, targetX: POS.machine1.x, targetY: sY, station: 'machine', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+      const tillPerson = hasPT ? 'pt' : 'mgr';
+      const tillLabel = hasPT ? 'PT' : 'MGR';
+      tokens.push({ id: tillPerson, label: tillLabel, x: POS.tillStation.x, y: sY, targetX: POS.tillStation.x, targetY: sY, station: 'till', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+      // If both PT and MGR present without HB, second one wanders
+      if (hasPT && hasMGR) {
+        tokens.push({ id: 'mgr', label: 'MGR', x: POS.foodPrep.x, y: sY + 30, targetX: POS.foodPrep.x + 40, targetY: sY + 30, station: 'wandering', busy: false, animState: 'wandering', animStart: 0, animProgress: 0 });
+      }
+    } else {
+      // Solo: AB1 at till (handles machine too in tick logic)
+      tokens.push({ id: 'ab1', label: 'AB1', x: POS.tillStation.x, y: sY, targetX: POS.tillStation.x, targetY: sY, station: 'till', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
     }
   } else {
-    // Specialised, duo-natural, or trio with 1 machine: AB1→till, HB→machine
-    tokens.push({
-      id: 'ab1', label: 'AB1',
-      x: POS.tillStation.x, y: sY,
-      targetX: POS.tillStation.x, targetY: sY,
-      station: 'till', busy: false,
-      animState: 'idle', animStart: 0, animProgress: 0,
-    });
-    if (config.totalStaff >= 2) {
-      tokens.push({
-        id: 'hb', label: 'HB',
-        x: POS.machine1.x, y: sY,
-        targetX: POS.machine1.x, targetY: sY,
-        station: 'machine', busy: false,
-        animState: 'idle', animStart: 0, animProgress: 0,
-      });
-    }
-    if (config.totalStaff >= 3) {
-      // Manager with 1 machine: wander in food prep / back area
-      tokens.push({
-        id: 'mgr', label: 'MGR',
-        x: POS.foodPrep.x, y: sY + 30,
-        targetX: POS.foodPrep.x + 40, targetY: sY + 30,
-        station: 'wandering', busy: false,
-        animState: 'wandering', animStart: 0, animProgress: 0,
-      });
-    }
-    if (config.totalStaff >= 4) {
-      if (config.tills >= 2) {
-        tokens.push({
-          id: 'pt', label: 'PT',
-          x: POS.tillStation2.x, y: sY,
-          targetX: POS.tillStation2.x, targetY: sY,
-          station: 'till2', busy: false,
-          animState: 'idle', animStart: 0, animProgress: 0,
-        });
+    // === HEAD BARISTA IS PRESENT ===
+    // HB always operates the coffee machine
+    tokens.push({ id: 'hb', label: 'HB', x: POS.machine1.x, y: sY, targetX: POS.machine1.x, targetY: sY, station: 'machine', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+
+    if (machines >= 2 && (hasPT || hasMGR)) {
+      // === 2 MACHINES: AB1 takes machine2, 3rd person takes the till ===
+      tokens.push({ id: 'ab1', label: 'AB1', x: POS.machine2.x, y: sY, targetX: POS.machine2.x, targetY: sY, station: 'machine2', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+      // Prefer PT at till, MGR at till2; if only one, they take the single till
+      if (hasPT && hasMGR) {
+        tokens.push({ id: 'pt',  label: 'PT',  x: POS.tillStation.x,  y: sY, targetX: POS.tillStation.x,  targetY: sY, station: 'till',  busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+        if (tills >= 2) {
+          tokens.push({ id: 'mgr', label: 'MGR', x: POS.tillStation2.x, y: sY, targetX: POS.tillStation2.x, targetY: sY, station: 'till2', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+        } else {
+          tokens.push({ id: 'mgr', label: 'MGR', x: POS.foodPrep.x, y: sY + 30, targetX: POS.foodPrep.x + 40, targetY: sY + 30, station: 'wandering', busy: false, animState: 'wandering', animStart: 0, animProgress: 0 });
+        }
       } else {
-        tokens.push({
-          id: 'pt', label: 'PT',
-          x: POS.foodPrep.x + 30, y: sY + 30,
-          targetX: POS.foodPrep.x + 60, targetY: sY + 30,
-          station: 'wandering', busy: false,
-          animState: 'wandering', animStart: 0, animProgress: 0,
-        });
+        const tillPerson = hasPT ? 'pt' : 'mgr';
+        const tillLabel  = hasPT ? 'PT' : 'MGR';
+        tokens.push({ id: tillPerson, label: tillLabel, x: POS.tillStation.x, y: sY, targetX: POS.tillStation.x, targetY: sY, station: 'till', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+      }
+    } else {
+      // === 1 MACHINE: AB1 at till, 3rd person at till2 (if 2 tills) or wanders ===
+      tokens.push({ id: 'ab1', label: 'AB1', x: POS.tillStation.x, y: sY, targetX: POS.tillStation.x, targetY: sY, station: 'till', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+      if (hasPT && hasMGR) {
+        // Two extra people: one fills till2 (if available), other wanders
+        if (tills >= 2) {
+          tokens.push({ id: 'pt',  label: 'PT',  x: POS.tillStation2.x, y: sY, targetX: POS.tillStation2.x, targetY: sY, station: 'till2', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+        } else {
+          tokens.push({ id: 'pt', label: 'PT', x: POS.foodPrep.x + 30, y: sY + 30, targetX: POS.foodPrep.x + 60, targetY: sY + 30, station: 'wandering', busy: false, animState: 'wandering', animStart: 0, animProgress: 0 });
+        }
+        tokens.push({ id: 'mgr', label: 'MGR', x: POS.foodPrep.x, y: sY + 30, targetX: POS.foodPrep.x + 40, targetY: sY + 30, station: 'wandering', busy: false, animState: 'wandering', animStart: 0, animProgress: 0 });
+      } else if (hasPT || hasMGR) {
+        const extraId    = hasPT ? 'pt'  : 'mgr';
+        const extraLabel = hasPT ? 'PT'  : 'MGR';
+        if (tills >= 2) {
+          tokens.push({ id: extraId, label: extraLabel, x: POS.tillStation2.x, y: sY, targetX: POS.tillStation2.x, targetY: sY, station: 'till2', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+        } else {
+          tokens.push({ id: extraId, label: extraLabel, x: POS.foodPrep.x, y: sY + 30, targetX: POS.foodPrep.x + 40, targetY: sY + 30, station: 'wandering', busy: false, animState: 'wandering', animStart: 0, animProgress: 0 });
+        }
       }
     }
   }
@@ -1156,7 +1120,8 @@ export function tickSimulation(state: SimState): SimState {
 
     if (isSerialisedModel && isTillStaff) {
       // Serialised staff (solo, duo-parallel): cycle between till and machine
-      const machinePos = (staff.station === 'till2' || rates.staffConfig.machines < 2) ? POS.machine1 : POS.machine2;
+      // Solo/serialised staff always use machine1, UNLESS explicitly mapped to till2 (duo-parallel right lane)
+      const machinePos = staff.station === 'till2' ? POS.machine2 : POS.machine1;
       const tillPos = staff.station === 'till2' ? POS.tillStation2 : POS.tillStation;
 
       switch (staff.animState) {

@@ -1,9 +1,32 @@
 import React, { useState } from 'react';
 import { caseData } from '../../data/caseData';
+import { useGameStore } from '../../store/useGameStore';
 import { FileText, ThumbsDown, ThumbsUp, X, ChevronRight } from 'lucide-react';
 
 export default function CaseDataPanel() {
   const [collapsed, setCollapsed] = useState(false);
+  const flags = useGameStore(state => state.flags);
+
+  // Build dynamic roster — start from static data, then apply flag-driven overrides
+  const dynamicRoster = caseData.staffRoster.map(staff => {
+    if (staff.role === 'Café Manager' && flags.managerMovedEarlier) {
+      return { ...staff, hours: '8 AM – 4 PM' };
+    }
+    if (staff.role === 'Head Barista' && flags.headBaristaMovedEarlier) {
+      return { ...staff, hours: '8 AM – 4 PM' };
+    }
+    return staff;
+  });
+
+  // Append part-time barista if hired
+  if (flags.tempStaffAdded) {
+    dynamicRoster.push({
+      role: 'Part-Time Barista',
+      schedule: 'Mon–Fri',
+      hours: '7 AM – 11 AM',
+      type: 'Part-time',
+    });
+  }
 
   if (collapsed) {
     return (
@@ -52,8 +75,8 @@ export default function CaseDataPanel() {
         <section>
           <h4 className="font-sans font-semibold text-sm text-text-primary mb-2">Staff Roster</h4>
           <div className="space-y-2">
-            {caseData.staffRoster.map((staff, i) => (
-              <div key={i} className={`p-2 rounded bg-white/70 border border-border-default`}>
+            {dynamicRoster.map((staff, i) => (
+              <div key={i} className={`p-2 rounded border border-border-default ${staff.type === 'Part-time' ? 'bg-amber-50/70' : 'bg-white/70'}`}>
                 <div className="font-sans text-sm font-medium text-text-primary">{staff.role}</div>
                 <div className="flex justify-between items-center mt-1">
                   <span className="font-sans text-xs text-text-secondary">{staff.schedule}</span>

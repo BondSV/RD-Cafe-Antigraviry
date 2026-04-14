@@ -16,7 +16,7 @@ export default function ActionGrid({ disabled }: { disabled: boolean }) {
         Interventions
       </h2>
       <div className="flex-1 overflow-y-auto px-4 md:px-0">
-        <ActionCategoryAccordion title="Space & Equipment" defaultOpen={true}>
+        <ActionCategoryAccordion title="Space & Equipment" defaultOpen={false}>
           {spaceActions.map(a => <ActionCard key={a.id} action={a} disabled={disabled} />)}
         </ActionCategoryAccordion>
         <ActionCategoryAccordion title="Staff & Processes" defaultOpen={false}>
