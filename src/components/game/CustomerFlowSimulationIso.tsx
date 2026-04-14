@@ -38,16 +38,12 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
   if (isStaff) {
      const role = String(token.id).toLowerCase();
      let staffIndex = 1;
-     // The provided staff-avatars.png order left to right:
-     // 1: Assistant Barista 1
-     // 2: Assistant Barista 2 (Part Timer)
-     // 3: Head Barista
-     // 4: Cafe Manager
+     // Sprite Mappings: 0=Girl white shirt, 1=Guy black shirt, 2=Green apron (HB), 3=Guy suit (MGR)
      if (role.includes('ab1')) staffIndex = 1;
-     else if (role.includes('ab2') || role.includes('pt')) staffIndex = 2;
-     else if (role.includes('hb')) staffIndex = 3;
-     else if (role.includes('mgr')) staffIndex = 4;
-     else staffIndex = (numId % 4) + 1; // Fallback pseudorandom
+     else if (role.includes('ab2') || role.includes('pt')) staffIndex = 0;
+     else if (role.includes('hb')) staffIndex = 2;
+     else if (role.includes('mgr')) staffIndex = 3;
+     else staffIndex = numId % 4; // Fallback pseudorandom
      
      spritePath = `/assets/sprites/staff-${staffIndex}.png`;
   } else if (token.type === 'courier') {
@@ -119,7 +115,7 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
       </foreignObject>
 
       {isStaff && (
-        <text x={0} y={-90} textAnchor="middle" fontSize={12} fill="#FFF" fontWeight="bold" filter="drop-shadow(0px 1px 2px rgba(0,0,0,0.8))">
+        <text x={0} y={24} textAnchor="middle" fontSize={10} fill="#475569" fontWeight="700">
           {token.label}
         </text>
       )}
@@ -162,9 +158,27 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
          </g>
       )}
 
-      {/* Legacy Badges/Moods hovering over head */}
-      {!isStaff && token.face && (
-        <circle cx={-15} cy={-78} r={6} fill={FACE_COLORS[token.face as Face]} />
+      {/* Active Wait / Mood Thought Bubbles */}
+      {!isStaff && token.state !== 'deciding' && token.state !== 'bouncing' && (
+        (() => {
+           let bubbleIcon = null;
+           if (token.state === 'leaving') {
+              if (token.face === 'happy') bubbleIcon = "😊";
+              else if (token.face === 'sad') bubbleIcon = "🙁";
+           } else if (token.state === 'queuing' || token.state === 'ordering' || token.state === 'waiting') {
+              if (token.face === 'sad') bubbleIcon = "⏳";
+           }
+
+           if (!bubbleIcon) return null;
+           return (
+             <g transform={`translate(30, -115)`}>
+                <ellipse cx={0} cy={0} rx={18} ry={13} fill="#FFF" filter="url(#dropShadowSmooth)" stroke="#E2E8F0" strokeWidth={1} />
+                <circle cx={-10} cy={16} r={3} fill="#FFF" />
+                <circle cx={-16} cy={22} r={1.5} fill="#FFF" />
+                <text x={0} y={1} textAnchor="middle" dominantBaseline="middle" fontSize={16}>{bubbleIcon}</text>
+             </g>
+           );
+        })()
       )}
 
       {!isStaff && token.type === 'cnc' && (

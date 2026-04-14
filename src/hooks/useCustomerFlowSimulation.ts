@@ -111,7 +111,7 @@ export interface SimRates {
 // ============================================================
 
 export const VB_W = 900;
-export const VB_H = 900;
+export const VB_H = 820;
 
 export const POS = {
   // Customer journey geometric nodes
@@ -121,7 +121,7 @@ export const POS = {
   queue:      { x: 320, y: 560 },      // Queue Head (Point 1)
   till:       { x: 420, y: 570 },      // Till 1
   till2:      { x: 320, y: 570 },      // Till 2 occupies queue's origin slot when active
-  waiting:    { x: 740, y: 565 },      // Pickup (Point 2 - Arrow Tip)
+  waiting:    { x: 720, y: 565 },      // Pickup (Point 2 - Arrow Tip)
   exitCorner: { x: 800, y: 180 },      // Top right geometric corner
   exit:       { x: 380, y: 70 },       // Same as enter
 
@@ -133,7 +133,7 @@ export const POS = {
   machine2:    { x: 802, y: 610 },
 
   counterY: 585,                     // top edge of counter blocks
-  backlogBase: { x: 700, y: 790 },
+  backlogBase: { x: 680, y: 720 },
   staffBelowY: 670,
 };
 
@@ -164,8 +164,8 @@ const STAFF_SPEED = 13;           // scaled up for larger layout distances
 const ANIM_TRAVEL_TICKS = 20;     // visual travel at STAFF_SPEED=9: ~180px/9 = 20 ticks
 
 // Face thresholds based on accumulated wait time (queuing + waiting states)
-const NEUTRAL_WAIT_THRESHOLD = 1120; // >= 7 sim-minutes (1120 ticks)
-const SAD_WAIT_THRESHOLD = 1600;     // >= 10 sim-minutes (1600 ticks)
+const NEUTRAL_WAIT_THRESHOLD = 1800; // >= 11 sim-minutes 
+const SAD_WAIT_THRESHOLD = 2800;     // >= 17 sim-minutes
 
 // ============================================================
 // RATE DERIVATION
@@ -598,8 +598,8 @@ function getWaitingPosition(index: number): { x: number; y: number } {
 }
 
 function getBacklogPosition(index: number, baseX: number, baseY: number): { x: number; y: number } {
-  const col = index % 5;
-  const row = Math.floor(index / 5);
+  const col = index % 6;
+  const row = Math.floor(index / 6);
   return { x: baseX + col * 20, y: baseY + row * 24 };
 }
 
@@ -936,7 +936,7 @@ export function tickSimulation(state: SimState): SimState {
         const wPos = getWaitingPosition(t.waitIndex);
         const dist = Math.sqrt(Math.pow(t.x - wPos.x, 2) + Math.pow(t.y - wPos.y, 2));
         
-        if (dist < 2 || (t.curveT !== undefined && t.curveT >= 1)) {
+        if (dist < 2 || (t.curveT !== undefined && t.curveT >= 1 && dist < 5)) {
             t.x = wPos.x;
             t.y = wPos.y;
             t.curveT = 1; // Locked in
@@ -946,10 +946,11 @@ export function tickSimulation(state: SimState): SimState {
             const isOddRow = waitRow % 2 !== 0;
             const isFirstInOddRow = isOddRow && (t.waitIndex % WAITING_PER_ROW === 0);
             
-            if (!isOddRow || isFirstInOddRow) {
+            // If they have already completed their arrival curve, they should just shuffle linearly
+            if (!isOddRow || isFirstInOddRow || (t.curveT !== undefined && t.curveT >= 1)) {
                 // Right-to-Left rows (and the far-left anchor of Left-to-Right rows) 
                 // simply walk linearly straight into their slot without clipping
-                const wp = moveTowardPoint(t.x, t.y, wPos.x, wPos.y, TOKEN_SPEED);
+                const wp = moveTowardPoint(t.x, t.y, wPos.x, wPos.y, TOKEN_SPEED * 1.4);
                 t.x = wp.x;
                 t.y = wp.y;
                 t.isStationary = false;
@@ -964,7 +965,7 @@ export function tickSimulation(state: SimState): SimState {
                 const cp = { x: midX, y: Math.min(startPos.y, wPos.y) - arcHeight };
                 
                 const spd = quadBezierSpeed(t.curveT, startPos, cp, wPos);
-                const dt = spd > 0.1 ? TOKEN_SPEED / spd : 0.01;
+                const dt = spd > 0.1 ? (TOKEN_SPEED * 1.4) / spd : 0.01;
                 t.curveT = Math.min(1, t.curveT + dt);
                 
                 const nextNode = quadBezier(t.curveT, startPos, cp, wPos);
@@ -984,6 +985,7 @@ export function tickSimulation(state: SimState): SimState {
           t.face = determineExitFace(t, rates);
           t.state = 'leaving';
           t.stageStart = tick;
+          t.curveT = 0; // Reset dirty token property to allow corner cutting logic
         }
         t.face = determineFace(t);
         break;
@@ -1043,13 +1045,15 @@ export function tickSimulation(state: SimState): SimState {
           t.y = sp.y;
         } else {
           let currentTarget = POS.exit;
-          if (t.y > POS.exitCorner.y + 40 && t.x > 300) {
-            currentTarget = POS.exitCorner;
-          }
+          if (t.curveT === undefined) t.curveT = 0;
           
-          const distToCorner = Math.sqrt(Math.pow(t.x - POS.exitCorner.x, 2) + Math.pow(t.y - POS.exitCorner.y, 2));
-          if (currentTarget === POS.exitCorner && distToCorner < 60) {
-            currentTarget = POS.exit; // Smooth geometric corner cut
+          if (t.curveT === 0) {
+            currentTarget = POS.exitCorner;
+            const distToCorner = Math.sqrt(Math.pow(t.x - POS.exitCorner.x, 2) + Math.pow(t.y - POS.exitCorner.y, 2));
+            if (distToCorner < 10) {
+              t.curveT = 1;
+              currentTarget = POS.exit; // Tracks sharply along the painted floor path
+            }
           }
         
           const sp2 = moveTowardPoint(t.x, t.y, currentTarget.x, currentTarget.y, TOKEN_SPEED * 1.2);
@@ -1066,13 +1070,15 @@ export function tickSimulation(state: SimState): SimState {
 
       case 'leaving': {
         let currentTarget = POS.exit;
-        if (t.y > POS.exitCorner.y + 40 && t.x > 300) {
-          currentTarget = POS.exitCorner;
-        }
+        if (t.curveT === undefined) t.curveT = 0;
         
-        const distToCorner = Math.sqrt(Math.pow(t.x - POS.exitCorner.x, 2) + Math.pow(t.y - POS.exitCorner.y, 2));
-        if (currentTarget === POS.exitCorner && distToCorner < 70) {
-          currentTarget = POS.exit; // Smooth geometric corner cut mimicking diagram
+        if (t.curveT === 0) {
+          currentTarget = POS.exitCorner;
+          const distToCorner = Math.sqrt(Math.pow(t.x - POS.exitCorner.x, 2) + Math.pow(t.y - POS.exitCorner.y, 2));
+          if (distToCorner < 10) {
+            t.curveT = 1;
+            currentTarget = POS.exit; // Tracks sharply along the painted floor path
+          }
         }
 
         const np = moveTowardPoint(t.x, t.y, currentTarget.x, currentTarget.y, TOKEN_SPEED * 1.3);
@@ -1150,7 +1156,7 @@ export function tickSimulation(state: SimState): SimState {
 
     if (isSerialisedModel && isTillStaff) {
       // Serialised staff (solo, duo-parallel): cycle between till and machine
-      const machinePos = staff.station === 'till2' ? POS.machine1 : POS.machine2;
+      const machinePos = (staff.station === 'till2' || rates.staffConfig.machines < 2) ? POS.machine1 : POS.machine2;
       const tillPos = staff.station === 'till2' ? POS.tillStation2 : POS.tillStation;
 
       switch (staff.animState) {
