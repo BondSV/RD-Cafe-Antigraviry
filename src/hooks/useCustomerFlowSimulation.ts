@@ -403,6 +403,54 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
   return tokens;
 }
 
+function reconcileStaffTokens(
+  currentStaff: StaffToken[],
+  nextConfig: StaffConfig
+): StaffToken[] {
+  const nextStaff = initStaffTokens(nextConfig);
+  const currentById = new Map(currentStaff.map((staff) => [staff.id, staff]));
+
+  return nextStaff.map((template) => {
+    const existing = currentById.get(template.id);
+    if (!existing) return template;
+
+    const stationChanged = existing.station !== template.station;
+    let nextAnimState = existing.animState;
+
+    if (stationChanged) {
+      if (template.station === 'wandering') {
+        nextAnimState = 'wandering';
+      } else if (template.station === 'machine' || template.station === 'machine2') {
+        nextAnimState = 'traveling-to-machine';
+      } else {
+        nextAnimState = 'traveling-to-till';
+      }
+    }
+
+    return {
+      ...existing,
+      label: template.label,
+      station: template.station,
+      targetX: template.targetX,
+      targetY: template.targetY,
+      busy: stationChanged ? false : existing.busy,
+      animState: nextAnimState,
+      animStart: stationChanged ? 0 : existing.animStart,
+      animProgress: stationChanged ? 0 : existing.animProgress,
+    };
+  });
+}
+
+function resizeLaneTimers(currentTimers: number[], laneCount: number): number[] {
+  const resized = currentTimers.slice(0, laneCount);
+
+  while (resized.length < laneCount) {
+    resized.push(0);
+  }
+
+  return resized;
+}
+
 // ============================================================
 // SIMULATION STATE
 // ============================================================
@@ -830,10 +878,16 @@ export function tickSimulation(state: SimState): SimState {
 
         if (t.queueIndex === 0) {
           const freeLane = tillBusyUntil.findIndex((u, laneIdx) => {
-             if (u > tick) return false;
-             // Check if a staff token is mapped to this till AND is waiting to serve
-             const mappedStation = laneIdx === 1 ? 'till2' : 'till';
-             return staffTokens.some(st => st.station === mappedStation && st.animState === 'idle');
+            if (u > tick) return false;
+            // Check if a staff token is mapped to this till, is ready to serve,
+            // and has actually reached their current assignment.
+            const mappedStation = laneIdx === 1 ? 'till2' : 'till';
+            return staffTokens.some(st =>
+              st.station === mappedStation &&
+              st.animState === 'idle' &&
+              Math.abs(st.x - st.targetX) < 3 &&
+              Math.abs(st.y - st.targetY) < 3
+            );
           });
           if (freeLane >= 0) {
             t.state = 'ordering';
@@ -1262,9 +1316,18 @@ export function useCustomerFlowSimulation(metrics: VisibleMetrics, flags: Action
     simRef.current.transitioning = true;
     simRef.current.transitionStart = simRef.current.tick;
 
-    simRef.current.staffTokens = initStaffTokens(newRates.staffConfig);
-    simRef.current.tillBusyUntil = new Array(newRates.staffConfig.tillLanes).fill(0);
-    simRef.current.prepBusyUntil = new Array(newRates.staffConfig.prepLanes).fill(0);
+    simRef.current.staffTokens = reconcileStaffTokens(
+      simRef.current.staffTokens,
+      newRates.staffConfig
+    );
+    simRef.current.tillBusyUntil = resizeLaneTimers(
+      simRef.current.tillBusyUntil,
+      newRates.staffConfig.tillLanes
+    );
+    simRef.current.prepBusyUntil = resizeLaneTimers(
+      simRef.current.prepBusyUntil,
+      newRates.staffConfig.prepLanes
+    );
   }, [triggerKey, metrics, flags]);
 
   const animate = useCallback((timestamp: number) => {

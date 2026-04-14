@@ -67,10 +67,10 @@ export default function GameLayout() {
             {/* <CustomerFlowSimulationTopDown metrics={metrics} flags={flags} triggerKey={simTrigger} /> */}
           </div>
           <div className="mt-4">
-            <SystemMap />
+            <MetricPanel />
           </div>
           <div className="mt-4">
-            <MetricPanel />
+            <SystemMap />
           </div>
         </div>
 

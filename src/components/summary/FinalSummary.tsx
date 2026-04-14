@@ -15,16 +15,58 @@ export default function FinalSummary() {
 
   const getOutcomeDetails = () => {
     switch(outcome) {
-      case 'collapse': return { icon: AlertTriangle, title: 'System Collapse', glow: 'bg-red-50 text-accent-red border-red-200', text: 'The café is struggling under unresolved pressure. Changes were disjointed and created more chaos.' };
-      case 'dead-end': return { icon: XCircle, title: 'Dead-end Strategy', glow: 'bg-red-50 text-accent-red border-red-200', text: 'Some local improvements appeared, but structural issues like cost or capability were ignored.' };
-      case 'near-miss': return { icon: Target, title: 'Near Miss', glow: 'bg-amber-50 text-accent-amber border-amber-200', text: 'Significant improvements made, but at least one major system pressure remains unresolved.' };
-      case 'strong-improvement': return { icon: TrendingUp, title: 'Strong Improvement', glow: 'bg-green-50 text-accent-green border-green-200', text: 'Most major issues resolved. A capable strategy with one or two minor trade-offs.' };
-      case 'full-win': return { icon: Trophy, title: 'Full Win', glow: 'bg-green-100 text-accent-green border-green-300', text: 'A highly coherent package of improvements balancing flow, capacity, and cost simultaneously.' };
-      default: return { icon: AlertTriangle, title: 'Unknown', glow: '', text: '' };
+      case 'collapse':
+        return {
+          icon: AlertTriangle,
+          title: 'System Collapse',
+          glow: 'bg-red-50 text-accent-red border-red-200',
+          text: 'The café is struggling under unresolved pressure. Changes were disjointed and created more chaos.',
+          debrief: 'The intervention package did not stabilise the operation. Core pressures in flow, cost, and consistency are still overwhelming the café.'
+        };
+      case 'dead-end':
+        return {
+          icon: XCircle,
+          title: 'Dead-end Strategy',
+          glow: 'bg-red-50 text-accent-red border-red-200',
+          text: 'Some local improvements appeared, but the overall system stayed too weak to recover.',
+          debrief: 'A few conditions improved, but the café still does not have a workable operating model. The next step is a more coherent set of changes across the main bottlenecks.'
+        };
+      case 'near-miss':
+        return {
+          icon: Target,
+          title: 'Near Miss',
+          glow: 'bg-amber-50 text-accent-amber border-amber-200',
+          text: 'The operation improved significantly, but the score is still short of a winning run.',
+          debrief: 'This is close to a strong solution. One or two remaining weaknesses are still dragging the overall score below the top bands.'
+        };
+      case 'strong-improvement':
+        return {
+          icon: TrendingUp,
+          title: 'Strong Improvement',
+          glow: 'bg-green-50 text-accent-green border-green-200',
+          text: 'The café is operating much more effectively, but the score is still just below the win threshold.',
+          debrief: 'This is a credible, high-quality run. The system is largely under control, but it has not quite reached the level required for a full win.'
+        };
+      case 'full-win':
+        return {
+          icon: Trophy,
+          title: 'Full Win',
+          glow: 'bg-green-100 text-accent-green border-green-300',
+          text: 'A highly coherent package of improvements balancing flow, consistency, stock control, and cost.',
+          debrief: 'The intervention package has produced a genuinely strong operating system. The café is now performing at a winning level across the score-critical metrics.'
+        };
+      default:
+        return {
+          icon: AlertTriangle,
+          title: 'Unknown',
+          glow: '',
+          text: '',
+          debrief: '',
+        };
     }
   };
 
-  const { icon: OutcomeIcon, title, glow, text } = getOutcomeDetails();
+  const { icon: OutcomeIcon, title, glow, text, debrief } = getOutcomeDetails();
 
   const renderMetric = (key: keyof VisibleMetrics) => (
     <MetricRow 
@@ -77,8 +119,7 @@ export default function FinalSummary() {
 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 w-full mb-8 text-center shadow-sm">
           <p className="font-sans text-base text-blue-900 leading-relaxed">
-            Your choices improved some local conditions, but pressure shifted elsewhere in the café. 
-            Stronger outcomes usually come from coordinated changes across staffing, workflow, complexity, and cost.
+            {debrief}
           </p>
         </div>
 
