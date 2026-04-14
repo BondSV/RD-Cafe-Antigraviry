@@ -64,13 +64,28 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
   const prevX = React.useRef(token.x);
   const isFlipped = React.useRef(false);
 
-  if (token.state !== 'deciding') {
+  if (token.state === 'leaving') {
+    // Face mathematically toward exit
+    isFlipped.current = isStaff ? false : true; 
+  } else if (token.state !== 'deciding') {
     if (token.x < prevX.current - 0.1) {
       // Moving Left
-      isFlipped.current = isStaff ? false : true; // Staff faces Top-Left naturally. Customers face Bottom-Right naturally.
+      isFlipped.current = isStaff ? false : true;
     } else if (token.x > prevX.current + 0.1) {
       // Moving Right
       isFlipped.current = isStaff ? true : false;
+    } else if (token.state === 'waiting' && token.waitIndex !== undefined && !isStaff && token.isStationary) {
+      // Stationary inside the pickup queue:
+      const waitRow = Math.floor(token.waitIndex / 4);
+      const isOddRow = waitRow % 2 !== 0;
+      
+      if (token.waitIndex === 0) {
+        isFlipped.current = true; // Index 0 faces left (focus on machine)
+      } else if (isOddRow) {
+        isFlipped.current = true; // Odd rows face left (snaking leftward)
+      } else {
+        isFlipped.current = false; // Even rows face right (snaking rightward)
+      }
     }
   }
   prevX.current = token.x;
@@ -354,8 +369,11 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
         {/* Path Y offset: sprites render at y+50 (feet position), paths must match */}
         {(() => {
           const F = 50; // feet offset — paths must be drawn at logical Y + F
-          const pathB = `M${POS.enter.x},${POS.enter.y+F} L${POS.decision.x},${POS.decision.y+F} C${POS.leftCP1.x},${POS.leftCP1.y+F} ${POS.leftCP2.x},${POS.leftCP2.y+F} ${POS.queue.x},${POS.queue.y+F} L${POS.till.x},${POS.till.y+F} L${POS.waiting.x},${POS.waiting.y+F} Q${POS.rightCP.x},${POS.rightCP.y+F} ${POS.exitCorner.x},${POS.exitCorner.y+F} L${POS.exit.x},${POS.exit.y+F}`;
-          const pathA = `M${POS.decision.x},${POS.decision.y+F} Q${POS.bounceCP.x},${POS.bounceCP.y+F} ${POS.exit.x},${POS.exit.y+F}`;
+          // The visual path drawn on floor
+          const postDecisionY = POS.decision.y + 40;
+          const postDecisionX = POS.decision.x - Math.round(40 * (150/110));
+          const pathB = `M${POS.enter.x},${POS.enter.y+F} L${POS.decision.x},${POS.decision.y+F} L${postDecisionX},${postDecisionY+F} L${POS.queueTrackCorner.x},${POS.queueTrackCorner.y+F} L${POS.queue.x},${POS.queue.y+F} L${POS.till.x},${POS.till.y+F} L${POS.waiting.x},${POS.waiting.y+F} L${POS.exitCorner.x},${POS.exitCorner.y+F} L${POS.exit.x},${POS.exit.y+F}`;
+          const pathA = `M${POS.decision.x},${POS.decision.y+F} Q${POS.decision.x + 130},${POS.decision.y + F} ${POS.exit.x},${POS.exit.y+F}`;
           return (<>
             {/* === PATH A: Bounce Route (dashed, subtle green, sagging curve) === */}
             <path d={pathA} stroke="rgba(0,0,0,0.07)" strokeWidth={10} strokeLinecap="round" fill="none" transform="translate(0,3)" strokeDasharray="8 6" />
@@ -387,7 +405,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
              if (ent.id === 'till2') return (
                 <g key={ent.id} id="till2">
                    <BlockCounter x={170} y={POS.counterY} width={170} depth={COUNTER_DEPTH} zHeight={COUNTER_Z} topColor={showTill2 ? "#F8FAFC" : "#F1F5F9"} frontColor={showTill2 ? "#DBEAFE" : "#E2E8F0"} label={showTill2 ? "Checkout II" : ""} />
-                   {showTill2 && <rect x={240} y={POS.counterY + 10} width={28} height={20} rx={3} fill="#1E293B" filter="url(#dropShadowSmooth)" />}
+                   {showTill2 && <rect x={310} y={POS.counterY + 10} width={28} height={20} rx={3} fill="#1E293B" filter="url(#dropShadowSmooth)" />}
                 </g>
              );
              if (ent.id === 'coffee1') return (

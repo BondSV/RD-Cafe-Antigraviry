@@ -40,6 +40,8 @@ export interface Token {
   decidingProgress?: number;// tracks 0.0 to 1.0 of the decision timer
   willLeave?: boolean;      // explicitly pre-calculated decision to bounce
   curveT?: number;          // 0..1 progress along current Bézier curve
+  waitIndex?: number;       // track slot in the pickup queue
+  isStationary?: boolean;   // true if exactly reached movement target
 }
 
 export type StaffAnimState = 'idle' | 'serving' | 'traveling-to-machine' | 'making' | 'traveling-to-till' | 'wandering';
@@ -111,32 +113,27 @@ export const VB_W = 900;
 export const VB_H = 900;
 
 export const POS = {
-  // Customer journey positions — exact Bézier curve coordinates
-  enter:    { x: 390, y: 70 },       // entrance/exit at top
-  decision: { x: 200, y: 160 },      // decision point, upper-left
-  queue:    { x: 320, y: 560 },      // end of left-approach curve (queue start)
-  till:     { x: 420, y: 570 },      // Till 1 at counter edge
-  till2:    { x: 255, y: 570 },      // Till 2 at counter edge
-  waiting:  { x: 700, y: 565 },      // pickup zone, at right end of Coffee 1 counter
-  exit:     { x: 390, y: 70 },       // same as enter
-
-  // Bézier control points for curved paths
-  bounceCP:   { x: 280, y: 220 },    // bounce path sags down before swooping up
-  leftCP1:    { x: 40,  y: 300 },    // left approach — pulls wide left
-  leftCP2:    { x: 80,  y: 620 },    // left approach — pulls deep into bottom-left hook
-  rightCP:    { x: 880, y: 350 },    // right exit sweep — bows wide right
-  exitCorner: { x: 740, y: 150 },    // top-right corner before diagonal return
+  // Customer journey geometric nodes
+  enter:      { x: 380, y: 70 },       // Entrance/exit (shifted left)
+  decision:   { x: 230, y: 180 },      // Decision point (red circle)
+  queueTrackCorner: { x: 90, y: 480 }, // Outer edge for L-curve corner
+  queue:      { x: 320, y: 560 },      // Queue Head (Point 1)
+  till:       { x: 420, y: 570 },      // Till 1
+  till2:      { x: 320, y: 570 },      // Till 2 occupies queue's origin slot when active
+  waiting:    { x: 740, y: 565 },      // Pickup (Point 2 - Arrow Tip)
+  exitCorner: { x: 800, y: 180 },      // Top right geometric corner
+  exit:       { x: 380, y: 70 },       // Same as enter
 
   // Staff stations (behind counter) — centered within each counter block
-  foodPrep:    { x: 85,  y: 660 },
-  tillStation2:{ x: 255, y: 660 },
-  tillStation: { x: 425, y: 660 },
-  machine1:    { x: 607, y: 660 },
-  machine2:    { x: 802, y: 660 },
+  foodPrep:    { x: 85,  y: 610 },
+  tillStation2:{ x: 325, y: 610 },
+  tillStation: { x: 425, y: 610 },
+  machine1:    { x: 607, y: 610 },
+  machine2:    { x: 802, y: 610 },
 
   counterY: 585,                     // top edge of counter blocks
   backlogBase: { x: 700, y: 790 },
-  staffBelowY: 720,
+  staffBelowY: 670,
 };
 
 // Stage labels (kept for backward compat with top-down views)
@@ -544,38 +541,57 @@ function cubicBezierSpeed(t: number, p0: {x:number,y:number}, cp1: {x:number,y:n
 // Constant-speed Bézier stepping: adjusts dt so pixel-speed stays at `pixelSpeed`
 const CURVE_WALK_SPEED = 1.3; // pixels per tick — matches TOKEN_SPEED
 
-// Queue layout: horizontal line going LEFT, then staggered/checkered curve upward
+// Queue layout: horizontal single file stretching left, then spilling backwards slightly upwards into checkered shape.
 function getQueuePosition(index: number, showTill2: boolean): { x: number; y: number } {
   const startX = showTill2 ? POS.queue.x - 60 : POS.queue.x;
-  const startY = POS.queue.y - 10; // slightly further from counter
+  const startY = POS.queue.y;
 
-  if (index < 3) {
-    // First 3: horizontal line going LEFT with good spacing
-    return { x: startX - index * 52, y: startY };
-  }
-  // Positions 3+: staggered/checkered curve upward-left with breathing room
-  const curveIdx = index - 3;
-  const isOdd = curveIdx % 2 === 1; // checkered offset
-  const layer = Math.floor(curveIdx / 2); // 2 people per "row" of the curve
-  const jitterX = ((index * 7) % 11) - 5;
-  const jitterY = ((index * 13) % 9) - 4;
+  // Single-file neck (indexes 0 to 3)
+  if (index === 0) return { x: startX, y: startY };
+  if (index === 1) return { x: startX - 45, y: startY };
+  if (index === 2) return { x: startX - 90, y: startY };
+  if (index === 3) return { x: startX - 135, y: startY - 8 }; // Third step left, bumping slightly upward to initiate the curve
+
+  // Index 4+ Spatula body (curving left and upwards with checkered pattern)
+  const curveIdx = index - 4;
+  const isOdd = curveIdx % 2 === 1;
+  const layer = Math.floor(curveIdx / 2);
+  
+  // Progress backwards up the track mapping to the orange blob
+  const baseX = startX - 180 - (layer * 28); // Increased layer spreading
+  const baseY = startY - 20 - (layer * 42); // Increased vertical step
+  
+  // Enforce distinct vertical and horizontal disalignment between staggered columns
+  const offsetX = isOdd ? -35 : 15;
+  const offsetY = isOdd ? -25 : 0; 
+  
+  // Add broader structured randomness
+  const jitterX = ((index * 17) % 20) - 10;
+  const jitterY = ((index * 11) % 16) - 8;
+  
   return {
-    x: startX - 3 * 52 - layer * 44 + (isOdd ? -20 : 20) + jitterX,
-    y: startY - (layer + 1) * 50 + (isOdd ? -15 : 0) + jitterY,
+    x: baseX + offsetX + jitterX,
+    y: baseY + offsetY + jitterY,
   };
 }
 
-// Waiting/pickup layout: first customer at inflection point, others stack LEFT and UP
-const WAITING_SPACING_X = 44;
-const WAITING_SPACING_Y = 44;
-const WAITING_PER_ROW = 3;
+// Waiting/pickup layout: first customer at tip of arrow (Point 2), others stack LEFT and wrap UP/backward
+const WAITING_SPACING_X = 45;
+const WAITING_SPACING_Y = 30;
+const WAITING_PER_ROW = 4;
 
 function getWaitingPosition(index: number): { x: number; y: number } {
-  // First customer at POS.waiting (the inflection point), others go left and up
   const row = Math.floor(index / WAITING_PER_ROW);
-  const col = index % WAITING_PER_ROW;
+  const isOddRow = row % 2 !== 0;
+  let col = index % WAITING_PER_ROW;
+  
+  // Snake the queue layout to naturally enforce correct movement direction
+  if (isOddRow) {
+    col = (WAITING_PER_ROW - 1) - col;
+  }
+  
   return {
-    x: POS.waiting.x - col * WAITING_SPACING_X,
+    x: POS.waiting.x - col * WAITING_SPACING_X - (row * 15),
     y: POS.waiting.y - row * WAITING_SPACING_Y,
   };
 }
@@ -790,30 +806,61 @@ export function tickSimulation(state: SimState): SimState {
       }
 
       case 'approaching_queue': {
-        // Follow cubic Bézier at constant pixel speed to queue entry point
-        if (!t.curveT) t.curveT = 0;
-        if (t.curveT < 1) {
-          const spd = cubicBezierSpeed(t.curveT, POS.decision, POS.leftCP1, POS.leftCP2, POS.queue);
-          const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
-          t.curveT = Math.min(1, t.curveT + dt);
-          const curvePos = cubicBezier(t.curveT, POS.decision, POS.leftCP1, POS.leftCP2, POS.queue);
-          t.x = curvePos.x;
-          t.y = curvePos.y;
+        const targetPos = getQueuePosition(t.queueIndex, rates.staffConfig.tillLanes >= 2);
+        
+        let currentTarget = targetPos;
+        const cornerY = POS.queueTrackCorner.y;
+        
+        // Emulate continuing the entry vector smoothly past the decision point before turning
+        const postDecisionY = POS.decision.y + 40;
+        const postDecisionX = POS.decision.x - Math.round(40 * (150/110)); // Follows exactly the entry dx/dy ratio
+        
+        if (t.y < postDecisionY) {
+            currentTarget = { x: postDecisionX, y: postDecisionY };
+        } 
+        // If past the post-decision mark but above the corner, head to the corner
+        else if (t.y < cornerY - 20 && targetPos.y > cornerY) {
+            const offsetX = (targetPos.x % 10) - 5;
+            currentTarget = { x: POS.queueTrackCorner.x + offsetX, y: cornerY };
         }
-        if (t.curveT >= 1) {
+
+        // Move towards assigned currentTarget
+        const np = moveTowardPoint(t.x, t.y, currentTarget.x, currentTarget.y, TOKEN_SPEED);
+        t.x = np.x;
+        t.y = np.y;
+        
+        // "Clip" the outer corner to create the smooth rounded arc bend
+        const distToCorner = Math.sqrt(Math.pow(t.x - currentTarget.x, 2) + Math.pow(t.y - currentTarget.y, 2));
+        if (currentTarget.y === cornerY && distToCorner < 50 && currentTarget !== targetPos) {
+           t.y += 1.5; // Drift downwards early to round out the bottom-left corner naturally
+        }
+        
+        // Hard-stop precisely upon reaching exact target slot in queue
+        const distToTarget = Math.sqrt(Math.pow(t.x - targetPos.x, 2) + Math.pow(t.y - targetPos.y, 2));
+        if (distToTarget < 2) {
           t.state = 'queuing';
+          t.arrivedAtStage = true;
           t.stageStart = tick;
-          t.queueIndex = queueCount;
-          t.curveT = 0;
+          t.isStationary = true;
+        } else {
+          t.isStationary = false;
         }
         break;
       }
 
       case 'queuing': {
-        const qPos = getQueuePosition(t.queueIndex, rates.staffConfig.tills >= 2);
-        const qp = moveTowardPoint(t.x, t.y, qPos.x, qPos.y, TOKEN_SPEED);
-        t.x = qp.x;
-        t.y = qp.y;
+        const qPos = getQueuePosition(t.queueIndex, rates.staffConfig.tillLanes >= 2);
+        const dist = Math.sqrt(Math.pow(t.x - qPos.x, 2) + Math.pow(t.y - qPos.y, 2));
+        if (dist < 2) {
+          t.x = qPos.x;
+          t.y = qPos.y;
+          t.isStationary = true;
+        } else {
+          const qp = moveTowardPoint(t.x, t.y, qPos.x, qPos.y, TOKEN_SPEED);
+          t.x = qp.x;
+          t.y = qp.y;
+          t.isStationary = false;
+        }
 
         if (t.queueIndex === 0) {
           const freeLane = tillBusyUntil.findIndex(u => u <= tick);
@@ -878,10 +925,47 @@ export function tickSimulation(state: SimState): SimState {
 
       case 'waiting': {
         const waitingTokens = tokens.filter(tk => tk.state === 'waiting' && tk.id < t.id);
-        const wPos = getWaitingPosition(waitingTokens.length);
-        const wp = moveTowardPoint(t.x, t.y, wPos.x, wPos.y, TOKEN_SPEED);
-        t.x = wp.x;
-        t.y = wp.y;
+        t.waitIndex = waitingTokens.length;
+        const wPos = getWaitingPosition(t.waitIndex);
+        const dist = Math.sqrt(Math.pow(t.x - wPos.x, 2) + Math.pow(t.y - wPos.y, 2));
+        
+        if (dist < 2 || (t.curveT !== undefined && t.curveT >= 1)) {
+            t.x = wPos.x;
+            t.y = wPos.y;
+            t.curveT = 1; // Locked in
+            t.isStationary = true;
+        } else {
+            const waitRow = Math.floor(t.waitIndex / WAITING_PER_ROW);
+            const isOddRow = waitRow % 2 !== 0;
+            const isFirstInOddRow = isOddRow && (t.waitIndex % WAITING_PER_ROW === 0);
+            
+            if (!isOddRow || isFirstInOddRow) {
+                // Right-to-Left rows (and the far-left anchor of Left-to-Right rows) 
+                // simply walk linearly straight into their slot without clipping
+                const wp = moveTowardPoint(t.x, t.y, wPos.x, wPos.y, TOKEN_SPEED);
+                t.x = wp.x;
+                t.y = wp.y;
+                t.isStationary = false;
+            } else {
+                // Subsequent Left-to-Right rows must arc overhead to avoid clipping through their neighbors
+                if (t.curveT === undefined) t.curveT = 0;
+                
+                const startPos = t.laneIndex === 1 ? POS.till2 : POS.till;
+                const midX = (startPos.x + wPos.x) / 2;
+                
+                const arcHeight = 40 + (waitRow * 25); 
+                const cp = { x: midX, y: Math.min(startPos.y, wPos.y) - arcHeight };
+                
+                const spd = quadBezierSpeed(t.curveT, startPos, cp, wPos);
+                const dt = spd > 0.1 ? TOKEN_SPEED / spd : 0.01;
+                t.curveT = Math.min(1, t.curveT + dt);
+                
+                const nextNode = quadBezier(t.curveT, startPos, cp, wPos);
+                t.x = nextNode.x;
+                t.y = nextNode.y;
+                t.isStationary = false;
+            }
+        }
 
         const prepDone = t.prepDoneAt > 0 && t.prepDoneAt <= tick;
         const timeWaited = tick - t.stageStart;
@@ -926,13 +1010,15 @@ export function tickSimulation(state: SimState): SimState {
       }
 
       case 'bouncing': {
-        // Follow quadratic Bézier at constant pixel speed
+        // Curves sharply rightwards and IMMEDIATELY swoops upwards to the exit
         if (!t.curveT) t.curveT = 0;
         if (t.curveT < 1) {
-          const spd = quadBezierSpeed(t.curveT, POS.decision, POS.bounceCP, POS.exit);
+          // CP placed perfectly to mirror diagram: pulls horizontally right then sharply up
+          const cp = { x: POS.decision.x + 130, y: POS.decision.y }; 
+          const spd = quadBezierSpeed(t.curveT, POS.decision, cp, POS.exit);
           const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
           t.curveT = Math.min(1, t.curveT + dt);
-          const bouncePos = quadBezier(t.curveT, POS.decision, POS.bounceCP, POS.exit);
+          const bouncePos = quadBezier(t.curveT, POS.decision, cp, POS.exit);
           t.x = bouncePos.x;
           t.y = bouncePos.y;
         } else {
@@ -943,52 +1029,52 @@ export function tickSimulation(state: SimState): SimState {
       }
 
       case 'stock_bouncing': {
-        // Move right to pickup zone first, then follow right exit sweep
+        // Move right to pickup zone first, then follow right geometric exit route
         if (t.x < POS.waiting.x - 5) {
           const sp = moveTowardPoint(t.x, t.y, POS.waiting.x, POS.waiting.y, TOKEN_SPEED * 1.2);
           t.x = sp.x;
           t.y = sp.y;
         } else {
-          if (!t.curveT) t.curveT = 0;
-          if (t.curveT < 1) {
-            const spd = quadBezierSpeed(t.curveT, POS.waiting, POS.rightCP, POS.exitCorner);
-            const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
-            t.curveT = Math.min(1, t.curveT + dt);
-            const sbPos = quadBezier(t.curveT, POS.waiting, POS.rightCP, POS.exitCorner);
-            t.x = sbPos.x;
-            t.y = sbPos.y;
-          } else {
-            const sp2 = moveTowardPoint(t.x, t.y, POS.exit.x, POS.exit.y, TOKEN_SPEED * 1.2);
-            t.x = sp2.x;
-            t.y = sp2.y;
-            if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
-              t.opacity -= FADE_SPEED * 4;
-              if (t.opacity <= 0) t.state = 'exited';
-            }
+          let currentTarget = POS.exit;
+          if (t.y > POS.exitCorner.y + 40 && t.x > 300) {
+            currentTarget = POS.exitCorner;
+          }
+          
+          const distToCorner = Math.sqrt(Math.pow(t.x - POS.exitCorner.x, 2) + Math.pow(t.y - POS.exitCorner.y, 2));
+          if (currentTarget === POS.exitCorner && distToCorner < 60) {
+            currentTarget = POS.exit; // Smooth geometric corner cut
+          }
+        
+          const sp2 = moveTowardPoint(t.x, t.y, currentTarget.x, currentTarget.y, TOKEN_SPEED * 1.2);
+          t.x = sp2.x;
+          t.y = sp2.y;
+          
+          if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
+            t.opacity -= FADE_SPEED * 4;
+            if (t.opacity <= 0) t.state = 'exited';
           }
         }
         break;
       }
 
       case 'leaving': {
-        // Phase 1: Follow quadratic Bézier at constant pixel speed
-        if (!t.curveT) t.curveT = 0;
-        if (t.curveT < 1) {
-          const spd = quadBezierSpeed(t.curveT, POS.waiting, POS.rightCP, POS.exitCorner);
-          const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
-          t.curveT = Math.min(1, t.curveT + dt);
-          const leavePos = quadBezier(t.curveT, POS.waiting, POS.rightCP, POS.exitCorner);
-          t.x = leavePos.x;
-          t.y = leavePos.y;
-        } else {
-          // Phase 2: Straight diagonal from exitCorner(740,150) to exit(390,70)
-          const ep = moveTowardPoint(t.x, t.y, POS.exit.x, POS.exit.y, TOKEN_SPEED * 1.3);
-          t.x = ep.x;
-          t.y = ep.y;
-          if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
-            t.opacity -= FADE_SPEED * 3;
-            if (t.opacity <= 0) t.state = 'exited';
-          }
+        let currentTarget = POS.exit;
+        if (t.y > POS.exitCorner.y + 40 && t.x > 300) {
+          currentTarget = POS.exitCorner;
+        }
+        
+        const distToCorner = Math.sqrt(Math.pow(t.x - POS.exitCorner.x, 2) + Math.pow(t.y - POS.exitCorner.y, 2));
+        if (currentTarget === POS.exitCorner && distToCorner < 70) {
+          currentTarget = POS.exit; // Smooth geometric corner cut mimicking diagram
+        }
+
+        const np = moveTowardPoint(t.x, t.y, currentTarget.x, currentTarget.y, TOKEN_SPEED * 1.3);
+        t.x = np.x;
+        t.y = np.y;
+
+        if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
+          t.opacity -= FADE_SPEED * 3;
+          if (t.opacity <= 0) t.state = 'exited';
         }
         break;
       }
@@ -1058,7 +1144,7 @@ export function tickSimulation(state: SimState): SimState {
 
     if (isSerialisedModel && isTillStaff) {
       // Serialised staff (solo, duo-parallel): cycle between till and machine
-      const machinePos = staff.station === 'till2' ? POS.machine2 : POS.machine1;
+      const machinePos = staff.station === 'till2' ? POS.machine1 : POS.machine2;
       const tillPos = staff.station === 'till2' ? POS.tillStation2 : POS.tillStation;
 
       switch (staff.animState) {
