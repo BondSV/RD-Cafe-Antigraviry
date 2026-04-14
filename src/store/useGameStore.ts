@@ -52,6 +52,7 @@ const initialState: GameState = {
   metrics: initialMetrics,
   breakdown: null,
   history: [],
+  outcome: undefined,
 };
 
 import { applyActionEngine } from '../engine/applyAction';
@@ -64,5 +65,13 @@ export const useGameStore = create<GameStore>((set) => ({
     if (!action) return state;
     return applyActionEngine(state, action);
   }),
-  resetGame: () => set(() => ({ ...initialState })),
+  resetGame: () => set(() => ({
+    ...initialState,
+    flags: { ...defaultFlags },
+    metrics: { ...initialMetrics },
+    actionsTaken: [],
+    history: [],
+    breakdown: null,
+    outcome: undefined,
+  }), true),
 }));
