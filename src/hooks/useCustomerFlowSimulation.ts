@@ -57,6 +57,7 @@ export interface StaffToken {
   busy: boolean;
   animState: StaffAnimState;
   animStart: number;
+  animProgress: number;
 }
 
 export interface BacklogTicket {
@@ -336,7 +337,7 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
       x: POS.tillStation.x, y: sY,
       targetX: POS.tillStation.x, targetY: sY,
       station: 'till', busy: false,
-      animState: 'idle', animStart: 0,
+      animState: 'idle', animStart: 0, animProgress: 0,
     });
   } else if (config.model === 'duo-parallel') {
     // Two serialised lanes — each cycles between their till and machine
@@ -345,14 +346,14 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
       x: POS.tillStation.x, y: sY,
       targetX: POS.tillStation.x, targetY: sY,
       station: 'till', busy: false,
-      animState: 'idle', animStart: 0,
+      animState: 'idle', animStart: 0, animProgress: 0,
     });
     tokens.push({
       id: 'hb', label: 'HB',
       x: POS.tillStation2.x, y: sY,
       targetX: POS.tillStation2.x, targetY: sY,
       station: 'till2', busy: false,
-      animState: 'idle', animStart: 0,
+      animState: 'idle', animStart: 0, animProgress: 0,
     });
   } else if (config.totalStaff >= 3 && config.machines >= 2 && !config.specialised) {
     // 3+ staff with 2 machines (not specialised): MGR→till, HB→machine1, AB1→machine2
@@ -361,21 +362,21 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
       x: POS.tillStation.x, y: sY,
       targetX: POS.tillStation.x, targetY: sY,
       station: 'till', busy: false,
-      animState: 'idle', animStart: 0,
+      animState: 'idle', animStart: 0, animProgress: 0,
     });
     tokens.push({
       id: 'hb', label: 'HB',
       x: POS.machine1.x, y: sY,
       targetX: POS.machine1.x, targetY: sY,
       station: 'machine', busy: false,
-      animState: 'idle', animStart: 0,
+      animState: 'idle', animStart: 0, animProgress: 0,
     });
     tokens.push({
       id: 'ab1', label: 'AB1',
       x: POS.machine2.x, y: sY,
       targetX: POS.machine2.x, targetY: sY,
       station: 'machine2', busy: false,
-      animState: 'idle', animStart: 0,
+      animState: 'idle', animStart: 0, animProgress: 0,
     });
     if (config.totalStaff >= 4) {
       tokens.push({
@@ -383,7 +384,7 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
         x: POS.foodPrep.x, y: sY + 30,
         targetX: POS.foodPrep.x + 40, targetY: sY + 30,
         station: 'wandering', busy: false,
-        animState: 'wandering', animStart: 0,
+        animState: 'wandering', animStart: 0, animProgress: 0,
       });
     }
   } else {
@@ -393,7 +394,7 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
       x: POS.tillStation.x, y: sY,
       targetX: POS.tillStation.x, targetY: sY,
       station: 'till', busy: false,
-      animState: 'idle', animStart: 0,
+      animState: 'idle', animStart: 0, animProgress: 0,
     });
     if (config.totalStaff >= 2) {
       tokens.push({
@@ -401,7 +402,7 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
         x: POS.machine1.x, y: sY,
         targetX: POS.machine1.x, targetY: sY,
         station: 'machine', busy: false,
-        animState: 'idle', animStart: 0,
+        animState: 'idle', animStart: 0, animProgress: 0,
       });
     }
     if (config.totalStaff >= 3) {
@@ -411,7 +412,7 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
         x: POS.foodPrep.x, y: sY + 30,
         targetX: POS.foodPrep.x + 40, targetY: sY + 30,
         station: 'wandering', busy: false,
-        animState: 'wandering', animStart: 0,
+        animState: 'wandering', animStart: 0, animProgress: 0,
       });
     }
     if (config.totalStaff >= 4) {
@@ -421,7 +422,7 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
           x: POS.tillStation2.x, y: sY,
           targetX: POS.tillStation2.x, targetY: sY,
           station: 'till2', busy: false,
-          animState: 'idle', animStart: 0,
+          animState: 'idle', animStart: 0, animProgress: 0,
         });
       } else {
         tokens.push({
@@ -429,7 +430,7 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
           x: POS.foodPrep.x + 30, y: sY + 30,
           targetX: POS.foodPrep.x + 60, targetY: sY + 30,
           station: 'wandering', busy: false,
-          animState: 'wandering', animStart: 0,
+          animState: 'wandering', animStart: 0, animProgress: 0,
         });
       }
     }
@@ -664,6 +665,7 @@ export function tickSimulation(state: SimState): SimState {
   const prepBusyUntil = [...state.prepBusyUntil];
   const completedTicks = [...state.completedTicks];
   const lostTicks = [...state.lostTicks];
+  let staffTokens = [...state.staffTokens];
 
   // --- Spawn walk-in customers ---
   if (tick - lastWalkinSpawn >= rates.spawnInterval) {
@@ -863,14 +865,19 @@ export function tickSimulation(state: SimState): SimState {
         }
 
         if (t.queueIndex === 0) {
-          const freeLane = tillBusyUntil.findIndex(u => u <= tick);
+          const freeLane = tillBusyUntil.findIndex((u, laneIdx) => {
+             if (u > tick) return false;
+             // Check if a staff token is mapped to this till AND is waiting to serve
+             const mappedStation = laneIdx === 1 ? 'till2' : 'till';
+             return staffTokens.some(st => st.station === mappedStation && st.animState === 'idle');
+          });
           if (freeLane >= 0) {
             t.state = 'ordering';
             t.stageStart = tick;
             t.laneIndex = freeLane;
             t.queueIndex = -1;
             t.arrivedAtStage = false;
-            // Block till lane for the full cycle time
+            // Block till lane for the full cycle time (for serialized models, this physically prevents overlap)
             tillBusyUntil[freeLane] = tick + rates.tillCycleTime;
           }
         }
@@ -1123,7 +1130,6 @@ export function tickSimulation(state: SimState): SimState {
   }
 
   // --- Update staff tokens (event-driven animation) ---
-  let staffTokens = [...state.staffTokens];
   const sY = POS.staffBelowY;
 
   for (const staff of staffTokens) {
@@ -1152,9 +1158,10 @@ export function tickSimulation(state: SimState): SimState {
           // Wait at till for a customer
           staff.targetX = tillPos.x;
           staff.targetY = sY;
+          const myTillLane = staff.station === 'till2' ? 1 : 0;
           // Check if any customer is ordering at our lane
           const orderingCustomer = tokens.find(t =>
-            t.state === 'ordering' && t.arrivedAtStage
+            t.state === 'ordering' && t.arrivedAtStage && t.laneIndex === myTillLane
           );
           if (orderingCustomer) {
             staff.animState = 'serving';
@@ -1165,11 +1172,14 @@ export function tickSimulation(state: SimState): SimState {
           // Stay at till while customer orders
           staff.targetX = tillPos.x;
           staff.targetY = sY;
+          staff.animProgress = Math.min(1, (tick - staff.animStart) / rates.tillTime);
+          const myTillLaneServing = staff.station === 'till2' ? 1 : 0;
           // When customer finishes ordering (transitions to waiting), travel to machine
-          const stillOrdering = tokens.some(t => t.state === 'ordering' && t.arrivedAtStage);
+          const stillOrdering = tokens.some(t => t.state === 'ordering' && t.arrivedAtStage && t.laneIndex === myTillLaneServing);
           if (!stillOrdering) {
             staff.animState = 'traveling-to-machine';
             staff.animStart = tick;
+            staff.animProgress = 0;
           }
           break;
         case 'traveling-to-machine':
@@ -1183,10 +1193,13 @@ export function tickSimulation(state: SimState): SimState {
         case 'making':
           staff.targetX = machinePos.x;
           staff.targetY = sY;
+          const makingDuration = rates.prepTime - ANIM_TRAVEL_TICKS * 2;
+          staff.animProgress = Math.min(1, (tick - staff.animStart) / makingDuration);
           // Wait for prep duration minus travel time
-          if (tick - staff.animStart >= rates.prepTime - ANIM_TRAVEL_TICKS * 2) {
+          if (tick - staff.animStart >= makingDuration) {
             staff.animState = 'traveling-to-till';
             staff.animStart = tick;
+            staff.animProgress = 0;
           }
           break;
         case 'traveling-to-till':
@@ -1195,6 +1208,7 @@ export function tickSimulation(state: SimState): SimState {
           if (Math.abs(staff.x - tillPos.x) < 3) {
             staff.animState = 'idle';
             staff.animStart = tick;
+            staff.animProgress = 0;
           }
           break;
       }
@@ -1203,11 +1217,35 @@ export function tickSimulation(state: SimState): SimState {
       const tillPos = staff.station === 'till2' ? POS.tillStation2 : POS.tillStation;
       staff.targetX = tillPos.x;
       staff.targetY = sY;
+
+      const orderingCustomer = tokens.find(t =>
+        t.state === 'ordering' && t.arrivedAtStage && t.laneIndex === (staff.station === 'till2' ? 1 : 0)
+      );
+      if (orderingCustomer) {
+        staff.animState = 'serving';
+        staff.animProgress = Math.min(1, (tick - orderingCustomer.stageStart) / rates.tillTime);
+      } else {
+        staff.animState = 'idle';
+        staff.animProgress = 0;
+      }
+
     } else if (isMachineStaff) {
       // Machine person: stays at machine
       const machPos = staff.station === 'machine2' ? POS.machine2 : POS.machine1;
       staff.targetX = machPos.x;
       staff.targetY = sY;
+
+      const machineIndex = staff.station === 'machine2' ? 1 : 0;
+      const makingCustomer = tokens.find(t =>
+        t.state === 'waiting' && t.laneIndex === machineIndex && t.prepDoneAt > tick && tick >= (t.prepDoneAt - rates.prepTime)
+      );
+      if (makingCustomer) {
+         staff.animState = 'making';
+         staff.animProgress = Math.min(1, 1 - (makingCustomer.prepDoneAt - tick) / rates.prepTime);
+      } else {
+         staff.animState = 'idle';
+         staff.animProgress = 0;
+      }
     }
 
     // Move toward target

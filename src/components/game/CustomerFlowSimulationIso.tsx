@@ -177,9 +177,7 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
       {isBusy && (
         <g transform="translate(-15, 12)">
           <rect x={0} y={0} width={30} height={4} rx={2} fill="#E2E8F0" stroke="#94A3B8" strokeWidth={1} />
-          <rect x={0} y={0} width={30} height={4} rx={2} fill="#3B82F6">
-             <animate attributeName="width" values="0; 30" dur="1.5s" repeatCount="indefinite" />
-          </rect>
+          <rect x={0} y={0} width={Math.max(0, Math.min(30, (token.animProgress || 0) * 30))} height={4} rx={2} fill="#3B82F6" />
         </g>
       )}
     </g>
