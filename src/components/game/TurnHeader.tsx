@@ -9,6 +9,11 @@ export default function TurnHeader() {
   const metrics = useGameStore(state => state.metrics);
   const systemScore = getSystemScore(metrics);
   const healthColor = systemScore > 69 ? 'bg-accent-green' : systemScore > 39 ? 'bg-accent-amber' : 'bg-accent-red';
+  const scoreAccent = systemScore > 69
+    ? 'border-accent-green/40 bg-accent-green/12 text-accent-green shadow-[0_0_0_1px_rgba(34,197,94,0.08),0_10px_24px_rgba(34,197,94,0.12)]'
+    : systemScore > 39
+      ? 'border-accent-amber/40 bg-accent-amber/12 text-accent-amber shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_10px_24px_rgba(245,158,11,0.14)]'
+      : 'border-accent-red/40 bg-accent-red/12 text-accent-red shadow-[0_0_0_1px_rgba(239,68,68,0.08),0_10px_24px_rgba(239,68,68,0.12)]';
 
   return (
     <div className="w-full h-[52px] bg-bg-surface border-b border-border-default flex items-center justify-between px-4 sticky top-0 z-10 shadow-sm">
@@ -21,8 +26,13 @@ export default function TurnHeader() {
           style={{ width: `${systemScore}%` }} 
         />
       </div>
-      <div className="font-mono text-xs text-text-muted">
-        SYSTEM SCORE: {systemScore.toFixed(1)}
+      <div className={`flex items-center gap-3 rounded-xl border px-3 py-1.5 transition-all duration-300 ${scoreAccent}`}>
+        <div className="font-mono text-[10px] font-bold leading-none uppercase tracking-[0.16em] text-black">
+          System Score
+        </div>
+        <div className="font-mono text-lg font-bold leading-none">
+          {systemScore.toFixed(1)}
+        </div>
       </div>
     </div>
   );
