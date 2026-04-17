@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameStore } from './store/useGameStore';
 import IntroScreen from './components/intro/IntroScreen';
 import GameLayout from './components/layout/GameLayout';
 import FinalSummary from './components/summary/FinalSummary';
+import { preloadSimulationSprites } from './utils/preloadSimulationSprites';
 
 function App() {
   const [started, setStarted] = useState(false);
   const outcome = useGameStore(state => state.outcome);
+
+  useEffect(() => {
+    preloadSimulationSprites();
+  }, []);
 
   if (!started) return <IntroScreen onStart={() => setStarted(true)} />;
   if (outcome) return <FinalSummary />;
