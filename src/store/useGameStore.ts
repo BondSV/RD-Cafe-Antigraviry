@@ -44,34 +44,26 @@ export const defaultFlags: ActionFlags = {
   rolesRemapped: false,
 };
 
-const initialState: GameState = {
+const createInitialGameState = (): GameState => ({
   turn: 1,
   maxTurns: 7,
   actionsTaken: [],
-  flags: defaultFlags,
-  metrics: initialMetrics,
+  flags: { ...defaultFlags },
+  metrics: { ...initialMetrics },
   breakdown: null,
   history: [],
   outcome: undefined,
-};
+});
 
 import { applyActionEngine } from '../engine/applyAction';
 import { actions } from '../data/actions';
 
 export const useGameStore = create<GameStore>((set) => ({
-  ...initialState,
+  ...createInitialGameState(),
   applyAction: (actionId: string) => set((state) => {
     const action = actions.find(a => a.id === actionId);
     if (!action) return state;
     return applyActionEngine(state, action);
   }),
-  resetGame: () => set(() => ({
-    ...initialState,
-    flags: { ...defaultFlags },
-    metrics: { ...initialMetrics },
-    actionsTaken: [],
-    history: [],
-    breakdown: null,
-    outcome: undefined,
-  }), true),
+  resetGame: () => set(() => createInitialGameState()),
 }));
