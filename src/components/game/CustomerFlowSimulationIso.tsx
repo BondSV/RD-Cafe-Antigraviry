@@ -95,24 +95,20 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
       {/* Dynamic floor shadow stretching slightly left/back */}
       <ellipse cx={-5} cy={2} rx={18} ry={8} fill="rgba(0,0,0,0.5)" filter="blur(3px)" transform="rotate(-15)" />
 
-      {/* Sprite Image wrapped in foreignObject for reliable rendering */}
-      <foreignObject x={-25} y={avatarY} width={50} height={avatarH}>
-        <div 
-           className="w-full h-full relative" 
-           style={{
-             transformOrigin: 'bottom center',
-             // Mirror based on active frame velocity only
-             transform: isFlipped.current ? 'scaleX(-1)' : 'none'
-           }}
-        >
-          <img 
-             src={spritePath} 
-             alt="sprite"
-             className="w-full h-full object-contain filter drop-shadow-md"
-             style={{ pointerEvents: 'none' }}
-          />
-        </div>
-      </foreignObject>
+      {/* Pure SVG image rendering is substantially more reliable than HTML inside foreignObject on mobile browsers */}
+      <g transform={isFlipped.current ? 'scale(-1 1)' : undefined}>
+        <image
+          href={spritePath}
+          xlinkHref={spritePath}
+          x={-25}
+          y={avatarY}
+          width={50}
+          height={avatarH}
+          preserveAspectRatio="xMidYMid meet"
+          filter="url(#dropShadowSmooth)"
+          style={{ pointerEvents: 'none' }}
+        />
+      </g>
 
       {isStaff && (
         <text x={0} y={24} textAnchor="middle" fontSize={10} fill="#475569" fontWeight="700">
