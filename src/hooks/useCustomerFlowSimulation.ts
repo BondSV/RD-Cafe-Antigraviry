@@ -40,6 +40,8 @@ export interface Token {
   decidingProgress?: number;// tracks 0.0 to 1.0 of the decision timer
   willLeave?: boolean;      // explicitly pre-calculated decision to bounce
   curveT?: number;          // 0..1 progress along current Bézier curve
+  routeStep?: number;       // current waypoint index for multi-node walking routes
+  routePhase?: 'branch' | 'queue' | 'direct';
   waitIndex?: number;       // track slot in the pickup queue
   isStationary?: boolean;   // true if exactly reached movement target
 }
@@ -118,15 +120,15 @@ export const VB_H = 820;
 
 export const POS = {
   // Customer journey geometric nodes
-  enter:      { x: 380, y: 70 },       // Entrance/exit (shifted left)
-  decision:   { x: 230, y: 180 },      // Decision point (red circle)
+  enter:      { x: 371, y: 7 },        // Entrance/exit just outside the left section of the doorway
+  decision:   { x: 270, y: 170 },      // Decision point (red circle)
   queueTrackCorner: { x: 90, y: 480 }, // Outer edge for L-curve corner
-  queue:      { x: 320, y: 560 },      // Queue Head (Point 1)
-  till:       { x: 420, y: 570 },      // Till 1
-  till2:      { x: 320, y: 570 },      // Till 2 occupies queue's origin slot when active
-  waiting:    { x: 720, y: 565 },      // Pickup (Point 2 - Arrow Tip)
+  queue:      { x: 320, y: 575 },      // Queue Head (Point 1)
+  till:       { x: 420, y: 585 },      // Till 1
+  till2:      { x: 320, y: 585 },      // Till 2 occupies queue's origin slot when active
+  waiting:    { x: 720, y: 585 },      // Pickup (Point 2 - Arrow Tip)
   exitCorner: { x: 800, y: 180 },      // Top right geometric corner
-  exit:       { x: 380, y: 70 },       // Same as enter
+  exit:       { x: 371, y: 7 },        // Same as enter
 
   // Staff stations (behind counter) — centered within each counter block
   foodPrep:    { x: 85,  y: 610 },
@@ -137,7 +139,98 @@ export const POS = {
 
   counterY: 585,                     // top edge of counter blocks
   backlogBase: { x: 680, y: 720 },
-  staffBelowY: 670,
+  staffBelowY: 645,
+};
+
+export const PATH = {
+  // Raw engine coordinates. Customer sprites render at y + 50 in the SVG.
+  entryRoute: [
+    { x: 371, y: 7 },
+    { x: 370, y: 39 },
+    { x: 357, y: 95 },
+    { x: 344, y: 115 },
+    { x: 324, y: 135 },
+    { x: 304, y: 149 },
+    { x: 284, y: 159 },
+    POS.decision,
+  ],
+  queueApproach: [
+    { x: 257, y: 180 },
+    { x: 237, y: 197 },
+    { x: 217, y: 217 },
+    { x: 191, y: 249 },
+    { x: 177, y: 267 },
+    { x: 164, y: 287 },
+    { x: 151, y: 310 },
+    { x: 141, y: 330 },
+    { x: 128, y: 360 },
+    { x: 114, y: 423 },
+    { x: 106, y: 473 },
+    { x: 112, y: 521 },
+    { x: 145, y: 557 },
+    { x: 200, y: 570 },
+    POS.queue,
+  ],
+  branchRoute: [
+    POS.decision,
+    { x: 257, y: 180 },
+    { x: 237, y: 197 },
+    { x: 217, y: 217 },
+    { x: 191, y: 249 },
+    { x: 177, y: 267 },
+    { x: 164, y: 287 },
+    { x: 151, y: 310 },
+  ],
+  directServiceRoute: [
+    { x: 151, y: 310 },
+    { x: 147, y: 344 },
+    { x: 160, y: 402 },
+    { x: 179, y: 464 },
+    { x: 202, y: 501 },
+    { x: 232, y: 532 },
+    { x: 269, y: 555 },
+    POS.queue,
+  ],
+  indexZeroOneRoute: [
+    { x: 151, y: 310 },
+    { x: 147, y: 344 },
+    { x: 160, y: 402 },
+    { x: 179, y: 464 },
+    { x: 202, y: 501 },
+    { x: 232, y: 532 },
+    { x: 269, y: 555 },
+    POS.queue,
+  ],
+  bounceRoute: [
+    POS.decision,
+    { x: 303, y: 164 },
+    { x: 336, y: 162 },
+    { x: 366, y: 158 },
+    { x: 389, y: 149 },
+    { x: 403, y: 133 },
+    { x: 405, y: 116 },
+    { x: 403, y: 81 },
+    { x: 400, y: 48 },
+    { x: 397, y: 16 },
+    { x: 371, y: 7 },
+  ],
+  exitRoute: [
+    { x: 770, y: 340 },
+    { x: 760, y: 269 },
+    { x: 749, y: 226 },
+    { x: 728, y: 201 },
+    { x: 696, y: 184 },
+    { x: 653, y: 166 },
+    { x: 611, y: 152 },
+    { x: 568, y: 139 },
+    { x: 526, y: 127 },
+    { x: 484, y: 112 },
+    { x: 451, y: 94 },
+    { x: 430, y: 74 },
+    { x: 419, y: 56 },
+    { x: 409, y: 28 },
+    POS.exit,
+  ],
 };
 
 // Stage labels (kept for backward compat with top-down views)
@@ -517,6 +610,70 @@ function moveTowardPoint(cx: number, cy: number, tx: number, ty: number, speed: 
   return { x: cx + dx * ratio, y: cy + dy * ratio };
 }
 
+function moveAlongRoute(
+  token: Token,
+  route: { x: number; y: number }[],
+  speed: number,
+): { x: number; y: number; routeStep: number; complete: boolean } {
+  const routeStep = Math.min(token.routeStep ?? 0, route.length - 1);
+  const target = route[routeStep];
+  const next = moveTowardPoint(token.x, token.y, target.x, target.y, speed);
+  const reached = Math.abs(next.x - target.x) < 2 && Math.abs(next.y - target.y) < 2;
+  const nextStep = reached ? routeStep + 1 : routeStep;
+
+  return {
+    x: next.x,
+    y: next.y,
+    routeStep: nextStep,
+    complete: nextStep >= route.length,
+  };
+}
+
+function getQueueApproachRoute(queueIndex: number, targetPos: { x: number; y: number }, showTill2: boolean): { x: number; y: number }[] {
+  const queueSpine = [
+    PATH.branchRoute[PATH.branchRoute.length - 1],
+    ...PATH.queueApproach.slice(7, 12),
+  ];
+
+  if (queueIndex === 0) {
+    return [
+      ...PATH.indexZeroOneRoute,
+      targetPos,
+    ];
+  }
+
+  if (queueIndex <= 4) {
+    const finalApproach =
+      queueIndex === 1 ? { x: 205, y: 563 } :
+      queueIndex === 2 ? { x: 180, y: 561 } :
+      queueIndex === 3 ? { x: 150, y: 553 } :
+      { x: 122, y: 545 };
+
+    return [
+      ...queueSpine,
+      finalApproach,
+      targetPos,
+    ];
+  }
+
+  // For tail positions, progressively shorten the shared spine so higher indexes
+  // do not walk past their slot and then backtrack.
+  const tailWaypoints = [
+    PATH.queueApproach[7],
+    PATH.queueApproach[8],
+    PATH.queueApproach[9],
+    PATH.queueApproach[10],
+    PATH.queueApproach[11],
+  ];
+  const tailWaypointCount = Math.max(0, 10 - queueIndex);
+
+  return [
+    PATH.branchRoute[PATH.branchRoute.length - 1],
+    ...tailWaypoints.slice(0, tailWaypointCount),
+    targetPos,
+  ];
+}
+
 // Quadratic Bézier: B(t) = (1-t)²·P0 + 2(1-t)t·CP + t²·P1
 function quadBezier(t: number, p0: {x:number,y:number}, cp: {x:number,y:number}, p1: {x:number,y:number}) {
   const u = 1 - t;
@@ -554,7 +711,6 @@ function cubicBezierSpeed(t: number, p0: {x:number,y:number}, cp1: {x:number,y:n
 // Constant-speed Bézier stepping: adjusts dt so pixel-speed stays at `pixelSpeed`
 const CURVE_WALK_SPEED = 1.3; // pixels per tick — matches TOKEN_SPEED
 
-// Queue layout: horizontal single file stretching left, then spilling backwards slightly upwards into checkered shape.
 function getQueuePosition(index: number, showTill2: boolean): { x: number; y: number } {
   const startX = showTill2 ? POS.queue.x - 60 : POS.queue.x;
   const startY = POS.queue.y;
@@ -564,27 +720,29 @@ function getQueuePosition(index: number, showTill2: boolean): { x: number; y: nu
   if (index === 1) return { x: startX - 45, y: startY };
   if (index === 2) return { x: startX - 90, y: startY };
   if (index === 3) return { x: startX - 135, y: startY - 8 }; // Third step left, bumping slightly upward to initiate the curve
+  if (index === 4) return { x: startX - 180, y: startY - 16 }; // Still straight behind index 3 before the tail bends.
 
-  // Index 4+ Spatula body (curving left and upwards with checkered pattern)
-  const curveIdx = index - 4;
-  const isOdd = curveIdx % 2 === 1;
-  const layer = Math.floor(curveIdx / 2);
-  
-  // Progress backwards up the track mapping to the orange blob
-  const baseX = startX - 180 - (layer * 28); // Increased layer spreading
-  const baseY = startY - 20 - (layer * 42); // Increased vertical step
-  
-  // Enforce distinct vertical and horizontal disalignment between staggered columns
-  const offsetX = isOdd ? -35 : 15;
-  const offsetY = isOdd ? -25 : 0; 
-  
-  // Add broader structured randomness
-  const jitterX = ((index * 17) % 20) - 10;
-  const jitterY = ((index * 11) % 16) - 8;
-  
+  // Index 5+ follows an explicit monotonic tail up the left corridor, with only a slight checkered x-shift.
+  const tailIdx = index - 5;
+  const tailTemplate = [
+    { x: startX - 225, y: startY - 42 },
+    { x: startX - 210, y: startY - 88 },
+    { x: startX - 198, y: startY - 134 },
+    { x: startX - 186, y: startY - 180 },
+    { x: startX - 174, y: startY - 222 },
+    { x: startX - 162, y: startY - 260 },
+    { x: startX - 148, y: startY - 294 },
+    { x: startX - 134, y: startY - 324 },
+    { x: startX - 118, y: startY - 350 },
+    { x: startX - 100, y: startY - 372 },
+  ];
+  const anchor = tailTemplate[Math.min(tailIdx, tailTemplate.length - 1)];
+  const overflow = Math.max(0, tailIdx - (tailTemplate.length - 1));
+  const stagger = tailIdx === 0 ? 0 : (tailIdx % 2 === 0 ? -6 : 6);
+
   return {
-    x: baseX + offsetX + jitterX,
-    y: baseY + offsetY + jitterY,
+    x: anchor.x + stagger + overflow * 14,
+    y: anchor.y - overflow * 24,
   };
 }
 
@@ -744,8 +902,18 @@ export function tickSimulation(state: SimState): SimState {
 
   // --- Queue stats ---
   const queueCount = tokens.filter(t => t.state === 'queuing').length;
-  const approachingCount = tokens.filter(t => t.state === 'approaching_queue').length;
+  const approachingCount = tokens.filter(t => t.state === 'approaching_queue' && t.queueIndex >= 0).length;
   const combinedQueueCount = tokens.filter(t => t.state === 'queuing' || t.state === 'waiting' || t.state === 'approaching_queue').length;
+  const findFreeTillLane = () => tillBusyUntil.findIndex((u, laneIdx) => {
+    if (u > tick) return false;
+    const mappedStation = laneIdx === 1 ? 'till2' : 'till';
+    return staffTokens.some(st =>
+      st.station === mappedStation &&
+      st.animState === 'idle' &&
+      Math.abs(st.x - st.targetX) < 3 &&
+      Math.abs(st.y - st.targetY) < 3
+    );
+  });
 
   // --- Update each token ---
   tokens = tokens.map(token => {
@@ -762,11 +930,14 @@ export function tickSimulation(state: SimState): SimState {
           t.state = 'fast_tracking';
           t.stageStart = tick;
         } else {
-          // Move in a straight line from entrance to decision point
-          const np = moveTowardPoint(t.x, t.y, POS.decision.x, POS.decision.y, TOKEN_SPEED);
+          const np = moveAlongRoute(t, PATH.entryRoute, TOKEN_SPEED);
           t.x = np.x;
           t.y = np.y;
-          if (Math.abs(t.x - POS.decision.x) < 2 && Math.abs(t.y - POS.decision.y) < 2) {
+          t.routeStep = np.routeStep;
+
+          if (np.complete) {
+            t.x = POS.decision.x;
+            t.y = POS.decision.y;
             // Item 10: skip decision animation when combined queue < 3
             if (combinedQueueCount < 3) {
               // Go straight through — no deciding wobble
@@ -775,17 +946,22 @@ export function tickSimulation(state: SimState): SimState {
                 t.face = 'sad';
                 t.state = 'bouncing';
                 t.stageStart = tick;
-                t.curveT = 0;
+                t.curveT = undefined;
+                t.routeStep = 0;
                 lostTicks.push(tick);
               } else {
                 t.state = 'approaching_queue';
                 t.stageStart = tick;
-                t.curveT = 0;
-                t.queueIndex = queueCount + approachingCount;
+                t.curveT = undefined;
+                t.routeStep = 0;
+                t.routePhase = 'branch';
+                t.queueIndex = -1;
               }
             } else {
               t.state = 'deciding';
               t.stageStart = tick;
+              t.curveT = undefined;
+              t.routeStep = undefined;
               // Pre-calculate the bounce decision so the UI thought-bubble can foreshadow it accurately
               const combinedQ = tokens.filter((tok: any) => tok.state === 'queuing' || tok.state === 'waiting').length;
               const effBounce = computeLinearBounce(combinedQ);
@@ -807,47 +983,73 @@ export function tickSimulation(state: SimState): SimState {
             t.face = 'sad';
             t.state = 'bouncing';
             t.stageStart = tick;
-            t.curveT = 0;
+            t.curveT = undefined;
+            t.routeStep = 0;
             lostTicks.push(tick);
           } else {
             t.state = 'approaching_queue';
             t.stageStart = tick;
-            t.curveT = 0;
-            t.queueIndex = queueCount + approachingCount;
+            t.curveT = undefined;
+            t.routeStep = 0;
+            t.routePhase = 'branch';
+            t.queueIndex = -1;
           }
         }
         break;
       }
 
       case 'approaching_queue': {
-        const targetPos = getQueuePosition(t.queueIndex, rates.staffConfig.tillLanes >= 2);
-        
-        let currentTarget = targetPos;
-        const cornerY = POS.queueTrackCorner.y;
-        
-        // Emulate continuing the entry vector smoothly past the decision point before turning
-        const postDecisionY = POS.decision.y + 40;
-        const postDecisionX = POS.decision.x - Math.round(40 * (150/110)); // Follows exactly the entry dx/dy ratio
-        
-        if (t.y < postDecisionY) {
-            currentTarget = { x: postDecisionX, y: postDecisionY };
-        } 
-        // If past the post-decision mark but above the corner, head to the corner
-        else if (t.y < cornerY - 20 && targetPos.y > cornerY) {
-            const offsetX = (targetPos.x % 10) - 5;
-            currentTarget = { x: POS.queueTrackCorner.x + offsetX, y: cornerY };
+        if (t.routePhase === 'direct') {
+          const direct = moveAlongRoute(t, PATH.directServiceRoute, TOKEN_SPEED);
+          t.x = direct.x;
+          t.y = direct.y;
+          t.routeStep = direct.routeStep;
+          if (direct.complete) {
+            t.state = 'ordering';
+            t.stageStart = tick;
+            t.routeStep = undefined;
+            t.arrivedAtStage = false;
+          }
+          break;
         }
 
-        // Move towards assigned currentTarget
-        const np = moveTowardPoint(t.x, t.y, currentTarget.x, currentTarget.y, TOKEN_SPEED);
+        if (t.routePhase === 'branch' || t.queueIndex < 0) {
+          const branch = moveAlongRoute(t, PATH.branchRoute, TOKEN_SPEED);
+          t.x = branch.x;
+          t.y = branch.y;
+          t.routeStep = branch.routeStep;
+
+          if (branch.complete) {
+            const lockedQueueCount = tokens.filter(tok =>
+              tok.state === 'queuing' ||
+              (tok.state === 'approaching_queue' && tok.routePhase === 'queue' && tok.queueIndex >= 0)
+            ).length;
+            const freeLane = lockedQueueCount === 0 ? findFreeTillLane() : -1;
+
+            if (freeLane >= 0) {
+              t.stageStart = tick;
+              t.laneIndex = freeLane;
+              t.queueIndex = -1;
+              t.routePhase = 'direct';
+              t.routeStep = 0;
+              t.arrivedAtStage = false;
+              tillBusyUntil[freeLane] = tick + rates.tillCycleTime;
+            } else {
+              t.queueIndex = lockedQueueCount;
+              t.routePhase = 'queue';
+              t.routeStep = 0;
+            }
+          }
+          break;
+        }
+
+        const showTill2 = rates.staffConfig.tillLanes >= 2;
+        const targetPos = getQueuePosition(t.queueIndex, showTill2);
+        const route = getQueueApproachRoute(t.queueIndex, targetPos, showTill2);
+        const np = moveAlongRoute(t, route, TOKEN_SPEED);
         t.x = np.x;
         t.y = np.y;
-        
-        // "Clip" the outer corner to create the smooth rounded arc bend
-        const distToCorner = Math.sqrt(Math.pow(t.x - currentTarget.x, 2) + Math.pow(t.y - currentTarget.y, 2));
-        if (currentTarget.y === cornerY && distToCorner < 50 && currentTarget !== targetPos) {
-           t.y += 1.5; // Drift downwards early to round out the bottom-left corner naturally
-        }
+        t.routeStep = np.routeStep;
         
         // Hard-stop precisely upon reaching exact target slot in queue
         const distToTarget = Math.sqrt(Math.pow(t.x - targetPos.x, 2) + Math.pow(t.y - targetPos.y, 2));
@@ -855,6 +1057,7 @@ export function tickSimulation(state: SimState): SimState {
           t.state = 'queuing';
           t.arrivedAtStage = true;
           t.stageStart = tick;
+          t.routeStep = undefined;
           t.isStationary = true;
         } else {
           t.isStationary = false;
@@ -923,6 +1126,7 @@ export function tickSimulation(state: SimState): SimState {
             t.face = 'sad';
             t.state = 'stock_bouncing';
             t.stageStart = tick;
+            t.routeStep = 0;
             lostTicks.push(tick);
           } else {
             t.state = 'waiting';
@@ -1003,7 +1207,8 @@ export function tickSimulation(state: SimState): SimState {
           t.face = determineExitFace(t, rates);
           t.state = 'leaving';
           t.stageStart = tick;
-          t.curveT = 0; // Reset dirty token property to allow corner cutting logic
+          t.curveT = undefined;
+          t.routeStep = 0;
         }
         t.face = determineFace(t);
         break;
@@ -1037,18 +1242,11 @@ export function tickSimulation(state: SimState): SimState {
       }
 
       case 'bouncing': {
-        // Curves sharply rightwards and IMMEDIATELY swoops upwards to the exit
-        if (!t.curveT) t.curveT = 0;
-        if (t.curveT < 1) {
-          // CP placed perfectly to mirror diagram: pulls horizontally right then sharply up
-          const cp = { x: POS.decision.x + 130, y: POS.decision.y }; 
-          const spd = quadBezierSpeed(t.curveT, POS.decision, cp, POS.exit);
-          const dt = spd > 0.1 ? CURVE_WALK_SPEED / spd : 0.01;
-          t.curveT = Math.min(1, t.curveT + dt);
-          const bouncePos = quadBezier(t.curveT, POS.decision, cp, POS.exit);
-          t.x = bouncePos.x;
-          t.y = bouncePos.y;
-        } else {
+        const bp = moveAlongRoute(t, PATH.bounceRoute, TOKEN_SPEED);
+        t.x = bp.x;
+        t.y = bp.y;
+        t.routeStep = bp.routeStep;
+        if (bp.complete) {
           t.opacity -= FADE_SPEED * 4;
           if (t.opacity <= 0) t.state = 'exited';
         }
@@ -1062,23 +1260,12 @@ export function tickSimulation(state: SimState): SimState {
           t.x = sp.x;
           t.y = sp.y;
         } else {
-          let currentTarget = POS.exit;
-          if (t.curveT === undefined) t.curveT = 0;
-          
-          if (t.curveT === 0) {
-            currentTarget = POS.exitCorner;
-            const distToCorner = Math.sqrt(Math.pow(t.x - POS.exitCorner.x, 2) + Math.pow(t.y - POS.exitCorner.y, 2));
-            if (distToCorner < 10) {
-              t.curveT = 1;
-              currentTarget = POS.exit; // Tracks sharply along the painted floor path
-            }
-          }
-        
-          const sp2 = moveTowardPoint(t.x, t.y, currentTarget.x, currentTarget.y, TOKEN_SPEED * 1.2);
+          const sp2 = moveAlongRoute(t, PATH.exitRoute, TOKEN_SPEED * 1.2);
           t.x = sp2.x;
           t.y = sp2.y;
+          t.routeStep = sp2.routeStep;
           
-          if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
+          if (sp2.complete) {
             t.opacity -= FADE_SPEED * 4;
             if (t.opacity <= 0) t.state = 'exited';
           }
@@ -1087,23 +1274,12 @@ export function tickSimulation(state: SimState): SimState {
       }
 
       case 'leaving': {
-        let currentTarget = POS.exit;
-        if (t.curveT === undefined) t.curveT = 0;
-        
-        if (t.curveT === 0) {
-          currentTarget = POS.exitCorner;
-          const distToCorner = Math.sqrt(Math.pow(t.x - POS.exitCorner.x, 2) + Math.pow(t.y - POS.exitCorner.y, 2));
-          if (distToCorner < 10) {
-            t.curveT = 1;
-            currentTarget = POS.exit; // Tracks sharply along the painted floor path
-          }
-        }
-
-        const np = moveTowardPoint(t.x, t.y, currentTarget.x, currentTarget.y, TOKEN_SPEED * 1.3);
+        const np = moveAlongRoute(t, PATH.exitRoute, TOKEN_SPEED * 1.3);
         t.x = np.x;
         t.y = np.y;
+        t.routeStep = np.routeStep;
 
-        if (Math.abs(t.x - POS.exit.x) < 5 && Math.abs(t.y - POS.exit.y) < 5) {
+        if (np.complete) {
           t.opacity -= FADE_SPEED * 3;
           if (t.opacity <= 0) t.state = 'exited';
         }
@@ -1115,6 +1291,7 @@ export function tickSimulation(state: SimState): SimState {
   });
 
   // --- Reindex queue positions ---
+  // Reindex only customers already standing in the queue; approaching customers keep their locked target slot.
   const queuedTokens = tokens
     .filter(t => t.state === 'queuing')
     .sort((a, b) => a.id - b.id);
