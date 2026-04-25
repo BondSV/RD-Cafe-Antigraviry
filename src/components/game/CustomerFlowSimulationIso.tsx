@@ -60,7 +60,9 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
   const prevX = React.useRef(token.x);
   const isFlipped = React.useRef(false);
 
-  if (token.state === 'leaving') {
+  if (!isStaff && token.state === 'queuing' && token.isStationary) {
+    isFlipped.current = false;
+  } else if (token.state === 'leaving') {
     // Face mathematically toward exit
     isFlipped.current = isStaff ? false : true; 
   } else if (token.state !== 'deciding') {
@@ -106,7 +108,9 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
           height={avatarH}
           preserveAspectRatio="xMidYMid meet"
           filter="url(#dropShadowSmooth)"
-          style={{ pointerEvents: 'none' }}
+          style={{
+            pointerEvents: 'none',
+          }}
         />
       </g>
 
@@ -274,7 +278,6 @@ function EspressoMachine3D({ x, y, width, depth }: any) {
   );
 }
 
-
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
@@ -369,65 +372,132 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
           <filter id="dropShadowSmooth" x="-20%" y="-20%" width="150%" height="150%">
             <feDropShadow dx="-1" dy="3" stdDeviation="2" floodColor="#000" floodOpacity="0.15" />
           </filter>
+
         </defs>
 
-        {/* Crisp Studio Backdrop */}
+        {/* Visual-overhaul background stack. These assets are aligned as a single plate; gameplay geometry stays code-driven. */}
         <rect x="-20%" y="-20%" width="140%" height="140%" fill="url(#floorVignette)" />
-
-        {/* Path Y offset: sprites render at y+50 (feet position), paths must match */}
-        {(() => {
-          const F = 50; // feet offset — paths must be drawn at logical Y + F
-          // The visual path drawn on floor
-          const postDecisionY = POS.decision.y + 40;
-          const postDecisionX = POS.decision.x - Math.round(40 * (150/110));
-          const pathB = `M${POS.enter.x},${POS.enter.y+F} L${POS.decision.x},${POS.decision.y+F} L${postDecisionX},${postDecisionY+F} L${POS.queueTrackCorner.x},${POS.queueTrackCorner.y+F} L${POS.queue.x},${POS.queue.y+F} L${POS.till.x},${POS.till.y+F} L${POS.waiting.x},${POS.waiting.y+F} L${POS.exitCorner.x},${POS.exitCorner.y+F} L${POS.exit.x},${POS.exit.y+F}`;
-          const pathA = `M${POS.decision.x},${POS.decision.y+F} Q${POS.decision.x + 130},${POS.decision.y + F} ${POS.exit.x},${POS.exit.y+F}`;
-          return (<>
-            {/* === PATH A: Bounce Route (dashed, subtle green, sagging curve) === */}
-            <path d={pathA} stroke="rgba(0,0,0,0.07)" strokeWidth={10} strokeLinecap="round" fill="none" transform="translate(0,3)" strokeDasharray="8 6" />
-            <path d={pathA} stroke="#D1FAE5" strokeWidth={10} strokeLinecap="round" fill="none" strokeDasharray="8 6" />
-
-            {/* === PATH B: Main Customer Journey (Bézier curves) === */}
-            <path d={pathB} stroke="rgba(0,0,0,0.1)" strokeWidth={14} strokeLinecap="round" strokeLinejoin="round" fill="none" transform="translate(0,3)" />
-            <path d={pathB} stroke="#F8FAFC" strokeWidth={14} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          </>);
-        })()}
+        <image
+          href="/assets/visual-overhaul/Main%20Layer.png"
+          x="0"
+          y="0"
+          width={VB_W}
+          height={VB_H}
+          preserveAspectRatio="xMidYMid slice"
+        />
+        <image
+          href="/assets/visual-overhaul/Carpet%20and%20Shadows.png"
+          x="0"
+          y="0"
+          width={VB_W}
+          height={VB_H}
+          preserveAspectRatio="xMidYMid slice"
+        />
 
         {/* ==================== UNITY Z-SORTED ENTITIES & COUNTERS ==================== */}
         {allEntities.map((ent: any) => {
           if (ent.typeCat === 'counter') {
-             if (ent.id === 'prep') return (
-                <g key={ent.id} id="prep">
-                   <BlockCounter x={0} y={POS.counterY} width={170} depth={COUNTER_DEPTH} zHeight={COUNTER_Z} topColor="#F8FAFC" frontColor="#D4D4D4" showWood={true} label="Food Prep" />
-                   <circle cx={50} cy={POS.counterY + 15} r={10} fill="#22C55E" filter="url(#dropShadowSmooth)" />
-                   <circle cx={80} cy={POS.counterY + 20} r={8} fill="#EF4444" filter="url(#dropShadowSmooth)" />
-                   <rect x={105} y={POS.counterY + 10} width={40} height={20} rx={3} fill="#FDE68A" filter="url(#dropShadowSmooth)" />
-                </g>
-             );
-             if (ent.id === 'till1') return (
-                <g key={ent.id} id="till1">
-                   <BlockCounter x={340} y={POS.counterY} width={170} depth={COUNTER_DEPTH} zHeight={COUNTER_Z} topColor="#F8FAFC" frontColor="#DBEAFE" label="Checkout" />
-                   <rect x={410} y={POS.counterY + 10} width={28} height={20} rx={3} fill="#1E293B" filter="url(#dropShadowSmooth)" />
-                </g>
-             );
-             if (ent.id === 'till2') return (
-                <g key={ent.id} id="till2">
-                   <BlockCounter x={170} y={POS.counterY} width={170} depth={COUNTER_DEPTH} zHeight={COUNTER_Z} topColor={showTill2 ? "#F8FAFC" : "#F1F5F9"} frontColor={showTill2 ? "#DBEAFE" : "#E2E8F0"} label={showTill2 ? "Checkout II" : ""} />
-                   {showTill2 && <rect x={310} y={POS.counterY + 10} width={28} height={20} rx={3} fill="#1E293B" filter="url(#dropShadowSmooth)" />}
-                </g>
-             );
-             if (ent.id === 'coffee1') return (
-                <g key={ent.id} id="coffee1">
-                   <BlockCounter x={510} y={POS.counterY} width={195} depth={COUNTER_DEPTH} zHeight={COUNTER_Z} topColor="#F8FAFC" frontColor="#D4D4D4" showWood={true} label="Espresso I" />
-                   <EspressoMachine3D x={545} y={POS.counterY - 10} width={100} depth={45} />
-                </g>
-             );
-             if (ent.id === 'coffee2') return (
-                <g key={ent.id} id="coffee2">
-                   <BlockCounter x={705} y={POS.counterY} width={195} depth={COUNTER_DEPTH} zHeight={COUNTER_Z} topColor={showMachine2 ? "#F8FAFC" : "#F1F5F9"} frontColor={showMachine2 ? "#D4D4D4" : "#E2E8F0"} showWood={showMachine2} label={showMachine2 ? "Espresso II" : ""} />
-                   {showMachine2 && <EspressoMachine3D x={740} y={POS.counterY - 10} width={100} depth={45} />}
-                </g>
-             );
+             if (ent.id === 'prep') {
+               return (
+                 <g key="counter-and-prep-assets">
+                   <image
+                     href="/assets/visual-overhaul/Counter%20SM.png"
+                     x="0"
+                     y="0"
+                     width={VB_W}
+                     height={VB_H}
+                     preserveAspectRatio="xMidYMid slice"
+                     pointerEvents="none"
+                   />
+                   <image
+                     href="/assets/visual-overhaul/Pastry.png"
+                     x="0"
+                     y="0"
+                     width={VB_W}
+                     height={VB_H}
+                     preserveAspectRatio="xMidYMid slice"
+                     pointerEvents="none"
+                   />
+                 </g>
+               );
+             }
+             if (ent.id === 'till1') {
+               return (
+                 <image
+                   key={ent.id}
+                   href="/assets/visual-overhaul/Till%201.png"
+                   x="0"
+                   y="0"
+                   width={VB_W}
+                   height={VB_H}
+                   preserveAspectRatio="xMidYMid slice"
+                   pointerEvents="none"
+                 />
+               );
+             }
+             if (ent.id === 'till2') {
+               return showTill2 ? (
+                 <image
+                   key={ent.id}
+                   href="/assets/visual-overhaul/Till%202.png"
+                   x="0"
+                   y="0"
+                   width={VB_W}
+                   height={VB_H}
+                   preserveAspectRatio="xMidYMid slice"
+                   pointerEvents="none"
+                 />
+               ) : null;
+             }
+             if (ent.id === 'coffee1') {
+               return (
+                 <g key={ent.id}>
+                   <image
+                     href="/assets/visual-overhaul/Grinder%201.png"
+                     x="0"
+                     y="0"
+                     width={VB_W}
+                     height={VB_H}
+                     preserveAspectRatio="xMidYMid slice"
+                     pointerEvents="none"
+                   />
+                   <image
+                     href="/assets/visual-overhaul/Espresso%201.png"
+                     x="0"
+                     y="0"
+                     width={VB_W}
+                     height={VB_H}
+                     preserveAspectRatio="xMidYMid slice"
+                     pointerEvents="none"
+                   />
+                 </g>
+               );
+             }
+             if (ent.id === 'coffee2') {
+               return showMachine2 ? (
+                 <g key={ent.id}>
+                   <image
+                     href="/assets/visual-overhaul/Grinder%202.png"
+                     x="0"
+                     y="0"
+                     width={VB_W}
+                     height={VB_H}
+                     preserveAspectRatio="xMidYMid slice"
+                     pointerEvents="none"
+                   />
+                   <image
+                     href="/assets/visual-overhaul/Espresso%202.png"
+                     x="0"
+                     y="0"
+                     width={VB_W}
+                     height={VB_H}
+                     preserveAspectRatio="xMidYMid slice"
+                     pointerEvents="none"
+                   />
+                 </g>
+               ) : null;
+             }
+             return null;
           } else if (ent.typeCat === 'staff') {
              // Offset staff Y downwards so they stand correctly behind / inside the counter zones
              return <StandingAvatar key={`s-${ent.id}`} token={{...ent, y: ent.y + 60}} isStaff={true} />;
@@ -445,6 +515,27 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
           }
           return null;
         })}
+
+        {/* Foreground environmental overlays: these sit above actors to create real occlusion depth. */}
+        <image
+          href="/assets/visual-overhaul/Central%20Seating.png"
+          x="0"
+          y="0"
+          width={VB_W}
+          height={VB_H}
+          preserveAspectRatio="xMidYMid slice"
+          pointerEvents="none"
+        />
+        <image
+          href="/assets/visual-overhaul/Lights.png"
+          x="0"
+          y="0"
+          width={VB_W}
+          height={VB_H}
+          preserveAspectRatio="xMidYMid slice"
+          opacity="0.72"
+          pointerEvents="none"
+        />
 
         {/* Sleek Minimalist Top Header */}
         <g transform="translate(40, 25)">
