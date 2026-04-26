@@ -539,31 +539,31 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
 
       </svg>
 
-      <div className="pointer-events-none absolute top-3 left-3 flex flex-col items-start gap-0.5 rounded-full border border-white/10 bg-stone-950/70 px-3 py-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-        <div className="whitespace-nowrap text-[8px] font-semibold uppercase leading-none tracking-[0.22em] text-amber-200/70">
+      <div className="pointer-events-none absolute top-0 left-6 flex flex-col items-start gap-px rounded-b-lg border border-t-0 border-white/10 bg-stone-950/75 px-1.5 py-0.5 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_-1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:top-1.5 sm:left-3 sm:gap-0.5 sm:rounded-full sm:border-t sm:px-3 sm:py-1.5 sm:shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]">
+        <div className="whitespace-nowrap text-[5px] font-semibold uppercase leading-none tracking-[0.16em] text-amber-200/70 sm:text-[8px] sm:tracking-[0.22em]">
           Peak Hour Simulation
         </div>
-        <div className="whitespace-nowrap text-[11px] font-bold uppercase leading-none tracking-[0.18em] text-white">
+        <div className="whitespace-nowrap text-[8px] font-bold uppercase leading-none tracking-[0.12em] text-white sm:text-[11px] sm:tracking-[0.18em]">
           Customer Flow
         </div>
       </div>
 
-      <div className="pointer-events-none absolute top-3 right-3 flex items-center gap-2">
-        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-stone-950/70 px-3 py-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
-          <div className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-[0.18em] text-stone-300">
-            Orders per hour
+      <div className="pointer-events-none absolute top-0 right-6 flex items-center gap-0.5 sm:top-1.5 sm:right-3 sm:gap-2">
+        <div className="flex items-center gap-1 rounded-b-lg border border-t-0 border-white/10 bg-stone-950/75 px-1.5 py-1 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_-1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:gap-2 sm:rounded-full sm:border-t sm:px-3 sm:py-1.5 sm:shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="h-1 w-1 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.7)] sm:h-1.5 sm:w-1.5 sm:shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
+          <div className="whitespace-nowrap text-[6px] font-semibold uppercase tracking-[0.12em] text-stone-300 sm:text-[9px] sm:tracking-[0.18em]">
+            Orders / hr
           </div>
-          <div className="font-mono text-[15px] font-semibold leading-none tabular-nums text-emerald-300">
+          <div className="font-mono text-[10px] font-semibold leading-none tabular-nums text-emerald-300 sm:text-[15px]">
             {ordersPerHour}
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-stone-950/70 px-3 py-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
-          <div className="h-1.5 w-1.5 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.7)]" />
-          <div className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-[0.18em] text-stone-300">
-            Lost sales per hour
+        <div className="flex items-center gap-1 rounded-b-lg border border-t-0 border-white/10 bg-stone-950/75 px-1.5 py-1 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_-1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:gap-2 sm:rounded-full sm:border-t sm:px-3 sm:py-1.5 sm:shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="h-1 w-1 rounded-full bg-rose-400 shadow-[0_0_4px_rgba(251,113,133,0.7)] sm:h-1.5 sm:w-1.5 sm:shadow-[0_0_6px_rgba(251,113,133,0.7)]" />
+          <div className="whitespace-nowrap text-[6px] font-semibold uppercase tracking-[0.12em] text-stone-300 sm:text-[9px] sm:tracking-[0.18em]">
+            Lost sales / hr
           </div>
-          <div className="font-mono text-[15px] font-semibold leading-none tabular-nums text-rose-300">
+          <div className="font-mono text-[10px] font-semibold leading-none tabular-nums text-rose-300 sm:text-[15px]">
             {lostSalesPerHour}
           </div>
         </div>
