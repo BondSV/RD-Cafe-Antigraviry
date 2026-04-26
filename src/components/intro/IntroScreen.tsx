@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-start md:items-center justify-center px-4 pt-8 pb-4 md:p-4">
       <div className="max-w-[600px] w-full flex flex-col items-center">
         <h1 className="text-4xl md:text-5xl font-bold font-sans text-text-primary text-center mb-2">Fix RainyDay Café</h1>
         <h2 className="text-sm font-mono text-text-secondary uppercase tracking-[0.15em] mb-8">A Systems Thinking Game</h2>
