@@ -320,14 +320,14 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
   // Orders and lost per sim-hour (moving average, display after 10 sim-minutes)
   const SIM_HOUR = 9600;
   const MIN_DISPLAY_TICKS = 1600; // 10 sim-minutes
-  let ordersPerHourText = '';
-  let lostPerHourText = '';
+  let ordersPerHour = 0;
+  let lostSalesPerHour = 0;
   if (state.tick >= MIN_DISPLAY_TICKS) {
     const windowTicks = Math.min(state.tick, SIM_HOUR);
     const recentCount = completedTicks.filter((t: number) => t > state.tick - SIM_HOUR).length;
-    ordersPerHourText = ` | ORDERS/HR: ${Math.round(recentCount * SIM_HOUR / windowTicks)}`;
+    ordersPerHour = Math.round(recentCount * SIM_HOUR / windowTicks);
     const recentLost = lostTicks.filter((t: number) => t > state.tick - SIM_HOUR).length;
-    lostPerHourText = ` | LOST/HR: ${Math.round(recentLost * SIM_HOUR / windowTicks)}`;
+    lostSalesPerHour = Math.round(recentLost * SIM_HOUR / windowTicks);
   }
 
   const COUNTER_Z = 45; // How tall the counters are (bigger in new layout)
@@ -351,7 +351,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
   ].sort((a, b) => a.sortY - b.sortY);
 
   return (
-    <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6 pb-2">
+    <div className="w-full relative rounded-[2rem] overflow-hidden bg-[#F1F5F9] shadow-inner border border-slate-200 mt-6">
       <svg
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         className="w-full h-auto block"
@@ -453,7 +453,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                return (
                  <g key={ent.id}>
                    <image
-                     href="/assets/visual-overhaul/Grinder%201.png"
+                     href={flags.premiumGrinderInstalled ? "/assets/visual-overhaul/fancy%20grinder%201.png" : "/assets/visual-overhaul/Grinder%201.png"}
                      x="0"
                      y="0"
                      width={VB_W}
@@ -477,7 +477,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                return showMachine2 ? (
                  <g key={ent.id}>
                    <image
-                     href="/assets/visual-overhaul/Grinder%202.png"
+                     href={flags.premiumGrinderInstalled ? "/assets/visual-overhaul/fancy%20grinder%202.png" : "/assets/visual-overhaul/Grinder%202.png"}
                      x="0"
                      y="0"
                      width={VB_W}
@@ -518,7 +518,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
 
         {/* Foreground environmental overlays: these sit above actors to create real occlusion depth. */}
         <image
-          href="/assets/visual-overhaul/Central%20Seating.png"
+          href="/assets/visual-overhaul/Central%20seating%20without%20corner.png"
           x="0"
           y="0"
           width={VB_W}
@@ -537,20 +537,37 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
           pointerEvents="none"
         />
 
-        {/* Sleek Minimalist Top Header */}
-        <g transform="translate(40, 25)">
-           <text x="0" y="0" fontSize="24" fontWeight="800" fill="#0F172A" letterSpacing="1px" className="uppercase">Customer Flow</text>
-           <text x="0" y="24" fontSize="14" fontWeight="600" fill="#64748B" letterSpacing="2px" className="uppercase">Peak Hour Simulation</text>
-        </g>
-
-        <g transform={`translate(${VB_W - 640}, 25)`}>
-           <rect x="0" y="-20" width="610" height="50" rx="8" fill="#F8FAFC" fillOpacity="0.8" stroke="#E2E8F0" strokeWidth="1" />
-           <text x="305" y="8" textAnchor="middle" fontSize="13" fontWeight="600" fill="#334155" fontFamily="monospace">
-             QUEUE: {tokens.filter(t => t.state === 'queuing').length}  |  WAITING: {tokens.filter(t => t.state === 'waiting').length} {ordersPerHourText} {lostPerHourText}
-           </text>
-        </g>
-        
       </svg>
+
+      <div className="pointer-events-none absolute top-3 left-3 flex flex-col items-start gap-0.5 rounded-full border border-white/10 bg-stone-950/70 px-3 py-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
+        <div className="whitespace-nowrap text-[8px] font-semibold uppercase leading-none tracking-[0.22em] text-amber-200/70">
+          Peak Hour Simulation
+        </div>
+        <div className="whitespace-nowrap text-[11px] font-bold uppercase leading-none tracking-[0.18em] text-white">
+          Customer Flow
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute top-3 right-3 flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-stone-950/70 px-3 py-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
+          <div className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-[0.18em] text-stone-300">
+            Orders per hour
+          </div>
+          <div className="font-mono text-[15px] font-semibold leading-none tabular-nums text-emerald-300">
+            {ordersPerHour}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-stone-950/70 px-3 py-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
+          <div className="h-1.5 w-1.5 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.7)]" />
+          <div className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-[0.18em] text-stone-300">
+            Lost sales per hour
+          </div>
+          <div className="font-mono text-[15px] font-semibold leading-none tabular-nums text-rose-300">
+            {lostSalesPerHour}
+          </div>
+        </div>
+      </div>
 
       <style>{`
         @keyframes spinPulse {

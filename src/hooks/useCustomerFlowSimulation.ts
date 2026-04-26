@@ -629,6 +629,71 @@ function moveAlongRoute(
   };
 }
 
+const AVATAR_COLLISION_RADIUS_X = 24;
+const AVATAR_COLLISION_RADIUS_Y = 16;
+
+function isCollisionGateParticipant(token: Token): boolean {
+  if (token.opacity <= 0 || token.state === 'exited') return false;
+
+  switch (token.state) {
+    case 'entering':
+    case 'approaching_queue':
+    case 'bouncing':
+    case 'stock_bouncing':
+    case 'fast_tracking':
+    case 'leaving':
+      return true;
+    case 'ordering':
+      return !token.arrivedAtStage;
+    case 'waiting':
+      return token.isStationary !== true;
+    default:
+      return false;
+  }
+}
+
+function footPositionsOverlap(a: { x: number; y: number }, b: { x: number; y: number }): boolean {
+  const nx = (a.x - b.x) / AVATAR_COLLISION_RADIUS_X;
+  const ny = (a.y - b.y) / AVATAR_COLLISION_RADIUS_Y;
+  return (nx * nx + ny * ny) < 1;
+}
+
+function hasMovementPriority(blocker: Token, token: Token): boolean {
+  if (blocker.stageStart !== token.stageStart) {
+    return blocker.stageStart < token.stageStart;
+  }
+
+  return blocker.id < token.id;
+}
+
+function canTakeMovementStep(
+  token: Token,
+  next: { x: number; y: number },
+  previousTokens: Token[],
+  acceptedTokens: Token[],
+): boolean {
+  if (!isCollisionGateParticipant(token)) return true;
+
+  const dx = next.x - token.x;
+  const dy = next.y - token.y;
+  if ((dx * dx + dy * dy) < 0.25) return true;
+
+  const checkedIds = new Set<number>([token.id]);
+  const possibleBlockers = [
+    ...acceptedTokens,
+    ...previousTokens,
+  ];
+
+  return !possibleBlockers.some((other) => {
+    if (checkedIds.has(other.id)) return false;
+    checkedIds.add(other.id);
+    if (!isCollisionGateParticipant(other)) return false;
+    if (!hasMovementPriority(other, token)) return false;
+
+    return footPositionsOverlap(next, other);
+  });
+}
+
 function getQueueApproachRoute(queueIndex: number, targetPos: { x: number; y: number }, showTill2: boolean): { x: number; y: number }[] {
   const queueSpine = [
     PATH.branchRoute[PATH.branchRoute.length - 1],
@@ -916,7 +981,13 @@ export function tickSimulation(state: SimState): SimState {
   });
 
   // --- Update each token ---
-  tokens = tokens.map(token => {
+  const previousTokens = tokens;
+  const acceptedTokens: Token[] = [];
+
+  const canMoveTo = (token: Token, next: { x: number; y: number }) =>
+    canTakeMovementStep(token, next, previousTokens, acceptedTokens);
+
+  tokens = previousTokens.map(token => {
     let t = { ...token, age: token.age + 1 };
     // Accumulate wait time when approaching queue, queuing, at till, or at pickup
     if (t.state === 'approaching_queue' || t.state === 'queuing' || t.state === 'ordering' || t.state === 'waiting') {
@@ -931,11 +1002,14 @@ export function tickSimulation(state: SimState): SimState {
           t.stageStart = tick;
         } else {
           const np = moveAlongRoute(t, PATH.entryRoute, TOKEN_SPEED);
-          t.x = np.x;
-          t.y = np.y;
-          t.routeStep = np.routeStep;
+          const canMove = canMoveTo(t, np);
+          if (canMove) {
+            t.x = np.x;
+            t.y = np.y;
+            t.routeStep = np.routeStep;
+          }
 
-          if (np.complete) {
+          if (canMove && np.complete) {
             t.x = POS.decision.x;
             t.y = POS.decision.y;
             // Item 10: skip decision animation when combined queue < 3
@@ -1001,10 +1075,13 @@ export function tickSimulation(state: SimState): SimState {
       case 'approaching_queue': {
         if (t.routePhase === 'direct') {
           const direct = moveAlongRoute(t, PATH.directServiceRoute, TOKEN_SPEED);
-          t.x = direct.x;
-          t.y = direct.y;
-          t.routeStep = direct.routeStep;
-          if (direct.complete) {
+          const canMove = canMoveTo(t, direct);
+          if (canMove) {
+            t.x = direct.x;
+            t.y = direct.y;
+            t.routeStep = direct.routeStep;
+          }
+          if (canMove && direct.complete) {
             t.state = 'ordering';
             t.stageStart = tick;
             t.routeStep = undefined;
@@ -1015,11 +1092,14 @@ export function tickSimulation(state: SimState): SimState {
 
         if (t.routePhase === 'branch' || t.queueIndex < 0) {
           const branch = moveAlongRoute(t, PATH.branchRoute, TOKEN_SPEED);
-          t.x = branch.x;
-          t.y = branch.y;
-          t.routeStep = branch.routeStep;
+          const canMove = canMoveTo(t, branch);
+          if (canMove) {
+            t.x = branch.x;
+            t.y = branch.y;
+            t.routeStep = branch.routeStep;
+          }
 
-          if (branch.complete) {
+          if (canMove && branch.complete) {
             const lockedQueueCount = tokens.filter(tok =>
               tok.state === 'queuing' ||
               (tok.state === 'approaching_queue' && tok.routePhase === 'queue' && tok.queueIndex >= 0)
@@ -1047,9 +1127,12 @@ export function tickSimulation(state: SimState): SimState {
         const targetPos = getQueuePosition(t.queueIndex, showTill2);
         const route = getQueueApproachRoute(t.queueIndex, targetPos, showTill2);
         const np = moveAlongRoute(t, route, TOKEN_SPEED);
-        t.x = np.x;
-        t.y = np.y;
-        t.routeStep = np.routeStep;
+        const canMove = canMoveTo(t, np);
+        if (canMove) {
+          t.x = np.x;
+          t.y = np.y;
+          t.routeStep = np.routeStep;
+        }
         
         // Hard-stop precisely upon reaching exact target slot in queue
         const distToTarget = Math.sqrt(Math.pow(t.x - targetPos.x, 2) + Math.pow(t.y - targetPos.y, 2));
@@ -1110,8 +1193,10 @@ export function tickSimulation(state: SimState): SimState {
         // Move to the correct till based on lane assignment
         const tillTarget = t.laneIndex === 1 ? POS.till2 : POS.till;
         const op = moveTowardPoint(t.x, t.y, tillTarget.x, tillTarget.y, TOKEN_SPEED);
-        t.x = op.x;
-        t.y = op.y;
+        if (canMoveTo(t, op)) {
+          t.x = op.x;
+          t.y = op.y;
+        }
 
         // Only start till timer after arriving at till position
         const atTill = Math.abs(t.x - tillTarget.x) < 2 && Math.abs(t.y - tillTarget.y) < 2;
@@ -1173,8 +1258,10 @@ export function tickSimulation(state: SimState): SimState {
                 // Right-to-Left rows (and the far-left anchor of Left-to-Right rows) 
                 // simply walk linearly straight into their slot without clipping
                 const wp = moveTowardPoint(t.x, t.y, wPos.x, wPos.y, TOKEN_SPEED * 1.4);
-                t.x = wp.x;
-                t.y = wp.y;
+                if (canMoveTo(t, wp)) {
+                  t.x = wp.x;
+                  t.y = wp.y;
+                }
                 t.isStationary = false;
             } else {
                 // Subsequent Left-to-Right rows must arc overhead to avoid clipping through their neighbors
@@ -1188,11 +1275,14 @@ export function tickSimulation(state: SimState): SimState {
                 
                 const spd = quadBezierSpeed(t.curveT, startPos, cp, wPos);
                 const dt = spd > 0.1 ? (TOKEN_SPEED * 1.4) / spd : 0.01;
-                t.curveT = Math.min(1, t.curveT + dt);
+                const nextCurveT = Math.min(1, t.curveT + dt);
                 
-                const nextNode = quadBezier(t.curveT, startPos, cp, wPos);
-                t.x = nextNode.x;
-                t.y = nextNode.y;
+                const nextNode = quadBezier(nextCurveT, startPos, cp, wPos);
+                if (canMoveTo(t, nextNode)) {
+                  t.curveT = nextCurveT;
+                  t.x = nextNode.x;
+                  t.y = nextNode.y;
+                }
                 t.isStationary = false;
             }
         }
@@ -1218,8 +1308,11 @@ export function tickSimulation(state: SimState): SimState {
         t.opacity = Math.min(1, t.opacity + FADE_SPEED * 2);
         const targetX = POS.waiting.x + 20;
         const targetY = POS.waiting.y - 50;  // approach from above
-        t.x = moveToward(t.x, targetX, TOKEN_SPEED * 1.5);
-        t.y = moveToward(t.y, targetY, TOKEN_SPEED * 1.5);
+        const ft = moveTowardPoint(t.x, t.y, targetX, targetY, TOKEN_SPEED * 1.5);
+        if (canMoveTo(t, ft)) {
+          t.x = ft.x;
+          t.y = ft.y;
+        }
         if (Math.abs(t.x - targetX) < 3 && Math.abs(t.y - targetY) < 3) {
           t.state = 'waiting';
           t.stageStart = tick;
@@ -1243,10 +1336,13 @@ export function tickSimulation(state: SimState): SimState {
 
       case 'bouncing': {
         const bp = moveAlongRoute(t, PATH.bounceRoute, TOKEN_SPEED);
-        t.x = bp.x;
-        t.y = bp.y;
-        t.routeStep = bp.routeStep;
-        if (bp.complete) {
+        const canMove = canMoveTo(t, bp);
+        if (canMove) {
+          t.x = bp.x;
+          t.y = bp.y;
+          t.routeStep = bp.routeStep;
+        }
+        if (canMove && bp.complete) {
           t.opacity -= FADE_SPEED * 4;
           if (t.opacity <= 0) t.state = 'exited';
         }
@@ -1257,15 +1353,20 @@ export function tickSimulation(state: SimState): SimState {
         // Move right to pickup zone first, then follow right geometric exit route
         if (t.x < POS.waiting.x - 5) {
           const sp = moveTowardPoint(t.x, t.y, POS.waiting.x, POS.waiting.y, TOKEN_SPEED * 1.2);
-          t.x = sp.x;
-          t.y = sp.y;
+          if (canMoveTo(t, sp)) {
+            t.x = sp.x;
+            t.y = sp.y;
+          }
         } else {
           const sp2 = moveAlongRoute(t, PATH.exitRoute, TOKEN_SPEED * 1.2);
-          t.x = sp2.x;
-          t.y = sp2.y;
-          t.routeStep = sp2.routeStep;
+          const canMove = canMoveTo(t, sp2);
+          if (canMove) {
+            t.x = sp2.x;
+            t.y = sp2.y;
+            t.routeStep = sp2.routeStep;
+          }
           
-          if (sp2.complete) {
+          if (canMove && sp2.complete) {
             t.opacity -= FADE_SPEED * 4;
             if (t.opacity <= 0) t.state = 'exited';
           }
@@ -1275,11 +1376,14 @@ export function tickSimulation(state: SimState): SimState {
 
       case 'leaving': {
         const np = moveAlongRoute(t, PATH.exitRoute, TOKEN_SPEED * 1.3);
-        t.x = np.x;
-        t.y = np.y;
-        t.routeStep = np.routeStep;
+        const canMove = canMoveTo(t, np);
+        if (canMove) {
+          t.x = np.x;
+          t.y = np.y;
+          t.routeStep = np.routeStep;
+        }
 
-        if (np.complete) {
+        if (canMove && np.complete) {
           t.opacity -= FADE_SPEED * 3;
           if (t.opacity <= 0) t.state = 'exited';
         }
@@ -1287,6 +1391,7 @@ export function tickSimulation(state: SimState): SimState {
       }
     }
 
+    acceptedTokens.push(t);
     return t;
   });
 
