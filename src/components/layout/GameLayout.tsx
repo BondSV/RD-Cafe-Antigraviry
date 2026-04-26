@@ -15,7 +15,7 @@ export default function GameLayout() {
   const metrics = useGameStore(state => state.metrics);
   const flags = useGameStore(state => state.flags);
   const [viewingResultFor, setViewingResultFor] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'map' | 'actions' | 'case'>('actions');
+  const [activeTab, setActiveTab] = useState<'map' | 'actions' | 'case'>('map');
   const [simTrigger, setSimTrigger] = useState(0);
   const [pendingSimTrigger, setPendingSimTrigger] = useState(false);
 
@@ -28,8 +28,8 @@ export default function GameLayout() {
 
   const closeResult = () => {
     setViewingResultFor(null);
-    // On desktop (lg+), map is always visible — fire immediately
-    // On mobile, only fire if map tab is active
+    // On desktop (lg+), the simulation is always visible - fire immediately.
+    // On mobile, only fire if the simulation tab is active.
     const isDesktop = window.innerWidth >= 1024;
     if (isDesktop || activeTab === 'map') {
       setSimTrigger(t => t + 1);
@@ -49,8 +49,8 @@ export default function GameLayout() {
     <div className="flex flex-col h-screen min-h-screen relative">
       <TurnHeader />
       
-      <div className="flex lg:hidden bg-bg-surface border-b border-border-default">
-        <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'map' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => handleTabSwitch('map')}>Map</button>
+      <div className="sticky top-[52px] z-20 flex shrink-0 lg:hidden bg-bg-surface/95 backdrop-blur-sm border-b border-border-default shadow-sm">
+        <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'map' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => handleTabSwitch('map')}>Simulation</button>
         <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'actions' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => handleTabSwitch('actions')}>Actions</button>
         <button className={`flex-1 py-3 text-sm font-semibold uppercase tracking-wider ${activeTab === 'case' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-text-secondary'}`} onClick={() => handleTabSwitch('case')}>Case</button>
       </div>

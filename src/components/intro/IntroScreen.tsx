@@ -26,7 +26,7 @@ export default function IntroScreen({ onStart }: { onStart: () => void }) {
           onClick={onStart}
           className="bg-accent-blue hover:bg-blue-600 text-white font-bold py-3 px-10 rounded-lg text-lg transition-transform transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-blue focus-visible:ring-offset-bg-primary"
         >
-          Start Fix
+          Start Simulation
         </button>
       </div>
     </div>
