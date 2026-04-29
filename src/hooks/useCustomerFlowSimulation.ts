@@ -258,6 +258,7 @@ const FADE_SPEED = 0.007;
 const DECIDING_TICKS = 120;      // ~2 seconds looking around
 const STAFF_SPEED = 13;           // scaled up for larger layout distances
 const ANIM_TRAVEL_TICKS = 20;     // visual travel at STAFF_SPEED=9: ~180px/9 = 20 ticks
+const STAFF_BYPASS_Y_OFFSET = 34;
 
 // Face thresholds based on accumulated wait time (queuing + waiting states)
 const NEUTRAL_WAIT_THRESHOLD = 1800; // >= 11 sim-minutes 
@@ -542,6 +543,34 @@ function resizeLaneTimers(currentTimers: number[], laneCount: number): number[] 
   }
 
   return resized;
+}
+
+function getSerialisedMachinePosition(staff: StaffToken, allStaff: StaffToken[], config: StaffConfig): { x: number; y: number } {
+  if (staff.station === 'till2' && config.machines >= 2) {
+    return POS.machine2;
+  }
+
+  const machineOneAssigned = allStaff.some(other =>
+    other.id !== staff.id &&
+    other.station === 'machine'
+  );
+
+  if (config.machines >= 2 && machineOneAssigned) {
+    return POS.machine2;
+  }
+
+  return POS.machine1;
+}
+
+function usesMachineOneBypass(staff: StaffToken, allStaff: StaffToken[], config: StaffConfig): boolean {
+  const machinePos = getSerialisedMachinePosition(staff, allStaff, config);
+
+  return (
+    staff.station === 'till' &&
+    config.machines >= 2 &&
+    machinePos.x === POS.machine2.x &&
+    allStaff.some(other => other.id !== staff.id && other.station === 'machine')
+  );
 }
 
 // ============================================================
@@ -1456,8 +1485,10 @@ export function tickSimulation(state: SimState): SimState {
 
     if (isSerialisedModel && isTillStaff) {
       // Serialised staff (solo, duo-parallel): cycle between till and machine
-      // Solo/serialised staff always use machine1, UNLESS explicitly mapped to till2 (duo-parallel right lane)
-      const machinePos = staff.station === 'till2' ? POS.machine2 : POS.machine1;
+      // Use a second machine when machine1 is already assigned to a fixed machine operator.
+      const machinePos = getSerialisedMachinePosition(staff, staffTokens, rates.staffConfig);
+      const useMachineOneBypass = usesMachineOneBypass(staff, staffTokens, rates.staffConfig);
+      const travelY = useMachineOneBypass ? sY + STAFF_BYPASS_Y_OFFSET : sY;
       const tillPos = staff.station === 'till2' ? POS.tillStation2 : POS.tillStation;
 
       switch (staff.animState) {
@@ -1491,8 +1522,8 @@ export function tickSimulation(state: SimState): SimState {
           break;
         case 'traveling-to-machine':
           staff.targetX = machinePos.x;
-          staff.targetY = sY;
-          if (Math.abs(staff.x - machinePos.x) < 3) {
+          staff.targetY = Math.abs(staff.x - machinePos.x) < 3 ? sY : travelY;
+          if (Math.abs(staff.x - machinePos.x) < 3 && Math.abs(staff.y - sY) < 3) {
             staff.animState = 'making';
             staff.animStart = tick;
           }
@@ -1511,8 +1542,8 @@ export function tickSimulation(state: SimState): SimState {
           break;
         case 'traveling-to-till':
           staff.targetX = tillPos.x;
-          staff.targetY = sY;
-          if (Math.abs(staff.x - tillPos.x) < 3) {
+          staff.targetY = Math.abs(staff.x - tillPos.x) < 3 ? sY : travelY;
+          if (Math.abs(staff.x - tillPos.x) < 3 && Math.abs(staff.y - sY) < 3) {
             staff.animState = 'idle';
             staff.animStart = tick;
             staff.animProgress = 0;
