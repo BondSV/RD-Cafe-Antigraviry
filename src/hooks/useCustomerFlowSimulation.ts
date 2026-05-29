@@ -660,6 +660,7 @@ function moveAlongRoute(
 
 const AVATAR_COLLISION_RADIUS_X = 24;
 const AVATAR_COLLISION_RADIUS_Y = 16;
+const DECISION_CLEARANCE_RADIUS = 48;
 
 function isCollisionGateParticipant(token: Token): boolean {
   if (token.opacity <= 0 || token.state === 'exited') return false;
@@ -685,6 +686,31 @@ function footPositionsOverlap(a: { x: number; y: number }, b: { x: number; y: nu
   const nx = (a.x - b.x) / AVATAR_COLLISION_RADIUS_X;
   const ny = (a.y - b.y) / AVATAR_COLLISION_RADIUS_Y;
   return (nx * nx + ny * ny) < 1;
+}
+
+function distanceFromDecision(point: { x: number; y: number }): number {
+  return Math.sqrt(
+    Math.pow(point.x - POS.decision.x, 2) +
+    Math.pow(point.y - POS.decision.y, 2)
+  );
+}
+
+function shouldLetDecisionExitProceed(
+  token: Token,
+  next: { x: number; y: number },
+  blocker: Token
+): boolean {
+  const isClearingDecision =
+    (token.state === 'bouncing' ||
+      (token.state === 'approaching_queue' && token.routePhase === 'branch')) &&
+    distanceFromDecision(token) <= DECISION_CLEARANCE_RADIUS &&
+    distanceFromDecision(next) >= distanceFromDecision(token);
+
+  const blockerIsIncoming =
+    blocker.state === 'entering' &&
+    distanceFromDecision(blocker) <= DECISION_CLEARANCE_RADIUS;
+
+  return isClearingDecision && blockerIsIncoming;
 }
 
 function hasMovementPriority(blocker: Token, token: Token): boolean {
@@ -718,6 +744,7 @@ function canTakeMovementStep(
     checkedIds.add(other.id);
     if (!isCollisionGateParticipant(other)) return false;
     if (!hasMovementPriority(other, token)) return false;
+    if (shouldLetDecisionExitProceed(token, next, other)) return false;
 
     return footPositionsOverlap(next, other);
   });
