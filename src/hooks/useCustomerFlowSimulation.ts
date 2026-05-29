@@ -203,15 +203,11 @@ export const PATH = {
   ],
   bounceRoute: [
     POS.decision,
-    { x: 303, y: 164 },
-    { x: 336, y: 162 },
-    { x: 366, y: 158 },
-    { x: 389, y: 149 },
-    { x: 403, y: 133 },
-    { x: 405, y: 116 },
-    { x: 403, y: 81 },
-    { x: 400, y: 48 },
-    { x: 397, y: 16 },
+    { x: 252, y: 151 },
+    { x: 281, y: 122 },
+    { x: 322, y: 91 },
+    { x: 360, y: 62 },
+    { x: 390, y: 32 },
     { x: 371, y: 7 },
   ],
   exitRoute: [
@@ -661,7 +657,7 @@ function moveAlongRoute(
 const AVATAR_COLLISION_RADIUS_X = 24;
 const AVATAR_COLLISION_RADIUS_Y = 16;
 const DECISION_CLEARANCE_RADIUS = 48;
-const DECISION_APPROACH_HOLD_RADIUS = 84;
+const DECISION_COLLISION_BYPASS_RADIUS = 84;
 
 function isCollisionGateParticipant(token: Token): boolean {
   if (token.opacity <= 0 || token.state === 'exited') return false;
@@ -714,40 +710,61 @@ function shouldLetDecisionExitProceed(
   return isClearingDecision && blockerIsIncoming;
 }
 
-function shouldHoldIncomingAtDecision(
-  token: Token,
-  next: { x: number; y: number },
-  blocker: Token
-): boolean {
-  const isEnteringDecision =
-    token.state === 'entering' &&
-    distanceFromDecision(next) <= DECISION_APPROACH_HOLD_RADIUS;
-
-  const blockerDistance = distanceFromDecision(blocker);
-  const blockerIsEnteringDecision =
-    blocker.state === 'entering' &&
-    hasMovementPriority(blocker, token) &&
-    blockerDistance <= DECISION_CLEARANCE_RADIUS;
-
-  const blockerOccupiesDecision =
-    blockerIsEnteringDecision ||
-    blocker.state === 'deciding' ||
-    blocker.state === 'bouncing' ||
-    (blocker.state === 'approaching_queue' && blocker.routePhase === 'branch');
-
-  return (
-    isEnteringDecision &&
-    blockerOccupiesDecision &&
-    blockerDistance <= DECISION_CLEARANCE_RADIUS
-  );
-}
-
 function hasMovementPriority(blocker: Token, token: Token): boolean {
   if (blocker.stageStart !== token.stageStart) {
     return blocker.stageStart < token.stageStart;
   }
 
   return blocker.id < token.id;
+}
+
+function hasIncomingDecisionPressure(token: Token, tokens: Token[]): boolean {
+  return tokens.some((other) =>
+    other.id > token.id &&
+    other.state === 'entering' &&
+    distanceFromDecision(other) <= DECISION_COLLISION_BYPASS_RADIUS
+  );
+}
+
+function isDecisionBypassMovement(token: Token, next: { x: number; y: number }): boolean {
+  const currentDistance = distanceFromDecision(token);
+  const nextDistance = distanceFromDecision(next);
+  const nearDecision =
+    currentDistance <= DECISION_COLLISION_BYPASS_RADIUS ||
+    nextDistance <= DECISION_COLLISION_BYPASS_RADIUS;
+
+  if (token.state === 'entering') return nearDecision;
+
+  return (
+    nearDecision &&
+    (token.state === 'bouncing' ||
+      (token.state === 'approaching_queue' && token.routePhase === 'branch'))
+  );
+}
+
+function resolveDecisionToken(token: Token, tick: number, lostTicks: number[]): Token {
+  const next = {
+    ...token,
+    stageStart: tick,
+    curveT: undefined,
+    routeStep: 0,
+  };
+
+  if (token.willLeave) {
+    lostTicks.push(tick);
+    return {
+      ...next,
+      face: 'sad',
+      state: 'bouncing',
+    };
+  }
+
+  return {
+    ...next,
+    state: 'approaching_queue',
+    routePhase: 'branch',
+    queueIndex: -1,
+  };
 }
 
 function canTakeMovementStep(
@@ -761,6 +778,7 @@ function canTakeMovementStep(
   const dx = next.x - token.x;
   const dy = next.y - token.y;
   if ((dx * dx + dy * dy) < 0.25) return true;
+  if (isDecisionBypassMovement(token, next)) return true;
 
   const checkedIds = new Set<number>([token.id]);
   const possibleBlockers = [
@@ -771,7 +789,6 @@ function canTakeMovementStep(
   return !possibleBlockers.some((other) => {
     if (checkedIds.has(other.id)) return false;
     checkedIds.add(other.id);
-    if (shouldHoldIncomingAtDecision(token, next, other)) return true;
     if (!isCollisionGateParticipant(other)) return false;
     if (!hasMovementPriority(other, token)) return false;
     if (shouldLetDecisionExitProceed(token, next, other)) return false;
@@ -1126,6 +1143,9 @@ export function tickSimulation(state: SimState): SimState {
               const combinedQ = tokens.filter((tok: any) => tok.state === 'queuing' || tok.state === 'waiting').length;
               const effBounce = computeLinearBounce(combinedQ);
               t.willLeave = Math.random() < effBounce;
+              if (hasIncomingDecisionPressure(t, previousTokens)) {
+                t = resolveDecisionToken(t, tick, lostTicks);
+              }
             }
           }
         }
@@ -1138,22 +1158,8 @@ export function tickSimulation(state: SimState): SimState {
         t.x = POS.decision.x;
         t.y = POS.decision.y;
 
-        if (decidingTime >= DECIDING_TICKS) {
-          if (t.willLeave) {
-            t.face = 'sad';
-            t.state = 'bouncing';
-            t.stageStart = tick;
-            t.curveT = undefined;
-            t.routeStep = 0;
-            lostTicks.push(tick);
-          } else {
-            t.state = 'approaching_queue';
-            t.stageStart = tick;
-            t.curveT = undefined;
-            t.routeStep = 0;
-            t.routePhase = 'branch';
-            t.queueIndex = -1;
-          }
+        if (decidingTime >= DECIDING_TICKS || hasIncomingDecisionPressure(t, previousTokens)) {
+          t = resolveDecisionToken(t, tick, lostTicks);
         }
         break;
       }
