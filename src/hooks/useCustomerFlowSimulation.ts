@@ -661,6 +661,7 @@ function moveAlongRoute(
 const AVATAR_COLLISION_RADIUS_X = 24;
 const AVATAR_COLLISION_RADIUS_Y = 16;
 const DECISION_CLEARANCE_RADIUS = 48;
+const DECISION_APPROACH_HOLD_RADIUS = 84;
 
 function isCollisionGateParticipant(token: Token): boolean {
   if (token.opacity <= 0 || token.state === 'exited') return false;
@@ -713,6 +714,34 @@ function shouldLetDecisionExitProceed(
   return isClearingDecision && blockerIsIncoming;
 }
 
+function shouldHoldIncomingAtDecision(
+  token: Token,
+  next: { x: number; y: number },
+  blocker: Token
+): boolean {
+  const isEnteringDecision =
+    token.state === 'entering' &&
+    distanceFromDecision(next) <= DECISION_APPROACH_HOLD_RADIUS;
+
+  const blockerDistance = distanceFromDecision(blocker);
+  const blockerIsEnteringDecision =
+    blocker.state === 'entering' &&
+    hasMovementPriority(blocker, token) &&
+    blockerDistance <= DECISION_CLEARANCE_RADIUS;
+
+  const blockerOccupiesDecision =
+    blockerIsEnteringDecision ||
+    blocker.state === 'deciding' ||
+    blocker.state === 'bouncing' ||
+    (blocker.state === 'approaching_queue' && blocker.routePhase === 'branch');
+
+  return (
+    isEnteringDecision &&
+    blockerOccupiesDecision &&
+    blockerDistance <= DECISION_CLEARANCE_RADIUS
+  );
+}
+
 function hasMovementPriority(blocker: Token, token: Token): boolean {
   if (blocker.stageStart !== token.stageStart) {
     return blocker.stageStart < token.stageStart;
@@ -742,6 +771,7 @@ function canTakeMovementStep(
   return !possibleBlockers.some((other) => {
     if (checkedIds.has(other.id)) return false;
     checkedIds.add(other.id);
+    if (shouldHoldIncomingAtDecision(token, next, other)) return true;
     if (!isCollisionGateParticipant(other)) return false;
     if (!hasMovementPriority(other, token)) return false;
     if (shouldLetDecisionExitProceed(token, next, other)) return false;
