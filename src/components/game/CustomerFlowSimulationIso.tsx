@@ -45,13 +45,13 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
      else if (role.includes('mgr')) staffIndex = 3;
      else staffIndex = numId % 4; // Fallback pseudorandom
      
-     spritePath = `/assets/sprites/staff-${staffIndex}.png`;
+     spritePath = `/assets/sprites/staff-${staffIndex}.webp`;
   } else if (token.type === 'courier') {
     const seed = numId % 12; // 12 GoGusto courier variations
-    spritePath = `/assets/sprites/courier-${seed}.png`;
+    spritePath = `/assets/sprites/courier-${seed}.webp`;
   } else {
     const seed = numId % 78; // Customers use a larger pool
-    spritePath = `/assets/sprites/customer-${seed}.png`;
+    spritePath = `/assets/sprites/customer-${seed}.webp`;
   }
   
   const isBusy = isStaff && (token.animState === 'serving' || token.animState === 'making');
@@ -211,7 +211,7 @@ function BlockCounter({ x, y, width, depth, zHeight, topColor, frontColor, showW
        <g transform={`translate(0, ${depth})`}>
          <rect width={width} height={zHeight} rx={4} fill={frontColor} />
          {showWood && (
-           <image href="/assets/wood_texture.png" x="0" y="0" width={width} height={zHeight} preserveAspectRatio="none" opacity={0.6} style={{ mixBlendMode: 'multiply' }} clipPath="url(#frontClip)" />
+           <image href="/assets/wood_texture.webp" x="0" y="0" width={width} height={zHeight} preserveAspectRatio="none" opacity={0.6} style={{ mixBlendMode: 'multiply' }} clipPath="url(#frontClip)" />
          )}
          {/* Base trim */}
          <rect x="0" y={zHeight - 5} width={width} height="5" fill="rgba(0,0,0,0.3)" />
@@ -311,7 +311,6 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
   const { state } = useCustomerFlowSimulation(metrics, flags, triggerKey);
 
   if (!state) return null;
-  console.log("3D Diorama render triggered normally.");
 
   const { tokens, staffTokens, backlog, rates, completedTicks, lostTicks } = state;
   const showMachine2 = rates.staffConfig.machines >= 2;
@@ -378,7 +377,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
         {/* Visual-overhaul background stack. These assets are aligned as a single plate; gameplay geometry stays code-driven. */}
         <rect x="-20%" y="-20%" width="140%" height="140%" fill="url(#floorVignette)" />
         <image
-          href="/assets/visual-overhaul/Main%20Layer.png"
+          href="/assets/visual-overhaul/Main%20Layer.webp"
           x="0"
           y="0"
           width={VB_W}
@@ -386,7 +385,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
           preserveAspectRatio="xMidYMid slice"
         />
         <image
-          href="/assets/visual-overhaul/Carpet%20and%20Shadows.png"
+          href="/assets/visual-overhaul/Carpet%20and%20Shadows.webp"
           x="0"
           y="0"
           width={VB_W}
@@ -401,7 +400,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                return (
                  <g key="counter-and-prep-assets">
                    <image
-                     href="/assets/visual-overhaul/Counter%20SM.png"
+                     href="/assets/visual-overhaul/Counter%20SM.webp"
                      x="0"
                      y="0"
                      width={VB_W}
@@ -410,7 +409,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                      pointerEvents="none"
                    />
                    <image
-                     href="/assets/visual-overhaul/Pastry.png"
+                     href="/assets/visual-overhaul/Pastry.webp"
                      x="0"
                      y="0"
                      width={VB_W}
@@ -425,7 +424,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                return (
                  <image
                    key={ent.id}
-                   href="/assets/visual-overhaul/Till%201.png"
+                   href="/assets/visual-overhaul/Till%201.webp"
                    x="0"
                    y="0"
                    width={VB_W}
@@ -439,7 +438,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                return showTill2 ? (
                  <image
                    key={ent.id}
-                   href="/assets/visual-overhaul/Till%202.png"
+                   href="/assets/visual-overhaul/Till%202.webp"
                    x="0"
                    y="0"
                    width={VB_W}
@@ -453,7 +452,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                return (
                  <g key={ent.id}>
                    <image
-                     href={flags.premiumGrinderInstalled ? "/assets/visual-overhaul/fancy%20grinder%201.png" : "/assets/visual-overhaul/Grinder%201.png"}
+                     href={flags.premiumGrinderInstalled ? "/assets/visual-overhaul/fancy%20grinder%201.webp" : "/assets/visual-overhaul/Grinder%201.webp"}
                      x="0"
                      y="0"
                      width={VB_W}
@@ -462,7 +461,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                      pointerEvents="none"
                    />
                    <image
-                     href="/assets/visual-overhaul/Espresso%201.png"
+                     href="/assets/visual-overhaul/Espresso%201.webp"
                      x="0"
                      y="0"
                      width={VB_W}
@@ -477,7 +476,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                return showMachine2 ? (
                  <g key={ent.id}>
                    <image
-                     href={flags.premiumGrinderInstalled ? "/assets/visual-overhaul/fancy%20grinder%202.png" : "/assets/visual-overhaul/Grinder%202.png"}
+                     href={flags.premiumGrinderInstalled ? "/assets/visual-overhaul/fancy%20grinder%202.webp" : "/assets/visual-overhaul/Grinder%202.webp"}
                      x="0"
                      y="0"
                      width={VB_W}
@@ -486,7 +485,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
                      pointerEvents="none"
                    />
                    <image
-                     href="/assets/visual-overhaul/Espresso%202.png"
+                     href="/assets/visual-overhaul/Espresso%202.webp"
                      x="0"
                      y="0"
                      width={VB_W}
@@ -518,7 +517,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
 
         {/* Foreground environmental overlays: these sit above actors to create real occlusion depth. */}
         <image
-          href="/assets/visual-overhaul/Central%20seating%20without%20corner.png"
+          href="/assets/visual-overhaul/Central%20seating%20without%20corner.webp"
           x="0"
           y="0"
           width={VB_W}
@@ -527,7 +526,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
           pointerEvents="none"
         />
         <image
-          href="/assets/visual-overhaul/Lights.png"
+          href="/assets/visual-overhaul/Lights.webp"
           x="0"
           y="0"
           width={VB_W}

@@ -3,9 +3,9 @@ const COURIER_SPRITE_COUNT = 12;
 const CUSTOMER_SPRITE_COUNT = 78;
 
 const SPRITE_PATHS = [
-  ...Array.from({ length: STAFF_SPRITE_COUNT }, (_, index) => `/assets/sprites/staff-${index}.png`),
-  ...Array.from({ length: COURIER_SPRITE_COUNT }, (_, index) => `/assets/sprites/courier-${index}.png`),
-  ...Array.from({ length: CUSTOMER_SPRITE_COUNT }, (_, index) => `/assets/sprites/customer-${index}.png`),
+  ...Array.from({ length: STAFF_SPRITE_COUNT }, (_, index) => `/assets/sprites/staff-${index}.webp`),
+  ...Array.from({ length: COURIER_SPRITE_COUNT }, (_, index) => `/assets/sprites/courier-${index}.webp`),
+  ...Array.from({ length: CUSTOMER_SPRITE_COUNT }, (_, index) => `/assets/sprites/customer-${index}.webp`),
 ];
 
 const preloadCache = new Map<string, Promise<void>>();

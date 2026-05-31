@@ -6,7 +6,7 @@ export default function IntroScreen({ onStart }: { onStart: () => void }) {
       <div className="max-w-[600px] w-full flex flex-col items-center">
         <h1 className="text-4xl md:text-5xl font-bold font-sans text-text-primary text-center mb-2">Fix RainyDay Café</h1>
         <h2 className="text-sm font-mono text-text-secondary uppercase tracking-[0.15em] mb-8">A Systems Thinking Game</h2>
-        
+
         <p className="text-base text-text-secondary text-center leading-relaxed mb-8">
           You already know the RainyDay Café case from the module. This simulation lets you test interventions
           and see how changes affect the live operation.
@@ -22,7 +22,7 @@ export default function IntroScreen({ onStart }: { onStart: () => void }) {
           </ul>
         </div>
 
-        <button 
+        <button
           onClick={onStart}
           className="bg-accent-blue hover:bg-blue-600 text-white font-bold py-3 px-10 rounded-lg text-lg transition-transform transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-blue focus-visible:ring-offset-bg-primary"
         >
