@@ -1,0 +1,15 @@
+services:
+  web:
+    image: caddy:2
+    container_name: rd-cafe-web
+    restart: unless-stopped
+    volumes:
+      - ./current:/srv:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - edge
+
+networks:
+  edge:
+    external: true
+    name: ffbsg_default
