@@ -2,6 +2,15 @@ import React from 'react';
 import { VisibleMetrics, ActionFlags } from '../../types/game';
 import { useCustomerFlowSimulation, Token, StaffToken, BacklogTicket, Face, VB_W, VB_H, POS } from '../../hooks/useCustomerFlowSimulation';
 
+// Independent cutouts preserve appliance proportions when the worktop depth changes.
+const staffEquipment = [
+  { name: 'press', x: 193.56, y: 733.6, width: 68.89, height: 70.4 },
+  { name: 'cups', x: 298.26, y: 738, width: 41.48, height: 62 },
+  { name: 'syrups', x: 353.89, y: 751, width: 34.23, height: 49 },
+  { name: 'stirrers', x: 400.03, y: 770, width: 15.94, height: 30 },
+  { name: 'sink', x: 458.45, y: 752, width: 101.09, height: 58 },
+];
+
 // ============================================================
 // IMAGE 1 EXACT REPLICA (STANDING 3D DIORAMA)
 // ============================================================
@@ -58,7 +67,29 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
 
   // Track velocity to flip character direction
   const prevX = React.useRef(token.x);
+  const prevY = React.useRef(token.y);
+  const facesAway = React.useRef(false);
   const isFlipped = React.useRef(false);
+  const rearPath = !isStaff && token.type !== 'courier'
+    ? `/assets/cutout-study/customer-rears/customer-${numId % 78}-rear.png`
+    : '';
+  const [loadedRear, setLoadedRear] = React.useState('');
+  React.useEffect(() => {
+    if (!rearPath) return;
+    const image = new Image();
+    image.onload = () => setLoadedRear(rearPath);
+    image.src = rearPath;
+    return () => { image.onload = null; };
+  }, [rearPath]);
+
+  if (rearPath) {
+    const dy = token.y - prevY.current;
+    if (dy < -0.03) facesAway.current = true;
+    else if (dy > 0.03) facesAway.current = false;
+  }
+  const showRear = !!rearPath && loadedRear === rearPath && facesAway.current;
+  if (showRear) spritePath = rearPath;
+  prevY.current = token.y;
 
   if (!isStaff && token.state === 'queuing' && token.isStationary) {
     isFlipped.current = false;
@@ -102,11 +133,12 @@ function StandingAvatar({ token, isStaff = false }: { token: any, isStaff?: bool
         <image
           href={spritePath}
           xlinkHref={spritePath}
-          x={-25}
+          x={showRear ? -36 : -25}
           y={avatarY}
-          width={50}
+          width={showRear ? 72 : 50}
           height={avatarH}
           preserveAspectRatio="xMidYMid meet"
+          transform={isStaff ? 'translate(0 5) scale(1.02) translate(0 -5)' : undefined}
           filter="url(#dropShadowSmooth)"
           style={{
             pointerEvents: 'none',
@@ -372,6 +404,10 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
             <feDropShadow dx="-1" dy="3" stdDeviation="2" floodColor="#000" floodOpacity="0.15" />
           </filter>
 
+          <filter id="ticketContactShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="0.6" stdDeviation="0.45" floodColor="#24170e" floodOpacity="0.3" />
+          </filter>
+
         </defs>
 
         {/* Visual-overhaul background stack. These assets are aligned as a single plate; gameplay geometry stays code-driven. */}
@@ -394,6 +430,25 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
         />
 
         {/* ==================== UNITY Z-SORTED ENTITIES & COUNTERS ==================== */}
+        <g pointerEvents="none">
+          <defs>
+            <clipPath id="staffFridgeClip"><rect x="0" y="0" width="195" height="820" /></clipPath>
+            <clipPath id="staffPlantClip"><rect x="604" y="0" width="296" height="751" /><rect x="875" y="751" width="25" height="69" /></clipPath>
+            <clipPath id="staffPlantCrownClip"><rect x="604" y="0" width="296" height="751" /></clipPath>
+          </defs>
+          <g transform="translate(12 0)">
+            {/* Keep the approved back edge and ticket coordinates; reduce furniture depth separately. */}
+            <svg x="163" y="751" width="411" height="85.5" viewBox="116 318 974 242" preserveAspectRatio="none">
+              <image href="/assets/cutout-study/staff-work-area-bare.png" width="1774" height="887" />
+            </svg>
+            <svg x="574" y="751" width="301" height="108.3" viewBox="1090 318 602 242" preserveAspectRatio="none">
+              <image href="/assets/cutout-study/staff-work-area-bare.png" width="1774" height="887" />
+            </svg>
+            {staffEquipment.map(({ name, ...placement }) => (
+              <image key={name} href={`/assets/cutout-study/equipment/${name}.png`} {...placement} preserveAspectRatio="xMidYMid meet" filter="url(#ticketContactShadow)" />
+            ))}
+          </g>
+        </g>
         {allEntities.map((ent: any) => {
           if (ent.typeCat === 'counter') {
              if (ent.id === 'prep') {
@@ -506,7 +561,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
           } else if (ent.typeCat === 'ticket') {
              return (
               <g key={`b-${ent.id}`} opacity={ent.opacity} transform={`translate(${ent.x}, ${ent.y + 50})`}>
-                <rect x={-8} y={-10} width={16} height={20} fill="#FFF" filter="url(#dropShadowSmooth)" />
+                <rect x={-8} y={-10} width={16} height={20} fill="#FFF" filter="url(#ticketContactShadow)" />
                 <line x1={-4} y1={-6} x2={4} y2={-6} stroke="#CBD5E1" strokeWidth={1} />
                 <line x1={-4} y1={-2} x2={4} y2={-2} stroke="#CBD5E1" strokeWidth={1} />
               </g>
@@ -514,6 +569,25 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
           }
           return null;
         })}
+
+        <g pointerEvents="none">
+          {/* Separate counter section continues beyond the left edge, behind the fridge. */}
+          <svg x="-8" y="751" width="70" height="85.5" viewBox="280 318 166 242" preserveAspectRatio="none">
+            <image href="/assets/cutout-study/staff-work-area-bare.png" width="1774" height="887" />
+          </svg>
+          <image href="/assets/cutout-study/retail-coffee-bags.png" x="4" y="735" width="32" height="42" preserveAspectRatio="xMidYMid meet" filter="url(#ticketContactShadow)" />
+          <image href="/assets/cutout-study/retail-coffee-bags.png" x="1" y="764" width="32" height="42" preserveAspectRatio="xMidYMid meet" filter="url(#ticketContactShadow)" />
+          {/* Keep the fridge proportional and aligned with the adjoining worktop. */}
+          <g transform="translate(175 820) scale(0.9) translate(-155 -820) translate(-30 18)">
+            <image href="/assets/cutout-study/staff-work-area-floor-v2.png" x="0" y={751 - 399 * 106 / 209} width="900" height={887 * 106 / 209} preserveAspectRatio="none" clipPath="url(#staffFridgeClip)" />
+          </g>
+          <g transform="translate(450 410) scale(0.5)">
+            <g transform="translate(-12 8)">
+              <image href="/assets/cutout-study/staff-work-area-floor-v2.png" x="0" y={751 - 399 * 134 / 209} width="900" height={887 * 134 / 209} preserveAspectRatio="none" clipPath="url(#staffPlantCrownClip)" />
+            </g>
+            <image href="/assets/cutout-study/staff-work-area-floor-v2.png" x="0" y={751 - 399 * 134 / 209} width="900" height={887 * 134 / 209} preserveAspectRatio="none" clipPath="url(#staffPlantClip)" />
+          </g>
+        </g>
 
         {/* Foreground environmental overlays: these sit above actors to create real occlusion depth. */}
         <image
