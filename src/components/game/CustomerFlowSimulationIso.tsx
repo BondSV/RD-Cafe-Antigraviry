@@ -444,6 +444,11 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
             <svg x="574" y="751" width="301" height="108.3" viewBox="1090 318 602 242" preserveAspectRatio="none">
               <image href="/assets/cutout-study/staff-work-area-bare.png" width="1774" height="887" />
             </svg>
+            {/* A shallow engraving on the tray, clear of both receipt rows. */}
+            <g aria-label="Orders backlog" transform="translate(725 768) scale(1 0.85)" fontFamily="Georgia, serif" fontSize="12" fontWeight="bold" letterSpacing="1" textAnchor="middle" pointerEvents="none">
+              <text y="0.7" fill="#edc995" opacity="0.45">ORDERS BACKLOG</text>
+              <text y="0" fill="#2c170e">ORDERS BACKLOG</text>
+            </g>
             {staffEquipment.map(({ name, ...placement }) => (
               <image key={name} href={`/assets/cutout-study/equipment/${name}.png`} {...placement} preserveAspectRatio="xMidYMid meet" filter="url(#ticketContactShadow)" />
             ))}
@@ -560,10 +565,14 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
              return <StandingAvatar key={`t-${ent.id}`} token={{...ent, y: ent.y + 50}} isStaff={false} />;
           } else if (ent.typeCat === 'ticket') {
              return (
-              <g key={`b-${ent.id}`} opacity={ent.opacity} transform={`translate(${ent.x}, ${ent.y + 50})`}>
-                <rect x={-8} y={-10} width={16} height={20} fill="#FFF" filter="url(#ticketContactShadow)" />
-                <line x1={-4} y1={-6} x2={4} y2={-6} stroke="#CBD5E1" strokeWidth={1} />
-                <line x1={-4} y1={-2} x2={4} y2={-2} stroke="#CBD5E1" strokeWidth={1} />
+              <g key={`b-${ent.id}`} data-backlog-receipt={ent.id} opacity={ent.opacity} transform={`translate(${ent.x}, ${ent.y + 50})`}>
+                <path d="M-8-10 H8 V9 L6.4 10 L4.8 9 L3.2 10 L1.6 9 L0 10 L-1.6 9 L-3.2 10 L-4.8 9 L-6.4 10 L-8 9 Z" fill="#fffaf0" stroke="#c8b99f" strokeWidth="0.35" filter="url(#ticketContactShadow)" />
+                <g fill="#443d33" fontFamily="monospace" textAnchor="middle">
+                  <text y="-6" fontSize="3.1" fontWeight="bold">RD CAFE</text>
+                  <text y="-2.5" fontSize="2.5">#{String(ent.id).padStart(3, '0')}</text>
+                </g>
+                <path d="M-5.5-1 H5.5 M-5.5 1.5 H1.5 M3 1.5 H5.5 M-5.5 3.7 H0 M3 3.7 H5.5 M-5.5 6.5 H5.5" stroke="#655b4d" strokeWidth="0.7" opacity="0.88" />
+                <path d="M-5.5 5.2 H5.5" stroke="#8a7e6c" strokeWidth="0.35" strokeDasharray="1 0.7" />
               </g>
              );
           }

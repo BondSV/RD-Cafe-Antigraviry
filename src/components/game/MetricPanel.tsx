@@ -33,18 +33,22 @@ export default function MetricPanel() {
   };
 
   return (
-    <div className="w-full pb-6 px-4 md:px-0">
+    <div className="metric-panel w-full pb-6">
       <h3 className="font-sans text-xs font-semibold text-text-secondary uppercase tracking-[0.12em] mb-3 px-1">
         Performance Metrics
       </h3>
-      <div className="flex flex-col gap-0.5">
+      <div className="metric-columns">
+        <div className="flex flex-col gap-0.5 min-w-0">
         {renderMetric('waitingTime')}
         {renderMetric('backlog')}
         {renderMetric('congestion')}
         {renderMetric('serviceConsistency')}
+        </div>
+        <div className="flex flex-col gap-0.5 min-w-0">
         {renderMetric('stockAvailability')}
         {renderMetric('financialResults')}
         {renderMetric('wasteTracker')}
+        </div>
       </div>
     </div>
   );

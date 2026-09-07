@@ -57,3 +57,102 @@
   stroke: #3B82F6;
   stroke-width: 2.5px;
 }
+
+/* Keep the sequence centred independently of the turn label and score. */
+.turn-header {
+  height: 52px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+.turn-label { grid-column: 1; }
+.turn-score { grid-column: 3; justify-self: end; }
+.turn-sequence {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.turn-step { position: relative; }
+.turn-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 1px;
+  top: 50%;
+  left: calc(100% + 2px);
+  background: #CBD5E1;
+}
+.turn-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid #CBD5E1;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #64748B;
+}
+.turn-step--completed .turn-marker {
+  background: #2563EB;
+  border-color: #2563EB;
+  color: #FFFFFF;
+}
+.turn-step--current .turn-marker {
+  border-color: transparent;
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
+  color: #2563EB;
+}
+.metric-panel { container-type: inline-size; }
+.metric-columns { display: grid; gap: 2px; }
+@container (min-width: 500px) {
+  .metric-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; }
+}
+@media (max-width: 639px) {
+  .turn-header { height: 88px; grid-template-columns: 1fr 1fr; grid-template-rows: 44px 44px; }
+  .turn-score { grid-column: 2; grid-row: 1; }
+  .turn-sequence { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
+}
+
+/* Keep HUD labels inside the fitted scene, including short landscape windows. */
+.cafe-stage { container-type: inline-size; }
+.cafe-stage > div > .pointer-events-none {
+  transform: scale(var(--cafe-mobile-hud-scale, 1));
+  transform-origin: top left;
+}
+.cafe-stage > div > .pointer-events-none:last-of-type {
+  transform-origin: top right;
+}
+@media (min-width: 640px) {
+  .cafe-stage > div > .pointer-events-none {
+    transform: scale(var(--cafe-hud-scale, 1));
+  }
+}
+
+@media (min-width: 1024px) {
+  .game-columns {
+    --case-width: 260px;
+    --actions-width: 272px;
+    padding: 17px 12px 20px;
+    align-items: flex-start;
+  }
+  .case-panel, .centre-panel, .interventions-panel { height: var(--scene-height); }
+  .interventions-panel { padding-bottom: 0; }
+  .case-panel > div > div.sticky { padding-top: 0; }
+  .case-panel { width: calc(var(--case-width) + var(--side-growth, 0px)); }
+  .interventions-panel { width: calc(var(--actions-width) + var(--side-growth, 0px)); }
+  .cafe-stage > div { margin-top: 0; }
+  .interventions-panel h2 {
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 20px;
+  }
+}
+@media (min-width: 1280px) {
+  .game-columns { --case-width: 280px; --actions-width: 304px; }
+}

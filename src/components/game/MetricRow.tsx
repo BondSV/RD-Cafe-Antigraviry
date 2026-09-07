@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import React, { useEffect, useState, useRef, useId } from 'react';
+import { ArrowUp, ArrowDown, Minus, ChevronDown } from 'lucide-react';
 import { MetricContribution } from '../../types/game';
 
 interface MetricRowProps {
@@ -11,6 +11,7 @@ interface MetricRowProps {
 }
 
 export default function MetricRow({ label, rawValue, previousValue, contributions, isLowerBetter }: MetricRowProps) {
+  const breakdownId = useId();
   const [displayValue, setDisplayValue] = useState(rawValue);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
@@ -59,21 +60,23 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
 
   return (
     <div ref={rowRef} className="relative">
-      <div
-        className={`bg-bg-surface-alt rounded-lg p-3 my-1 border border-border-default ${hasContributions ? 'cursor-pointer hover:border-accent-blue/50 transition-colors' : ''}`}
+      <button
+        type="button"
+        aria-expanded={hasContributions ? showBreakdown : undefined}
+        aria-controls={hasContributions ? breakdownId : undefined}
+        disabled={!hasContributions}
+        className={`w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue bg-bg-surface-alt rounded-lg p-3 my-1 border border-border-default ${hasContributions ? 'cursor-pointer hover:border-accent-blue/50 transition-colors' : ''}`}
         onClick={() => hasContributions && setShowBreakdown(prev => !prev)}
       >
-        <div className="flex justify-between items-center mb-1.5">
-          <div className="flex items-center">
-            <div className={`w-2 h-2 rounded-full mr-2 ${bgClass}`}></div>
+        <div className="flex justify-between gap-2 items-center mb-1.5">
+          <div className="flex min-w-0 items-center">
+            <div className={`w-2 h-2 shrink-0 rounded-full mr-2 ${bgClass}`}></div>
             <span className="font-sans font-medium text-sm text-text-primary">{label}</span>
             {hasContributions && (
-              <span className="text-[10px] text-text-muted ml-1.5">
-                {showBreakdown ? '\u25B2' : '\u25BC'}
-              </span>
+              <ChevronDown aria-hidden="true" className={`w-3 h-3 shrink-0 text-text-muted ml-1.5 ${showBreakdown ? 'rotate-180' : ''}`} />
             )}
           </div>
-          <div className="flex items-center">
+          <div className="flex shrink-0 items-center">
             <span className={`font-mono font-bold text-sm ${colorClass}`}>{Math.round(displayValue)}</span>
             {deltaText}
             {deltaIcon && <div className="ml-0.5 flex justify-end">{deltaIcon}</div>}
@@ -85,11 +88,11 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
             style={{ width: `${Math.round(displayValue)}%` }}
           />
         </div>
-      </div>
+      </button>
 
-      {/* Breakdown tooltip */}
+      {/* Inline explanation expands only its own metric column. */}
       {showBreakdown && hasContributions && (
-        <div className="mx-1 mb-1 bg-bg-surface border border-border-default rounded-lg p-3 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+        <div id={breakdownId} className="mx-1 mb-1 bg-bg-surface border border-border-default rounded-lg p-3 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
           <div className="text-[11px] font-sans text-text-muted mb-2 uppercase tracking-wider">Card contributions</div>
           <div className="flex flex-col gap-1.5">
             {contributions.map((c) => {
@@ -100,7 +103,7 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
               const deltaColor = isPositive ? 'text-accent-green' : 'text-accent-red';
               return (
                 <div key={c.cardId} className="flex justify-between items-center">
-                  <span className="text-xs text-text-secondary truncate mr-2">{c.cardTitle}</span>
+                  <span className="text-xs text-text-secondary break-words min-w-0 mr-2">{c.cardTitle}</span>
                   <span className={`text-xs font-mono font-semibold ${deltaColor} shrink-0`}>
                     {sign}{Math.round(displayDelta)}
                   </span>

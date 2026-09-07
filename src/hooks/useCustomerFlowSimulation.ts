@@ -138,7 +138,7 @@ export const POS = {
   machine2:    { x: 802, y: 610 },
 
   counterY: 585,                     // top edge of counter blocks
-  backlogBase: { x: 680, y: 720 },
+  backlogBase: { x: 638, y: 734 },
   staffBelowY: 645,
 };
 
@@ -336,12 +336,18 @@ export function deriveStaffConfig(flags: ActionFlags): StaffConfig {
     }
   }
 
-  return {
+  const config: StaffConfig = {
     totalStaff, tills, machines, specialised, model, tillLanes, serialised, prepLanes, managerWandering,
     hasPT: !!flags.tempStaffAdded,
     hasHB: !!flags.headBaristaMovedEarlier,
     hasMGR: !!flags.managerMovedEarlier,
   };
+  const manager = initStaffTokens(config).find(staff => staff.id === 'mgr');
+  // A staffed second till must also be available to customer routing, including
+  // specialised three-person setups that otherwise default to a single lane.
+  if (manager?.station === 'till2') config.tillLanes = 2;
+  config.managerWandering = manager?.station === 'wandering';
+  return config;
 }
 
 function lerp(a: number, b: number, t: number): number {
@@ -442,9 +448,13 @@ export function initStaffTokens(config: StaffConfig): StaffToken[] {
       const tillPerson = hasPT ? 'pt' : 'mgr';
       const tillLabel = hasPT ? 'PT' : 'MGR';
       tokens.push({ id: tillPerson, label: tillLabel, x: POS.tillStation.x, y: sY, targetX: POS.tillStation.x, targetY: sY, station: 'till', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
-      // If both PT and MGR present without HB, second one wanders
+      // The manager covers an unassigned second till before floating.
       if (hasPT && hasMGR) {
-        tokens.push({ id: 'mgr', label: 'MGR', x: POS.foodPrep.x, y: sY + 30, targetX: POS.foodPrep.x + 40, targetY: sY + 30, station: 'wandering', busy: false, animState: 'wandering', animStart: 0, animProgress: 0 });
+        if (tills >= 2) {
+          tokens.push({ id: 'mgr', label: 'MGR', x: POS.tillStation2.x, y: sY, targetX: POS.tillStation2.x, targetY: sY, station: 'till2', busy: false, animState: 'idle', animStart: 0, animProgress: 0 });
+        } else {
+          tokens.push({ id: 'mgr', label: 'MGR', x: POS.foodPrep.x, y: sY + 30, targetX: POS.foodPrep.x + 40, targetY: sY + 30, station: 'wandering', busy: false, animState: 'wandering', animStart: 0, animProgress: 0 });
+        }
       }
     } else {
       // Solo: AB1 at till (handles machine too in tick logic)
@@ -940,9 +950,14 @@ function getWaitingPosition(index: number): { x: number; y: number } {
 }
 
 function getBacklogPosition(index: number, baseX: number, baseY: number): { x: number; y: number } {
-  const col = index % 6;
-  const row = Math.floor(index / 6);
-  return { x: baseX + col * 20, y: baseY + row * 24 };
+  const columns = 10;
+  const visibleRows = 2;
+  const col = index % columns;
+  const row = Math.floor(index / columns) % visibleRows;
+  // Keep every pending order represented. Extra orders stack within the tray
+  // instead of creating a third row below the camera's bottom edge.
+  const stackOffset = Math.min(3, Math.floor(index / (columns * visibleRows))) * 0.6;
+  return { x: baseX + col * 22 + stackOffset, y: baseY + row * 22 + stackOffset };
 }
 
 // Linear bounce based on combined queue (queue + waiting).
