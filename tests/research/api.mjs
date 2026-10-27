@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import http from 'node:http';
+import https from 'node:https';
 import {randomUUID,randomBytes} from 'node:crypto';
 const base=process.env.TEST_BASE||'http://127.0.0.1:8091';const key=process.env.TEST_ADMIN_KEY||'local-test-key-000000000000000000000000';
 async function call(path,body,token,method='POST'){const r=await fetch(base+'/api/research/'+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});return {status:r.status,body:await r.json()};}
@@ -27,5 +29,13 @@ assert.equal((await send([first])).status,401,'late writes blocked after withdra
 assert.equal((await call('enrol',{token,consentVersion:config.consentVersion})).status,410,'withdrawn code cannot re-enrol');
 const stopToken=tokens[1];assert.equal((await call('stop',{},stopToken)).status,200);
 assert.equal((await call('enrol',{token:stopToken,consentVersion:config.consentVersion})).status,410);
+// A request authenticated before withdrawal must not write after withdrawal commits.
+const raceToken=randomBytes(32).toString('hex');await call('enrol',{token:raceToken,consentVersion:config.consentVersion,test:true},key);
+const raceEvent={version:config.version,id:randomUUID(),runId:randomUUID(),pageId:randomUUID(),seq:1,elapsedMs:0,clientAt:new Date().toISOString(),type:'run_started',actions:[],data:{}};
+const payload=JSON.stringify({version:config.version,events:[raceEvent]});
+const transport=base.startsWith('https:')?https:http;let slowRequest;
+const response=new Promise((resolve,reject)=>{slowRequest=transport.request(base+'/api/research/events',{method:'POST',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(payload),Authorization:'Bearer '+raceToken}},r=>{r.resume();r.on('end',()=>resolve(r.statusCode));});slowRequest.on('error',reject);slowRequest.write(payload.slice(0,10));});
+await new Promise(resolve=>setTimeout(resolve,200));assert.equal((await call('withdraw',{},raceToken)).status,200);slowRequest.end(payload.slice(10));assert([400,401].includes(await response),'in-flight upload rejected after withdrawal');
+assert.equal((await call('withdraw',{},raceToken)).status,200,'withdrawal retry is idempotent');
 assert.equal((await call('admin/test-cleanup',{},key)).status,200);
 console.log('API integrity, balanced assignment, authentication, duplicate/retry, canonical sequence, privacy validation, stop and withdrawal checks passed');

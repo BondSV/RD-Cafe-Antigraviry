@@ -15,7 +15,7 @@ const DATA=process.env.RESEARCH_DATA || './research-data';
 process.umask(0o077);
 mkdirSync(DATA,{recursive:true,mode:0o700});
 const db=new DatabaseSync(join(DATA,'research.sqlite'));
-db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;
+db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA secure_delete=ON; PRAGMA busy_timeout=5000;
 CREATE TABLE IF NOT EXISTS participants(id TEXT PRIMARY KEY,token_hash TEXT UNIQUE NOT NULL,session TEXT NOT NULL,condition TEXT NOT NULL,created_at TEXT NOT NULL,test INTEGER NOT NULL DEFAULT 0,stopped INTEGER NOT NULL DEFAULT 0,withdrawn INTEGER NOT NULL DEFAULT 0,consent_version TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY,participant_id TEXT NOT NULL REFERENCES participants(id),started_at TEXT NOT NULL,updated_at TEXT NOT NULL,action_count INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'incomplete');
 CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,participant_id TEXT NOT NULL REFERENCES participants(id),run_id TEXT NOT NULL REFERENCES runs(id),page_id TEXT NOT NULL,seq INTEGER NOT NULL,elapsed_ms REAL NOT NULL,client_at TEXT NOT NULL,received_at TEXT NOT NULL,type TEXT NOT NULL,version TEXT NOT NULL,data TEXT NOT NULL,input_hash TEXT NOT NULL,UNIQUE(page_id,seq));
@@ -63,7 +63,7 @@ function eraseFromBackups(id){
  for(const name of readdirSync(dir).filter(n=>n.endsWith('.sqlite'))){const copy=new DatabaseSync(join(dir,name));try{copy.exec('PRAGMA foreign_keys=ON; BEGIN IMMEDIATE');copy.prepare('DELETE FROM events WHERE participant_id=?').run(id);copy.prepare('DELETE FROM runs WHERE participant_id=?').run(id);copy.prepare('UPDATE participants SET stopped=1,withdrawn=1 WHERE id=?').run(id);copy.exec('COMMIT; VACUUM;');}finally{copy.close();}}
 }
 function exportData(){
- const people=db.prepare('SELECT id,session,condition,created_at,consent_version FROM participants WHERE test=0 AND withdrawn=0 ORDER BY created_at').all();
+ const people=db.prepare('SELECT id,session,condition,created_at,consent_version,stopped FROM participants WHERE test=0 AND withdrawn=0 ORDER BY created_at').all();
  const runs=db.prepare('SELECT r.* FROM runs r JOIN participants p ON p.id=r.participant_id WHERE p.test=0 AND p.withdrawn=0 ORDER BY r.started_at').all();
  const events=db.prepare('SELECT e.id,e.participant_id,e.run_id,e.page_id,e.seq,e.elapsed_ms,e.client_at,e.received_at,e.type,e.version,e.data FROM events e JOIN participants p ON p.id=e.participant_id WHERE p.test=0 AND p.withdrawn=0 ORDER BY e.received_at,e.page_id,e.seq').all().map(e=>({...e,data:JSON.parse(e.data)}));
  return {exportedAt:now(),version:VERSION,session:SESSION,catalogue:actions,metricLabels,scoredMetrics:SCORE_METRIC_KEYS,initialState:describe(reconstruct([])),protocol:{assignment:'balanced random, fixed per participant',identification:'classroom session only',timing:'browser elapsed/visibility, not attention',animation:'illustrative and stochastic; replay reconstructs decisions and feedback'},participants:people,runs,events};
@@ -123,6 +123,7 @@ const server=http.createServer(async(req,res)=>{
    const prepared=b.events.map(e=>({event:e,...validate(e)}));
    db.exec('BEGIN IMMEDIATE');
    try{
+    if(!db.prepare('SELECT id FROM participants WHERE id=? AND stopped=0 AND withdrawn=0').get(p.id))throw Error('Participation has ended');
     for(const {event:e,state,data} of prepared){
      const inputHash=hash(JSON.stringify(e));const duplicate=db.prepare('SELECT input_hash,participant_id FROM events WHERE id=?').get(e.id);
      if(duplicate){if(duplicate.input_hash!==inputHash||duplicate.participant_id!==p.id)throw Error('Conflicting duplicate');continue;}
@@ -151,7 +152,8 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='POST'&&['/api/research/stop','/api/research/withdraw'].includes(path)){
    const token=req.headers.authorization?.replace(/^Bearer /,'')||'';
    const p=/^[a-f0-9]{64}$/.test(token)?db.prepare('SELECT * FROM participants WHERE token_hash=?').get(hash(token)):null;if(!p)return send(res,401,{error:'Participant session unavailable'});
-   if(p.withdrawn||(p.stopped&&path.endsWith('/stop')))return send(res,200,{ok:true});
+   if(p.withdrawn){eraseFromBackups(p.id);backup();return send(res,200,{ok:true});}
+   if(p.stopped&&path.endsWith('/stop')){backup();return send(res,200,{ok:true});}
    db.exec('BEGIN IMMEDIATE');
    if(path.endsWith('/withdraw')){db.prepare('DELETE FROM events WHERE participant_id=?').run(p.id);db.prepare('DELETE FROM runs WHERE participant_id=?').run(p.id);}
    db.prepare('UPDATE participants SET stopped=1,withdrawn=? WHERE id=?').run(path.endsWith('/withdraw')?1:0,p.id);db.exec('COMMIT');
