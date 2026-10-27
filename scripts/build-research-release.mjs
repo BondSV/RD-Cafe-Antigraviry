@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-const root=process.cwd();const release=process.env.RELEASE_VERSION||'research-2026-10-28-v1';
+const root=process.cwd();const release=process.env.RELEASE_VERSION||'research-2026-10-28-v2';
 const output=path.join(root,'output/research-release');const source=path.join(output,'source');
 await fs.rm(source,{recursive:true,force:true});await fs.mkdir(source,{recursive:true});
 // Isolate the committed production game from pre-existing local experiments.
@@ -20,7 +20,7 @@ execFileSync(path.join(root,'node_modules/.bin/tsc'),['--noEmit'],{cwd:source,st
 await fs.rm(path.join(source,'dist'),{recursive:true,force:true});
 execFileSync(path.join(root,'node_modules/.bin/vite'),['build'],{cwd:source,stdio:'inherit'});
 const server=path.join(output,'server');await fs.mkdir(server,{recursive:true});
-for(const file of ['research.mjs','Dockerfile'])await fs.copyFile(path.join(root,'server',file),path.join(server,file));
+for(const file of ['research.mjs','questionnaire.mjs','Dockerfile'])await fs.copyFile(path.join(root,'server',file),path.join(server,file));
 execFileSync(path.join(root,'node_modules/.bin/esbuild'),['server/game.ts','--bundle','--platform=node','--format=esm','--outfile='+path.join(server,'game.mjs')],{cwd:root,stdio:'inherit'});
 const files=[];async function walk(dir){for(const entry of await fs.readdir(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.name==='.DS_Store'){await fs.rm(file);continue;}if(entry.isDirectory())await walk(file);else{const data=await fs.readFile(file);files.push({path:path.relative(path.join(source,'dist'),file),bytes:data.length,sha256:createHash('sha256').update(data).digest('hex')});}}}
 await walk(path.join(source,'dist'));

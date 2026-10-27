@@ -8,8 +8,8 @@ import { metricLabels } from '../data/labels';
 import { recordOnce, useRecording } from './recording';
 
 export default function CandidateDialog(){
- const state=useGameStore();const {participant}=useRecording();const ref=useRef<HTMLDialogElement>(null);
- const candidate=actions.find(a=>a.id===state.selectedActionId);const preview=participant?.condition==='preview';
+ const state=useGameStore();const {participant,phase}=useRecording();const ref=useRef<HTMLDialogElement>(null);
+ const candidate=actions.find(a=>a.id===state.selectedActionId);const preview=phase!=='practice'&&participant?.condition==='preview';
  const predicted=candidate&&preview?applyActionEngine(state,candidate):null;
  useEffect(()=>{const dialog=ref.current;if(!candidate||!dialog)return;dialog.showModal();recordOnce('candidate:'+state.selectionId,'candidate_opened',{actionId:candidate.id});return()=>{dialog.close();};},[state.selectionId,candidate?.id]);
  if(!candidate)return null;

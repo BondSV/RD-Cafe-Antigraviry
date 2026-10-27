@@ -235,3 +235,14 @@ html[data-input="keyboard"] :is(.study-primary,.bg-accent-blue):focus { outline-
 .result-dialog[open] { display:flex; align-items:center; justify-content:center; }
 .result-dialog::backdrop { background:#15243a88; }
 .result-dialog>div { max-height:calc(100dvh - 32px); }
+.questionnaire-question { display:block; margin:24px 0; font-weight:600; line-height:1.5; }
+.questionnaire-question textarea { display:block; width:100%; padding:12px; margin-top:10px; border:1px solid #aeb9c7; border-radius:8px; font-weight:400; resize:vertical; font-size:16px; color:#17243b; background:white; }
+.questionnaire-question small { display:block; font-weight:400; color:#4b5c70; margin-top:4px; }
+.study-session-label { font-weight:600; }
+.study-bar-line .study-finish { margin-left:0; }
+.research-session-section { margin:24px 0; padding:20px 0; border-top:1px solid #cad4e1; border-bottom:1px solid #cad4e1; }
+.research-session-section .study-secondary { margin:8px 10px; }
+.research-session-section a { color:#174ea6; text-decoration:underline; overflow-wrap:anywhere; }
+.research-answer { margin:12px 0; padding:16px; background:white; border:1px solid #d3dce8; border-radius:8px; }
+.research-answer summary { cursor:pointer; font-weight:600; }
+.research-answer-text { white-space:pre-wrap; overflow-wrap:anywhere; }

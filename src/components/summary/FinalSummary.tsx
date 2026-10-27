@@ -1,4 +1,5 @@
 import React, {useEffect} from 'react';
+import { finishPlaying, useRecording } from '../../research/recording';
 import { recordOnce } from '../../research/recording';
 import { useGameStore } from '../../store/useGameStore';
 import { AlertTriangle, Target, Trophy, XCircle, TrendingUp, RotateCcw } from 'lucide-react';
@@ -10,6 +11,7 @@ import { getSystemScore } from '../../engine/getSystemScore';
 import { VisibleMetrics } from '../../types/game';
 
 export default function FinalSummary() {
+  const phase=useRecording(s=>s.phase);const researchOpen=useRecording(s=>s.config?.open);
   const outcome = useGameStore(state => state.outcome);
   const metrics = useGameStore(state => state.metrics);
   const actionsTaken = useGameStore(state => state.actionsTaken);
@@ -138,6 +140,7 @@ export default function FinalSummary() {
           <RotateCcw className="w-5 h-5 mr-2" />
           Play Again
         </button>
+        {phase==='playing'&&researchOpen&&<button className="study-secondary mt-4" onClick={finishPlaying}>Finish playing</button>}
 
       </div>
     </div>
