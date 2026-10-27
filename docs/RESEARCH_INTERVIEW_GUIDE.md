@@ -8,11 +8,11 @@ This draft follows the signed forms’ voluntary interview and withdrawal provis
 
 The non-teaching researcher selects students across conditions, groups/intakes and contrasting patterns of engagement. Include limited progress, confusion and unresolved explanations, not only high scores. Multiple attempts from one student are not independent participants. Prepare one or two moments from that student's recorded runs. A questionnaire response, where separately consented and linked, may suggest a useful follow-up but is not an interview prerequisite.
 
-Keep recruitment/contact details and any identity-to-code mapping outside the gameplay/questionnaire dataset, in the approved research location. Confirm actual permissions before using a replay or questionnaire answer in an interview. Record the interview date as a later research contribution for the withdrawal-window calculation. The software cannot observe the interview itself.
+The game holds no general student-to-code lookup table. Only an interview volunteer who chooses to share their code creates an identity-to-gameplay link with the interviewer. Do not create a universal mapping. Keep recruitment/contact details and that limited volunteer mapping outside the gameplay/questionnaire dataset, separately with the interviewer in the approved research location and with restricted access. Confirm actual permissions before using a replay or questionnaire answer in an interview. Record the interview date as a later research contribution for the withdrawal-window calculation. The software cannot observe the interview itself.
 
 ## Opening, approximately 5 minutes
 
-Confirm the student's study code, voluntary interview participation, separate permission for audio recording and the route for requesting withdrawal. Explain that the interview is not an assessment and there is no expected correct explanation. Invite them to decline a question, pause, or ask to remove a contribution.
+Confirm voluntary interview participation and explicitly ask whether the student agrees to share their study code and link their existing gameplay records to this interview. Obtain separate permission for audio recording and explain the route for requesting withdrawal. Interview or audio consent alone does not authorise that linkage or the independent collection/research use of the wider gameplay dataset. Explain that the interview is not an assessment and there is no expected correct explanation. Invite them to decline a question, pause, or ask to remove a contribution.
 
 “What was your overall approach to playing the game across your attempts?”
 
