@@ -1,3 +1,4 @@
+import {record} from '../../research/recording';
 import React, { useEffect, useState, useRef } from 'react';
 import { deriveNodeHealth } from '../../engine/deriveNodeHealth';
 import { useGameStore } from '../../store/useGameStore';
@@ -12,6 +13,8 @@ export default function SystemMapNode({ node }: { node: NodeType }) {
   const [animClass, setAnimClass] = useState('');
   
   const [showTooltip, setShowTooltip] = useState(false);
+  const lastShown=useRef(false);
+  useEffect(()=>{if(showTooltip!==lastShown.current){lastShown.current=showTooltip;record('node_tooltip',{node:node.id,open:showTooltip});}},[showTooltip,node.id]);
   const nodeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

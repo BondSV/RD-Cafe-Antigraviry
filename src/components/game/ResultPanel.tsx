@@ -1,9 +1,11 @@
-import React from 'react';
+import React, {useEffect,useRef} from 'react';
 import { TurnRecord, DeltaStatus } from '../../types/game';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { actions } from '../../data/actions';
 
-export default function ResultPanel({ turnRecord, onClose }: { turnRecord: TurnRecord, onClose: () => void }) {
+export default function ResultPanel({ turnRecord, onClose, final=false }: { turnRecord: TurnRecord, onClose: () => void, final?: boolean }) {
+  const ref=useRef<HTMLDialogElement>(null);
+  useEffect(()=>{const dialog=ref.current;if(dialog&&!dialog.open)dialog.showModal();return()=>dialog?.close();},[]);
   const action = actions.find(a => a.id === turnRecord.actionId);
 
   const getDeltaColor = (status: DeltaStatus) => {
@@ -19,7 +21,7 @@ export default function ResultPanel({ turnRecord, onClose }: { turnRecord: TurnR
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-0 bg-black/60 md:bg-transparent md:backdrop-blur-none transition-opacity">
+    <dialog ref={ref} aria-label={`Turn ${turnRecord.turn} result`} className="result-dialog" onCancel={e=>e.preventDefault()}>
       <div className="bg-bg-surface border border-border-default rounded-2xl w-full max-w-md md:max-w-[440px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
 
         <div className="p-6 overflow-y-auto flex-1">
@@ -45,7 +47,7 @@ export default function ResultPanel({ turnRecord, onClose }: { turnRecord: TurnR
             ))}
           </div>
 
-          <p className="font-sans text-sm md:text-base text-text-primary leading-relaxed bg-black/20 p-4 rounded-xl border-l-4 border-accent-blue">
+          <p className="font-sans text-sm md:text-base text-text-primary leading-relaxed bg-bg-surface-alt p-4 rounded-xl border-l-4 border-accent-blue">
             {turnRecord.eventText}
           </p>
         </div>
@@ -55,10 +57,10 @@ export default function ResultPanel({ turnRecord, onClose }: { turnRecord: TurnR
             onClick={onClose}
             className="w-full bg-accent-blue hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl text-md transition-transform transform active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-blue focus-visible:ring-offset-bg-surface"
           >
-            Continue
+            {final ? 'View final summary' : 'Continue'}
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

@@ -637,7 +637,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
             Orders / hr
           </div>
           <div className="font-mono text-[10px] font-semibold leading-none tabular-nums text-emerald-300 sm:text-[15px]">
-            {ordersPerHour}
+            <span data-research-counter="orders">{ordersPerHour}</span>
           </div>
         </div>
         <div className="flex items-center gap-1 rounded-b-lg border border-t-0 border-white/10 bg-stone-950/75 px-1.5 py-1 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_-1px_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:gap-2 sm:rounded-full sm:border-t sm:px-3 sm:py-1.5 sm:shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]">
@@ -646,7 +646,7 @@ function CustomerFlowSimulationIso({ metrics, flags, triggerKey }: Props) {
             Lost sales / hr
           </div>
           <div className="font-mono text-[10px] font-semibold leading-none tabular-nums text-rose-300 sm:text-[15px]">
-            {lostSalesPerHour}
+            <span data-research-counter="lost">{lostSalesPerHour}</span>
           </div>
         </div>
       </div>

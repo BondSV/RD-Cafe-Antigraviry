@@ -1,3 +1,9 @@
+{
+    log {
+        output discard
+    }
+}
+
 :80 {
     root * /srv
     encode zstd gzip
@@ -7,6 +13,11 @@
         Referrer-Policy "strict-origin-when-cross-origin"
         -Server
     }
-    try_files {path} /index.html
-    file_server
+    handle /api/research/* {
+        reverse_proxy rd-cafe-research:8091
+    }
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
 }

@@ -5,28 +5,39 @@ import HowItWorksPage from './components/landing/HowItWorksPage';
 import IntroScreen from './components/intro/IntroScreen';
 import GameLayout from './components/layout/GameLayout';
 import FinalSummary from './components/summary/FinalSummary';
+import StudyEntry from './research/StudyEntry';
+import StudyBar from './research/StudyBar';
+import CandidateDialog from './research/CandidateDialog';
+import ResearchDashboard from './research/ResearchDashboard';
+import { beginRun, initialiseResearch, useRecording } from './research/recording';
 import { preloadSimulationSprites } from './utils/preloadSimulationSprites';
+
 
 function App() {
   const [started, setStarted] = useState(false);
   const outcome = useGameStore(state => state.outcome);
+  const acknowledgedTurn = useGameStore(state=>state.acknowledgedTurn);
+  const recording = useRecording();
+  useEffect(()=>{if(window.location.pathname!=='/research'&&window.location.pathname!=='/v2-sample')void initialiseResearch();},[]);
+  const start=()=>{beginRun();setStarted(true);};
   const routePath = window.location.pathname.replace(/\/$/, '');
   const isLandingRoute = routePath === '/landing';
   const isHowItWorksRoute = routePath === '/how-it-works';
 
   useEffect(() => {
     preloadSimulationSprites();
-  }, []);
+  }, [routePath]);
 
-  if (outcome) return <FinalSummary />;
+
+  if(routePath==='/research')return <ResearchDashboard/>;
+  if(!recording.ready||recording.choice==='pending')return <StudyEntry/>;
+  if (outcome && acknowledgedTurn>=7) return <><StudyBar/><FinalSummary /></>;
   if (!started) {
-    if (isHowItWorksRoute) return <HowItWorksPage onStart={() => setStarted(true)} />;
-    return isLandingRoute
-      ? <LandingPage onStart={() => setStarted(true)} />
-      : <IntroScreen onStart={() => setStarted(true)} />;
+    const intro=isHowItWorksRoute?<HowItWorksPage onStart={start}/>:isLandingRoute?<LandingPage onStart={start}/>:<IntroScreen onStart={start}/>;
+    return <><StudyBar/>{intro}</>;
   }
 
-  return <GameLayout />;
+  return <div className="study-game-shell"><StudyBar/><GameLayout /><CandidateDialog/></div>;
 }
 
 export default App;

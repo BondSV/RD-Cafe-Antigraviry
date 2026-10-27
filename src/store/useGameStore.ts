@@ -1,8 +1,15 @@
 import { create } from 'zustand';
 import { GameState, ActionFlags } from '../types/game';
 import { initialMetrics } from '../data/initialMetrics';
+import { beginRun, record, updateRecordedActions } from '../research/recording';
 
 export interface GameStore extends GameState {
+  selectedActionId: string | null;
+  selectionId: string;
+  acknowledgedTurn: number;
+  selectAction: (actionId: string) => void;
+  cancelSelection: () => void;
+  acknowledgeResult: (turn: number) => void;
   applyAction: (actionId: string) => void;
   resetGame: () => void;
 }
@@ -58,12 +65,15 @@ const createInitialGameState = (): GameState => ({
 import { applyActionEngine } from '../engine/applyAction';
 import { actions } from '../data/actions';
 
-export const useGameStore = create<GameStore>((set) => ({
-  ...createInitialGameState(),
-  applyAction: (actionId: string) => set((state) => {
-    const action = actions.find(a => a.id === actionId);
-    if (!action) return state;
-    return applyActionEngine(state, action);
-  }),
-  resetGame: () => set(() => createInitialGameState()),
+export const useGameStore = create<GameStore>((set,get) => ({
+  ...createInitialGameState(), selectedActionId:null, selectionId:'', acknowledgedTurn:0,
+  selectAction: (actionId) => {const state=get();if(state.turn>state.maxTurns||state.acknowledgedTurn<state.history.length||state.actionsTaken.includes(actionId))return;set({selectedActionId:actionId,selectionId:crypto.randomUUID()});},
+  cancelSelection: () => {const id=get().selectedActionId;if(id)record('candidate_cancelled',{actionId:id});set({selectedActionId:null});},
+  acknowledgeResult: (turn) => {if(turn!==get().history.length||turn<=get().acknowledgedTurn)return;record('feedback_dismissed',{turn});set({acknowledgedTurn:turn});},
+  applyAction: (actionId: string) => {
+    const state=get();if(state.selectedActionId!==actionId||state.acknowledgedTurn<state.history.length)return;
+    const action=actions.find(a=>a.id===actionId);if(!action||state.actionsTaken.includes(actionId)||state.turn>state.maxTurns)return;
+    const result=applyActionEngine(state,action);updateRecordedActions(result);record('action_committed',{actionId});set({...result,selectedActionId:null});
+  },
+  resetGame: () => {beginRun();set({...createInitialGameState(),selectedActionId:null,selectionId:'',acknowledgedTurn:0});},
 }));

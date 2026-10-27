@@ -4,7 +4,7 @@ import { Users, Hammer, UtensilsCrossed, ClipboardList, PoundSterling } from 'lu
 import { useGameStore } from '../../store/useGameStore';
 
 export default function ActionCard({ action, disabled }: { action: ActionConfig, disabled: boolean }) {
-  const applyAction = useGameStore(state => state.applyAction);
+  const applyAction = useGameStore(state => state.selectAction);
   const actionsTaken = useGameStore(state => state.actionsTaken);
 
   const isUsed = actionsTaken.includes(action.id);
@@ -26,6 +26,7 @@ export default function ActionCard({ action, disabled }: { action: ActionConfig,
 
   return (
     <button
+      data-research-card={action.id}
       onClick={() => isInteractive && applyAction(action.id)}
       disabled={!isInteractive}
       className={`w-full text-left bg-white border-y-[1.5px] border-r-[1.5px] border-l-[4px] rounded-xl p-4 my-2 transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary focus-visible:ring-accent-blue shadow-sm

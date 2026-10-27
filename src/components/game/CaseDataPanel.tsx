@@ -1,3 +1,4 @@
+import {record} from '../../research/recording';
 import React, { useState } from 'react';
 import { caseData } from '../../data/caseData';
 import { useGameStore } from '../../store/useGameStore';
@@ -30,7 +31,7 @@ export default function CaseDataPanel() {
 
   if (collapsed) {
     return (
-      <div className="h-full flex flex-col items-center py-4 bg-bg-surface border-r border-border-default w-12 cursor-pointer hover:bg-bg-hover transition-colors" onClick={() => setCollapsed(false)}>
+      <div className="h-full flex flex-col items-center py-4 bg-bg-surface border-r border-border-default w-12 cursor-pointer hover:bg-bg-hover transition-colors" onClick={() => {record('case_toggled',{open:true});setCollapsed(false);}}>
         <FileText className="w-5 h-5 text-text-secondary mb-4" />
         <ChevronRight className="w-4 h-4 text-text-secondary" />
         <div className="mt-8 font-sans text-xs uppercase tracking-[0.12em] text-text-secondary transform -rotate-90 whitespace-nowrap">
@@ -47,7 +48,7 @@ export default function CaseDataPanel() {
           <FileText className="w-4 h-4 mr-2" />
           Case Data
         </h3>
-        <button onClick={() => setCollapsed(true)} className="hidden md:block text-text-secondary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-surface focus-visible:ring-accent-blue rounded">
+        <button onClick={() => {record('case_toggled',{open:false});setCollapsed(true);}} className="hidden md:block text-text-secondary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-surface focus-visible:ring-accent-blue rounded">
           <X className="w-4 h-4" />
         </button>
       </div>

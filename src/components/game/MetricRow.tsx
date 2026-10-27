@@ -1,3 +1,4 @@
+import {record} from '../../research/recording';
 import React, { useEffect, useState, useRef, useId } from 'react';
 import { ArrowUp, ArrowDown, Minus, ChevronDown } from 'lucide-react';
 import { MetricContribution } from '../../types/game';
@@ -28,6 +29,7 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
     if (!showBreakdown) return;
     const handler = (e: MouseEvent) => {
       if (rowRef.current && !rowRef.current.contains(e.target as Node)) {
+        record('metric_toggled',{metric:label,open:false});
         setShowBreakdown(false);
       }
     };
@@ -66,7 +68,7 @@ export default function MetricRow({ label, rawValue, previousValue, contribution
         aria-controls={hasContributions ? breakdownId : undefined}
         disabled={!hasContributions}
         className={`w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue bg-bg-surface-alt rounded-lg p-3 my-1 border border-border-default ${hasContributions ? 'cursor-pointer hover:border-accent-blue/50 transition-colors' : ''}`}
-        onClick={() => hasContributions && setShowBreakdown(prev => !prev)}
+        onClick={() => {if(hasContributions){record('metric_toggled',{metric:label,open:!showBreakdown});setShowBreakdown(!showBreakdown);}}}
       >
         <div className="flex justify-between gap-2 items-center mb-1.5">
           <div className="flex min-w-0 items-center">

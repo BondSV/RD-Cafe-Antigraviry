@@ -1,4 +1,5 @@
-import React from 'react';
+import React, {useEffect} from 'react';
+import { recordOnce } from '../../research/recording';
 import { useGameStore } from '../../store/useGameStore';
 import { AlertTriangle, Target, Trophy, XCircle, TrendingUp, RotateCcw } from 'lucide-react';
 import { actions } from '../../data/actions';
@@ -14,6 +15,7 @@ export default function FinalSummary() {
   const actionsTaken = useGameStore(state => state.actionsTaken);
   const resetGame = useGameStore(state => state.resetGame);
   const systemScore = getSystemScore(metrics);
+  useEffect(()=>{recordOnce('summary','summary_shown');},[]);
 
   const getOutcomeDetails = () => {
     switch(outcome) {
@@ -114,12 +116,12 @@ export default function FinalSummary() {
           <h3 className="text-xs uppercase tracking-[0.12em] text-text-muted mb-4 font-semibold text-center">Final Metrics</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
             {renderMetric('waitingTime')}
-            {renderMetric('throughput')}
             {renderMetric('backlog')}
             {renderMetric('congestion')}
             {renderMetric('serviceConsistency')}
             {renderMetric('stockAvailability')}
             {renderMetric('financialResults')}
+            {renderMetric('wasteTracker')}
           </div>
         </div>
 

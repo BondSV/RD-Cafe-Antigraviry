@@ -1,3 +1,5 @@
+import { observeResearch } from '../../research/observe';
+import { record, recordOnce } from '../../research/recording';
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import TurnHeader from '../game/TurnHeader';
 import CaseDataPanel from '../game/CaseDataPanel';
@@ -15,7 +17,10 @@ export default function GameLayout() {
   const history = useGameStore(state => state.history);
   const metrics = useGameStore(state => state.metrics);
   const flags = useGameStore(state => state.flags);
-  const [viewingResultFor, setViewingResultFor] = useState<number | null>(null);
+  const acknowledgedTurn=useGameStore(state=>state.acknowledgedTurn);
+  const acknowledgeResult=useGameStore(state=>state.acknowledgeResult);
+  const latest=history[history.length-1];
+  const viewingResultFor=latest&&latest.turn>acknowledgedTurn?latest.turn:null;
   const [activeTab, setActiveTab] = useState<'map' | 'actions' | 'case'>('map');
   const [simTrigger, setSimTrigger] = useState(0);
   const [pendingSimTrigger, setPendingSimTrigger] = useState(false);
@@ -64,15 +69,11 @@ export default function GameLayout() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (history.length > 0 && viewingResultFor !== history[history.length - 1].turn) {
-      setViewingResultFor(history[history.length - 1].turn);
-      setPendingSimTrigger(true);
-    }
-  }, [history]);
+  useEffect(observeResearch, [history.length===0]);
+  useEffect(()=>{if(viewingResultFor!==null){recordOnce('feedback:'+viewingResultFor,'feedback_shown',{turn:viewingResultFor});setPendingSimTrigger(true);}},[viewingResultFor]);
 
   const closeResult = () => {
-    setViewingResultFor(null);
+    if(viewingResultFor!==null)acknowledgeResult(viewingResultFor);
     // On desktop (lg+), the simulation is always visible - fire immediately.
     // On mobile, only fire if the simulation tab is active.
     const isDesktop = window.innerWidth >= 1024;
@@ -83,6 +84,7 @@ export default function GameLayout() {
   };
 
   const handleTabSwitch = (tab: 'map' | 'actions' | 'case') => {
+    record('tab_changed',{tab});
     setActiveTab(tab);
     if (tab === 'map' && pendingSimTrigger) {
       setSimTrigger(t => t + 1);
@@ -91,7 +93,7 @@ export default function GameLayout() {
   };
 
   return (
-    <div className="flex flex-col h-screen h-[100dvh] min-h-0 relative">
+    <div className="game-screen flex flex-col min-h-0 relative">
       <TurnHeader />
       
       <div className="sticky top-[88px] sm:top-[52px] z-20 flex shrink-0 lg:hidden bg-bg-surface/95 backdrop-blur-sm border-b border-border-default shadow-sm">
@@ -101,32 +103,32 @@ export default function GameLayout() {
       </div>
 
       <div ref={layoutRef} style={{ '--side-growth': `${sideGrowth}px`, '--scene-height': sceneHeight === undefined ? 'auto' : `${sceneHeight}px` } as React.CSSProperties} className="game-columns flex flex-1 overflow-hidden w-full max-w-[1600px] mx-auto min-h-0 gap-4">
-        <div className={`case-panel w-full flex-shrink-0 ${activeTab === 'case' ? 'block hover:overflow-y-auto' : 'hidden lg:block'}`}>
+        <div data-research-section="case" className={`case-panel w-full flex-shrink-0 ${activeTab === 'case' ? 'block hover:overflow-y-auto' : 'hidden lg:block'}`}>
           <CaseDataPanel />
         </div>
 
         <div ref={centreRef} className={`centre-panel flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto pt-4 lg:pt-0 pr-2 px-4 lg:px-0 ${activeTab === 'map' ? 'block' : 'hidden lg:flex'}`}>
           <div className="centre-content mx-auto max-w-full shrink-0" style={{ width: cafeWidth ?? '100%', '--cafe-hud-scale': Math.min(1, (cafeWidth ?? 520) / 520), '--cafe-mobile-hud-scale': Math.min(1, (cafeWidth ?? 360) / 360) } as React.CSSProperties}>
-            <div className="cafe-stage w-full">
+            <div data-research-section="simulation" className="cafe-stage w-full">
             <CustomerFlowSimulationIso metrics={metrics} flags={flags} triggerKey={simTrigger} />
 
           </div>
-          <div className="mt-4">
+          <div data-research-section="metrics" className="mt-4">
             <MetricPanel />
           </div>
-          <div className="mt-4">
+          <div data-research-section="system-map" className="mt-4">
             <SystemMap />
           </div>
           </div>
         </div>
 
-        <div className={`interventions-panel w-full flex-shrink-0 overflow-y-auto pt-4 lg:pt-0 pr-2 px-4 lg:px-0 pb-8 ${activeTab === 'actions' ? 'block' : 'hidden lg:block'}`}>
+        <div data-research-section="interventions" className={`interventions-panel w-full flex-shrink-0 overflow-y-auto pt-4 lg:pt-0 pr-2 px-4 lg:px-0 pb-8 ${activeTab === 'actions' ? 'block' : 'hidden lg:block'}`}>
           <ActionGrid disabled={viewingResultFor !== null} />
         </div>
       </div>
 
       {viewingResultFor !== null && (
-        <ResultPanel turnRecord={history.find(h => h.turn === viewingResultFor)!} onClose={closeResult} />
+        <ResultPanel turnRecord={history.find(h => h.turn === viewingResultFor)!} onClose={closeResult} final={viewingResultFor===7} />
       )}
     </div>
   );

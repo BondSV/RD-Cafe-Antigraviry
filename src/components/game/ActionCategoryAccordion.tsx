@@ -1,3 +1,4 @@
+import {record} from '../../research/recording';
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
@@ -7,7 +8,7 @@ export default function ActionCategoryAccordion({ title, children, defaultOpen }
   return (
     <div className="border-b border-border-default last:border-b-0">
       <button 
-        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen} onClick={() => {record('category_toggled',{category:title,open:!isOpen});setIsOpen(!isOpen);}}
         className="w-full flex justify-between items-center h-12 focus:outline-none text-left"
       >
         <span className={`font-sans font-semibold text-sm uppercase tracking-[0.12em] transition-colors ${isOpen ? 'text-text-primary' : 'text-text-secondary'}`}>
