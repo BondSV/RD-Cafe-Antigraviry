@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-const root=process.cwd();const release=process.env.RELEASE_VERSION||'research-2026-10-28-v3';
+const root=process.cwd();const release=process.env.RELEASE_VERSION||'research-2026-10-28-v4';
 const output=path.join(root,'output/research-release');const source=path.join(output,'source');
 await fs.rm(source,{recursive:true,force:true});await fs.mkdir(source,{recursive:true});
 // Isolate the committed production game from pre-existing local experiments.

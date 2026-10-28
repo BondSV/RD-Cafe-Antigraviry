@@ -20,6 +20,7 @@ export function setupQuestionnaire(db,defaults){
  for(const row of db.prepare('SELECT DISTINCT session FROM participants').all())db.prepare('INSERT OR IGNORE INTO classroom_sessions(id,label,enabled,created_at,notice_version,instrument_version) VALUES(?,?,0,?,?,?)').run(row.session,'Earlier classroom session',now(),'not-recorded',INSTRUMENT);
  const columns=new Set(db.prepare('PRAGMA table_info(respondents)').all().map(c=>c.name));if(!columns.has('finish_context'))db.exec("ALTER TABLE respondents ADD COLUMN finish_context TEXT NOT NULL DEFAULT '{}'");
  const sessionColumns=new Set(db.prepare('PRAGMA table_info(classroom_sessions)').all().map(c=>c.name));if(!sessionColumns.has('recording_required'))db.exec('ALTER TABLE classroom_sessions ADD COLUMN recording_required INTEGER NOT NULL DEFAULT 1');
+ db.prepare("UPDATE classroom_sessions SET notice_version=? WHERE recording_required=1 AND notice_version='2026-10-28-required-v2'").run(defaults.notice);
  const session=id=>db.prepare('SELECT * FROM classroom_sessions WHERE id=?').get(id||defaults.session);
  const open=s=>!!s&&!!s.enabled&&(!s.opens_at||Date.now()>=Date.parse(s.opens_at))&&(!s.closes_at||Date.now()<Date.parse(s.closes_at));
  const respondent=req=>{const t=req.headers.authorization?.replace(/^Bearer /,'')||'';return validToken(t)?db.prepare('SELECT * FROM respondents WHERE token_hash=?').get(hash(t)):null;};
@@ -76,7 +77,7 @@ export function setupQuestionnaire(db,defaults){
     if(p&&!p.stopped&&!db.prepare('SELECT id FROM session_finishes WHERE participant_id=?').get(p.id))throw Error('Finish the playing session before the questionnaire');
     const context=b.finishContext;if(!p&&(!context||typeof context.clientAt!=='string'||!Number.isFinite(Date.parse(context.clientAt))))throw Error('Explicit finish context is required');
     if(p&&db.prepare('SELECT id FROM respondents WHERE session=? AND participant_id=?').get(s.id,p.id)){send(res,409,{error:'A questionnaire credential already exists for this session. Please ask the researcher if it has been lost.'});return true;}
-    const played=p?db.prepare('SELECT DISTINCT version FROM events WHERE participant_id=? ORDER BY version').all(p.id).map(e=>e.version).join(','):(['research-2026-10-28-v1','research-2026-10-28-v2'].includes(b.gameVersion)?b.gameVersion:defaults.version);
+    const played=p?db.prepare('SELECT DISTINCT version FROM events WHERE participant_id=? ORDER BY version').all(p.id).map(e=>e.version).join(','):(['research-2026-10-28-v1','research-2026-10-28-v2','research-2026-10-28-v3',defaults.version].includes(b.gameVersion)?b.gameVersion:defaults.version);
     const stamp=now();db.prepare('INSERT INTO respondents(id,token_hash,session,participant_id,condition,assignment_basis,game_version,consent_version,consented_at,test,final_contribution_at,finish_context) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').run(randomUUID(),hash(b.token),s.id,p?.id||null,p?.condition||'control',p?'balanced_random':'unrecorded_practice',played||defaults.version,b.consentVersion,stamp,p?.test||b.test===true?1:0,stamp,JSON.stringify(p?{source:'recorded_finish'}:{clientAt:context.clientAt,reason:'explicit_finish_playing',source:'unrecorded_play'}));
     r=db.prepare('SELECT * FROM respondents WHERE token_hash=?').get(hash(b.token));
    }

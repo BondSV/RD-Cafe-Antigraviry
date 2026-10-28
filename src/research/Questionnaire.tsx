@@ -10,7 +10,7 @@ export default function Questionnaire(){
  const save=(next:Draft)=>{setDraft(next);try{localStorage.setItem(key,JSON.stringify(next));}catch{setError('The draft could not be retained on this device. Keep this tab open until your response is saved.');}};
  const consent=()=>{if(agreed)save({...draft,agreed:true});};
  const submit=async()=>{
-  if(busy||!draft.agreed)return;if(!draft.answers.some(a=>a.trim())){setError('Answer at least one question, or skip the questionnaire.');return;}
+  if(busy||!draft.agreed)return;if(!draft.answers.some(a=>a.trim())){setError('Answer at least one question before submitting.');return;}
   setBusy(true);setError('');save({...draft,queued:true});
   try{
    await finalisePlaying();
@@ -38,7 +38,7 @@ export default function Questionnaire(){
     {(config?.questions||[]).map((q,i)=><label className="questionnaire-question" key={q}><span>{i+1}. {q}</span><textarea rows={5} maxLength={2000} value={draft.answers[i]} onChange={e=>{const answers=[...draft.answers];answers[i]=e.target.value;save({...draft,answers,queued:false});}} disabled={busy}/><small>{draft.answers[i].length}/2,000 characters. Optional.</small></label>)}
     <button className="study-primary" disabled={busy}>{busy?'Saving response…':draft.queued?'Retry submission':'Submit questionnaire'}</button>
    </form>}
-   <button className="study-secondary" disabled={busy} onClick={skip}>Skip questionnaire</button>
+   {!draft.agreed&&<button className="study-secondary" disabled={busy} onClick={skip}>Skip questionnaire</button>}
   </>}
   {error&&<p className="study-error" role="alert">{error}</p>}
   {(skipped||draft.submittedAt||draft.withdrawn)&&<button className="study-primary" onClick={practiceAfterFinish}>Continue with unrecorded practice</button>}

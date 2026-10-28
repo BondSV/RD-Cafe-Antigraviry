@@ -7,9 +7,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { reconstruct, describe, actions, metricLabels, SCORE_METRIC_KEYS } from './game.mjs';
 
-const VERSION=process.env.RELEASE_VERSION || 'research-2026-10-28-v3';
+const VERSION=process.env.RELEASE_VERSION || 'research-2026-10-28-v4';
 // The operational rules and programmed observations are unchanged in these releases.
-const COMPATIBLE_VERSIONS=new Set([VERSION,'research-2026-10-28-v1','research-2026-10-28-v2']);
+const COMPATIBLE_VERSIONS=new Set([VERSION,'research-2026-10-28-v1','research-2026-10-28-v2','research-2026-10-28-v3']);
 const SESSION=process.env.STUDY_SESSION || 'rd-2026-10-28';
 const CLOSES=process.env.STUDY_CLOSES || '2026-10-29T00:00:00Z';
 const KEY=process.env.RESEARCH_ADMIN_KEY || '';
@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS runs_participant ON runs(participant_id);`);
 const participantColumns=new Set(db.prepare('PRAGMA table_info(participants)').all().map(c=>c.name));
 if(!participantColumns.has('notice_version'))db.exec("ALTER TABLE participants ADD COLUMN notice_version TEXT NOT NULL DEFAULT ''");
 if(!participantColumns.has('participation_mode'))db.exec("ALTER TABLE participants ADD COLUMN participation_mode TEXT NOT NULL DEFAULT 'optional'");
-const study=setupQuestionnaire(db,{session:SESSION,closes:CLOSES,notice:'2026-10-28-required-v2',version:VERSION});
+const study=setupQuestionnaire(db,{session:SESSION,closes:CLOSES,notice:'2026-10-28-required-v4',version:VERSION});
 chmodSync(join(DATA,'research.sqlite'),0o600);
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const uuid=s=>typeof s==='string'&&/^[a-f0-9-]{36}$/i.test(s);

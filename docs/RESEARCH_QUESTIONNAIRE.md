@@ -1,6 +1,6 @@
 # RainyDay Café post-session questionnaire
 
-Instrument version: 2026-10-27-v1. Target completion time: approximately five minutes. Offered once after an explicit **Finish playing** action covering the whole playing session, regardless of the number of attempts. Do not show it after each run or between **Play Again** attempts. The questionnaire is optional, has separate affirmative research consent, and individual questions may be left unanswered. No substantive response is counted for a skipped or entirely blank form.
+Instrument version: 2026-10-27-v1. Target completion time: approximately five minutes. Offered once after an explicit **Finish playing** action covering the whole playing session, regardless of the number of attempts. Do not show it after each run or between **Play Again** attempts. The questionnaire is optional, has separate affirmative research consent, and individual questions may be left unanswered. Skip questionnaire is available only before agreement and opening the questions. The opened form has one action, Submit questionnaire, and requires at least one answer. No substantive response is counted for a skipped or entirely blank form.
 
 Instructions: Think about the whole playing session, including all your attempts, rather than only your last run. Your answers are not assessed. Please do not include anyone's name, student number or other identifying details.
 

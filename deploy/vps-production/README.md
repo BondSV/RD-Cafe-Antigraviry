@@ -8,7 +8,7 @@ Cloudflare DNS must contain an A record named `rd-cafe` pointing to `51.38.236.1
 
 ## Research release
 
-Production runs `research-2026-10-28-v3`, including required classroom gameplay recording and the once-per-playing-session optional questionnaire. The researcher page is `/research`. Follow `docs/RESEARCH_SETUP.md` for session configuration and private key handling.
+Production runs `research-2026-10-28-v4`, including required classroom gameplay recording and the once-per-playing-session optional questionnaire. The researcher page is `/research`. Follow `docs/RESEARCH_SETUP.md` for session configuration and private key handling.
 
 The research container has a read-only root filesystem. Before starting it, create `research-data/sqlite-tmp` owned by UID/GID 1000 with mode 0700. Compose sets `SQLITE_TMPDIR=/data/sqlite-tmp`, so SQLite can spill large operations and compact backups in the private writable data mount. This directory is outside the public web root. Do not remove databases, backups, secrets or another application's files during image cleanup.
 
