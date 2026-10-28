@@ -13,6 +13,10 @@
         Referrer-Policy "strict-origin-when-cross-origin"
         -Server
     }
+    handle /api/test-research/* {
+        uri replace /api/test-research/ /api/research/
+        reverse_proxy rd-cafe-test-research:8091
+    }
     handle /api/research/* {
         reverse_proxy rd-cafe-research:8091
     }

@@ -2,14 +2,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-const root=process.cwd();const release=process.env.RELEASE_VERSION||'research-2026-10-28-v4';
+const root=process.cwd();const release=process.env.RELEASE_VERSION||'research-2026-10-28-v5';
 const output=path.join(root,'output/research-release');const source=path.join(output,'source');
 await fs.rm(source,{recursive:true,force:true});await fs.mkdir(source,{recursive:true});
 // Isolate the committed production game from pre-existing local experiments.
 const archive=path.join(output,'base-source.tar');const fd=await fs.open(archive,'w');
 try{execFileSync('git',['archive','12ab862b7728e47843f5d39412a328904320bad8','index.html','package.json','package-lock.json','tsconfig.json','tsconfig.node.json','vite.config.ts','tailwind.config.js','postcss.config.js','src','public'],{cwd:root,stdio:['ignore',fd.fd,'inherit']});}finally{await fd.close();}
 execFileSync('tar',['-xf',archive,'-C',source]);await fs.rm(archive);
-const overlay=['index.html','vite.config.ts','src/App.tsx','src/main.tsx','src/index.css','src/store/useGameStore.ts','src/components/layout/GameLayout.tsx','src/components/game/ActionCard.tsx','src/components/game/ActionCategoryAccordion.tsx','src/components/game/CaseDataPanel.tsx','src/components/game/CustomerFlowSimulationIso.tsx','src/components/game/MetricRow.tsx','src/components/game/ResultPanel.tsx','src/components/game/SystemMapNode.tsx','src/components/summary/FinalSummary.tsx','src/research','public/assets/research-fonts'];
+const overlay=['index.html','vite.config.ts','src/App.tsx','src/main.tsx','src/index.css','src/store/useGameStore.ts','src/components/layout/GameLayout.tsx','src/components/game/TurnHeader.tsx','src/components/game/ActionCard.tsx','src/components/game/ActionCategoryAccordion.tsx','src/components/game/CaseDataPanel.tsx','src/components/game/CustomerFlowSimulationIso.tsx','src/components/game/MetricRow.tsx','src/components/game/ResultPanel.tsx','src/components/game/SystemMapNode.tsx','src/components/summary/FinalSummary.tsx','src/research','public/assets/research-fonts'];
 for(const file of overlay)await fs.cp(path.join(root,file),path.join(source,file),{recursive:true});
 await fs.writeFile(path.join(source,'src/research/version.ts'),'export const RESEARCH_VERSION = '+JSON.stringify(release)+';\n');
 const app=path.join(source,'src/App.tsx');let text=await fs.readFile(app,'utf8');text=text.replace(', lazy, Suspense','').replace(/const CafeSample =[^\n]+\n/,'').replace(/  if \(routePath === '\/v2-sample'\)[^\n]+\n/,'').replace("if (routePath !== '/v2-sample') preloadSimulationSprites();",'preloadSimulationSprites();');await fs.writeFile(app,text);

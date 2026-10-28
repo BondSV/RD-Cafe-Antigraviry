@@ -1,6 +1,7 @@
+import {researchApi} from './api';
 import {RESEARCH_VERSION} from './version';
 import React, {useEffect,useState} from 'react';
-import { clearPendingForWithdrawal, finalisePlaying, practiceAfterFinish, useRecording } from './recording';
+import { clearPendingForWithdrawal, finalisePlaying, practiceAfterFinish, startNewBrowserSession, useRecording } from './recording';
 const CONSENT='questionnaire-2026-10-27-v1';
 type Draft={token:string;id:string;answers:string[];agreed:boolean;submittedAt?:string;queued?:boolean;respondentCode?:string;withdrawn?:boolean};
 export default function Questionnaire(){
@@ -14,20 +15,22 @@ export default function Questionnaire(){
   setBusy(true);setError('');save({...draft,queued:true});
   try{
    await finalisePlaying();
-   const enrol=await fetch('/api/research/questionnaire/enrol',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:draft.token,session:config!.session,consent:true,consentVersion:CONSENT,instrumentVersion:config!.instrumentVersion,gameVersion:RESEARCH_VERSION,...(participant?{gameplayToken:participant.token}:{finishContext:JSON.parse(localStorage.getItem('rd-finish:'+config!.session)||'{}')})})});
+   const enrol=await fetch(researchApi('questionnaire/enrol'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:draft.token,session:config!.session,consent:true,consentVersion:CONSENT,instrumentVersion:config!.instrumentVersion,gameVersion:RESEARCH_VERSION,...(participant?{gameplayToken:participant.token}:{finishContext:JSON.parse(localStorage.getItem('rd-finish:'+config!.session)||'{}')})})});
    const person=await enrol.json();if(!enrol.ok){if(enrol.status===410){clearPendingForWithdrawal();setDraft({...draft,answers:['','','','',''],queued:false,withdrawn:true});}throw Error(person.error||'Could not connect');}
-   const response=await fetch('/api/research/questionnaire',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+draft.token},body:JSON.stringify({id:draft.id,instrumentVersion:config!.instrumentVersion,answers:draft.answers})});const result=await response.json();
+   const response=await fetch(researchApi('questionnaire'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+draft.token},body:JSON.stringify({id:draft.id,instrumentVersion:config!.instrumentVersion,answers:draft.answers})});const result=await response.json();
    if(!response.ok){if(response.status===410){clearPendingForWithdrawal();setDraft({...draft,answers:['','','','',''],queued:false,withdrawn:true});}throw Error(result.error||'Could not save your response');}
    save({...draft,queued:false,submittedAt:result.submittedAt,respondentCode:person.code});
   }catch(e){setError((e instanceof Error?e.message:'Could not connect')+' Your response has not been confirmed. Keep this tab open and retry when connected.');}finally{setBusy(false);}
  };
  useEffect(()=>{if(draft.queued&&!draft.submittedAt&&!busy){const retry=()=>{if(navigator.onLine)void submit();};window.addEventListener('online',retry);const timer=window.setInterval(retry,5000);return()=>{window.removeEventListener('online',retry);window.clearInterval(timer);};}},[draft,busy]);
- useEffect(()=>{void finalisePlaying().catch(()=>{});if(draft.agreed){void fetch('/api/research/questionnaire/status',{headers:{Authorization:'Bearer '+draft.token}}).then(async r=>{if(r.status===410){clearPendingForWithdrawal();setDraft({...draft,answers:['','','','',''],queued:false,withdrawn:true});}}).catch(()=>{});}},[]);
+ useEffect(()=>{void finalisePlaying().catch(()=>{});if(draft.agreed){void fetch(researchApi('questionnaire/status'),{headers:{Authorization:'Bearer '+draft.token}}).then(async r=>{if(r.status===410){clearPendingForWithdrawal();setDraft({...draft,answers:['','','','',''],queued:false,withdrawn:true});}}).catch(()=>{});}},[]);
  useEffect(()=>{if(recordsWithdrawn)setDraft(d=>({...d,answers:['','','','',''],queued:false,withdrawn:true}));},[recordsWithdrawn]);
  const skip=()=>{localStorage.setItem(key+':skipped','true');localStorage.removeItem(key);setDraft(d=>({...d,queued:false,answers:['','','','','']}));setSkipped(true);};
  return <main className="study-entry"><article className="study-sheet">
   <h1>{draft.withdrawn?'Records withdrawn':draft.submittedAt?'Response saved':skipped?'Playing session finished':'Your playing session'}</h1>
-  {draft.withdrawn?<p>Your pending answers have been cleared from this device. Please ask the researcher about any record request.</p>:draft.submittedAt?<><p>Your questionnaire has been received.</p>{participant?<p>Keep your study code <strong>{participant.code}</strong> for any discussion with the researcher.</p>:<p>Keep your questionnaire reference <strong>{draft.respondentCode}</strong> for any discussion with the researcher.</p>}</>:skipped?<p>No questionnaire response was submitted.</p>:<>
+  {config?.testMode&&<p className="study-test-note">Test environment. These answers stay out of the classroom research dataset.</p>}
+  {participant&&draft.agreed&&!draft.submittedAt&&!draft.withdrawn&&<p className="study-code">Study code <strong>{participant.code}</strong></p>}
+  {draft.withdrawn?<p>Your pending answers have been cleared from this device. Please ask the researcher about any record request.</p>:draft.submittedAt?<><p>Your questionnaire has been received.</p>{participant?<p>Keep your study code <strong>{participant.code}</strong> for any discussion with the researcher.</p>:<p>Keep your questionnaire reference <strong>{draft.respondentCode}</strong> for any discussion with the researcher.</p>}</>:skipped?<><p>No questionnaire response was submitted.</p>{participant&&<p>For an optional interview, keep your study code <strong>{participant.code}</strong>.</p>}</>:<>
    <h2>About five minutes to reflect</h2><p>Think about the whole playing session, including all your attempts, rather than only your last run. Your answers are not assessed. Please do not include anyone’s name, student number or other identifying details.</p>
    {!draft.agreed?<><p>This questionnaire is a separate research contribution. It asks about your decisions and how you interpreted the game. You may skip individual questions or the whole form.</p>
     <p>{participant?'If you agree, your answers will be linked by your study code to all recorded attempts in this classroom session.':'Your answers will use an independent random code. No unrecorded gameplay will be uploaded retrospectively.'} The research team can read and export the responses. You may request removal of linked research records until at least 14 calendar days after your final research contribution. A later interview can extend that date. Ask the researcher named in your participant information using {participant?'your study code':'the questionnaire reference shown after submission'}.</p>
@@ -41,6 +44,7 @@ export default function Questionnaire(){
    {!draft.agreed&&<button className="study-secondary" disabled={busy} onClick={skip}>Skip questionnaire</button>}
   </>}
   {error&&<p className="study-error" role="alert">{error}</p>}
+  {(draft.withdrawn||(config?.testMode&&(skipped||draft.submittedAt)))&&<button className="study-secondary" onClick={startNewBrowserSession}>{config?.testMode?'Start a new test session':'Start a new session'}</button>}
   {(skipped||draft.submittedAt||draft.withdrawn)&&<button className="study-primary" onClick={practiceAfterFinish}>Continue with unrecorded practice</button>}
  </article></main>;
 }

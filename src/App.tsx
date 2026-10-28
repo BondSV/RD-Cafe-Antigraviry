@@ -33,7 +33,7 @@ function App() {
 
   if(routePath==='/research')return <ResearchDashboard/>;
   if(!recording.ready||recording.choice==='pending')return <StudyEntry/>;
-  if(recording.phase==='finished')return <><StudyBar/><Questionnaire/></>;
+  if(recording.phase==='finished')return <Questionnaire/>;
   if (outcome && acknowledgedTurn>=7) return <><StudyBar/><FinalSummary /></>;
   if (!started) {
     const intro=isHowItWorksRoute?<HowItWorksPage onStart={start}/>:isLandingRoute?<LandingPage onStart={start}/>:<IntroScreen onStart={start}/>;

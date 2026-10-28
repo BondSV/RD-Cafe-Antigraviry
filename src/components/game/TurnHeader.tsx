@@ -1,8 +1,10 @@
 import React from 'react';
+import {finishPlaying,useRecording} from '../../research/recording';
 import { useGameStore } from '../../store/useGameStore';
 import { getSystemScore } from '../../engine/getSystemScore';
 
 export default function TurnHeader() {
+  const {phase,config}=useRecording();
   const turn = useGameStore(state => state.turn);
   const maxTurns = useGameStore(state => state.maxTurns);
 
@@ -17,7 +19,8 @@ export default function TurnHeader() {
   return (
     <header className="turn-header w-full bg-bg-surface border-b border-border-default px-4 sticky top-0 z-30 shadow-sm shrink-0" aria-label="Simulation progress">
       <div className="turn-label font-mono font-bold text-sm text-text-primary">
-        TURN {Math.min(turn, maxTurns)} OF {maxTurns}
+        <span>TURN {Math.min(turn, maxTurns)} OF {maxTurns}</span>
+        {phase==='playing'&&config?.open&&<button className="study-finish-inline" aria-label="Finish playing" title="Finish the whole playing session" onClick={finishPlaying}>Finish</button>}
       </div>
       <ol className="turn-sequence" aria-label="Turn progress">
         {Array.from({ length: maxTurns }, (_, index) => {

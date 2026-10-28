@@ -7,11 +7,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { reconstruct, describe, actions, metricLabels, SCORE_METRIC_KEYS } from './game.mjs';
 
-const VERSION=process.env.RELEASE_VERSION || 'research-2026-10-28-v4';
+const VERSION=process.env.RELEASE_VERSION || 'research-2026-10-28-v5';
+const TEST_MODE=process.env.RESEARCH_TEST_MODE==='1';
 // The operational rules and programmed observations are unchanged in these releases.
-const COMPATIBLE_VERSIONS=new Set([VERSION,'research-2026-10-28-v1','research-2026-10-28-v2','research-2026-10-28-v3']);
-const SESSION=process.env.STUDY_SESSION || 'rd-2026-10-28';
-const CLOSES=process.env.STUDY_CLOSES || '2026-10-29T00:00:00Z';
+const COMPATIBLE_VERSIONS=new Set([VERSION,'research-2026-10-28-v1','research-2026-10-28-v2','research-2026-10-28-v3','research-2026-10-28-v4']);
+const SESSION=TEST_MODE?'rd-test-preview':(process.env.STUDY_SESSION || 'rd-2026-10-28');
+const CLOSES=TEST_MODE?null:(process.env.STUDY_CLOSES || '2026-10-29T00:00:00Z');
 const KEY=process.env.RESEARCH_ADMIN_KEY || '';
 if(KEY.length<32)throw Error('A researcher access key of at least 32 characters is required');
 const DATA=process.env.RESEARCH_DATA || './research-data';
@@ -29,6 +30,10 @@ const participantColumns=new Set(db.prepare('PRAGMA table_info(participants)').a
 if(!participantColumns.has('notice_version'))db.exec("ALTER TABLE participants ADD COLUMN notice_version TEXT NOT NULL DEFAULT ''");
 if(!participantColumns.has('participation_mode'))db.exec("ALTER TABLE participants ADD COLUMN participation_mode TEXT NOT NULL DEFAULT 'optional'");
 const study=setupQuestionnaire(db,{session:SESSION,closes:CLOSES,notice:'2026-10-28-required-v4',version:VERSION});
+if(TEST_MODE){
+ db.prepare("UPDATE classroom_sessions SET label='Test predictions',closes_at=NULL,enabled=1 WHERE id=?").run(SESSION);
+ db.prepare("INSERT OR IGNORE INTO classroom_sessions(id,label,enabled,created_at,notice_version,instrument_version) VALUES(?,?,1,?,?,?)").run('rd-test-control','Test after-action feedback',new Date().toISOString(),'2026-10-28-required-v4',INSTRUMENT);
+}
 chmodSync(join(DATA,'research.sqlite'),0o600);
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const uuid=s=>typeof s==='string'&&/^[a-f0-9-]{36}$/i.test(s);
@@ -85,14 +90,14 @@ const server=http.createServer(async(req,res)=>{
    if(criteria.participantId)eraseFromBackups(criteria.participantId);
    if(criteria.respondentId){const dir=join(DATA,'backups');if(existsSync(dir))for(const name of readdirSync(dir).filter(n=>n.endsWith('.sqlite'))){const c=new DatabaseSync(join(dir,name));try{study.erase(c,criteria);c.exec('VACUUM');}finally{c.close();}}}
   }}))return;
-  if(req.method==='GET'&&path==='/api/research/health')return send(res,200,{ok:db.prepare('SELECT 1 AS ready').get().ready===1,version:VERSION});
-  if(req.method==='GET'&&path==='/api/research/config'){const s=study.session(url.searchParams.get('session'));if(!s)return send(res,404,{error:'Classroom session not found. Ask the tutor for the correct link.'});return send(res,200,{version:VERSION,session:s.id,sessionInfo:s,closesAt:s.closes_at,open:study.open(s),noticeVersion:s.notice_version,participation:s.recording_required?'required':'voluntary',instrumentVersion:s.instrument_version,questionnaireConsentVersion:'questionnaire-2026-10-27-v1',questions:QUESTIONS});}
+  if(req.method==='GET'&&path==='/api/research/health')return send(res,200,{ok:db.prepare('SELECT 1 AS ready').get().ready===1,version:VERSION,testMode:TEST_MODE});
+  if(req.method==='GET'&&path==='/api/research/config'){const s=study.session(url.searchParams.get('session'));if(!s)return send(res,404,{error:'Classroom session not found. Ask the tutor for the correct link.'});return send(res,200,{version:VERSION,testMode:TEST_MODE,session:s.id,sessionInfo:s,closesAt:s.closes_at,open:study.open(s),noticeVersion:s.notice_version,participation:s.recording_required?'required':'voluntary',instrumentVersion:s.instrument_version,questionnaireConsentVersion:'questionnaire-2026-10-27-v1',questions:QUESTIONS});}
   if(req.method==='POST'&&path==='/api/research/enrol'){
    const b=await body(req);fields(b,['token','session','noticeVersion','gameplayConsent','test','condition']);
    const selected=study.session(b.session);
    if(!selected||!/^[a-f0-9]{64}$/.test(b.token)||b.noticeVersion!==selected.notice_version)return send(res,400,{error:'Invalid enrolment'});
    if(selected&&!selected.recording_required&&b.gameplayConsent!==true)return send(res,400,{error:'Gameplay research permission is required for recording'});
-   const isTest=b.test===true;if((isTest||b.condition!==undefined)&&!admin(req))return send(res,403,{error:'Not authorised'});
+   const isTest=TEST_MODE||b.test===true;if(!TEST_MODE&&(isTest||b.condition!==undefined)&&!admin(req))return send(res,403,{error:'Not authorised'});
    db.exec('BEGIN IMMEDIATE');
    try{
     let p=db.prepare('SELECT * FROM participants WHERE token_hash=?').get(hash(b.token));
@@ -101,7 +106,7 @@ const server=http.createServer(async(req,res)=>{
      if(!study.open(selected)&&!isTest){db.exec('ROLLBACK');return send(res,410,{error:'This classroom session has ended'});}
      const rows=db.prepare('SELECT condition,COUNT(*) AS n FROM participants WHERE session=? AND test=? GROUP BY condition').all(selected.id,isTest?1:0);
      const counts=Object.fromEntries(rows.map(r=>[r.condition,r.n]));const a=counts.control||0,bn=counts.preview||0;
-     const condition=isTest&&['control','preview'].includes(b.condition)?b.condition:a<bn?'control':bn<a?'preview':randomInt(2)?'control':'preview';
+     const condition=TEST_MODE?(selected.id==='rd-test-control'?'control':'preview'):isTest&&['control','preview'].includes(b.condition)?b.condition:a<bn?'control':bn<a?'preview':randomInt(2)?'control':'preview';
      let id=randomUUID();while(db.prepare('SELECT id FROM participants WHERE substr(id,1,8)=?').get(id.slice(0,8)))id=randomUUID();db.prepare('INSERT INTO participants(id,token_hash,session,condition,created_at,test,consent_version,notice_version,participation_mode) VALUES(?,?,?,?,?,?,?,?,?)').run(id,hash(b.token),selected.id,condition,now(),isTest?1:0,selected.recording_required?'':selected.notice_version,selected.notice_version,selected.recording_required?'required':'voluntary');p=db.prepare('SELECT * FROM participants WHERE id=?').get(id);
     }
     db.prepare('UPDATE participants SET notice_version=?,participation_mode=? WHERE id=?').run(selected.notice_version,selected.recording_required?'required':'voluntary',p.id);

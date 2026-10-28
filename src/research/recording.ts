@@ -1,13 +1,14 @@
+import {researchApi,isTestRoute} from './api';
 import {RESEARCH_VERSION} from './version';
 import { create } from 'zustand';
 import { GameState } from '../types/game';
 
 export type Condition = 'control' | 'preview';
-export type StudyConfig = {version:string;session:string;closesAt:string;open:boolean;noticeVersion:string;participation:'required'|'voluntary';instrumentVersion:string;questions:string[];sessionInfo:{label:string;module:string;group_label:string;intake:string}};
+export type StudyConfig = {version:string;session:string;closesAt:string;open:boolean;noticeVersion:string;participation:'required'|'voluntary';instrumentVersion:string;questions:string[];testMode:boolean;sessionInfo:{label:string;module:string;group_label:string;intake:string}};
 export type Participant = {id:string;code:string;condition:Condition;session:string;version:string;token:string;test?:boolean;noticeVersion?:string;finishedAt?:string|null};
 type Event = {version:string;id:string;runId:string;pageId:string;seq:number;elapsedMs:number;clientAt:string;type:string;actions:string[];data:Record<string,unknown>};
-type RecordingState = {config:StudyConfig|null;participant:Participant|null;ready:boolean;choice:'pending'|'study'|'outside-session';pending:number;error:string;storageError:boolean;phase:'playing'|'finished'|'practice'};
-export const useRecording = create<RecordingState>(()=>({config:null,participant:null,ready:false,choice:'pending',pending:0,error:'',storageError:false,phase:'playing'}));
+type RecordingState = {config:StudyConfig|null;participant:Participant|null;ready:boolean;choice:'pending'|'study'|'outside-session';pending:number;error:string;storageError:boolean;inactive:boolean;phase:'playing'|'finished'|'practice'};
+export const useRecording = create<RecordingState>(()=>({config:null,participant:null,ready:false,choice:'pending',pending:0,error:'',storageError:false,inactive:false,phase:'playing'}));
 const PAGE=crypto.randomUUID();
 let seq=0,runId='',actionIds:string[]=[],startedAt=performance.now(),busy=false;
 const queues=new Map<string,Event[]>();
@@ -32,7 +33,7 @@ export async function flush(){
  busy=true;
  try{
   for(const [key,q] of queues){
-   while(q.length){const batch=q.slice(0,10);const response=await fetch('/api/research/events',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+p.token},body:JSON.stringify({version:batch[0].version,events:batch}),keepalive:true});
+   while(q.length){const batch=q.slice(0,10);const response=await fetch(researchApi('events'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+p.token},body:JSON.stringify({version:batch[0].version,events:batch}),keepalive:true});
     if(!response.ok){const b=await response.json();if(response.status===410&&b.withdrawn){clearPendingForWithdrawal();return;}throw Error(b.error||'Recording is temporarily unavailable');}
     const b=await response.json();if(!Array.isArray(b.accepted)||batch.some(e=>!b.accepted.includes(e.id)))throw Error('The server did not confirm these records');
     q.splice(0,batch.length);persist(key);
@@ -53,19 +54,19 @@ export function initialiseResearch(){
  if(initialising)return initialising;
  initialising=(async()=>{
   try{
-   const r=await fetch('/api/research/config'+(new URLSearchParams(location.search).has('session')?'?session='+encodeURIComponent(new URLSearchParams(location.search).get('session')!):''),{cache:'no-store'});if(!r.ok)throw Error();const config:StudyConfig=await r.json();useRecording.setState({config});if(config.version!==RESEARCH_VERSION)throw Error('The game has been updated. Reload this page before joining.');
+   const r=await fetch(researchApi('config')+(new URLSearchParams(location.search).has('session')?'?session='+encodeURIComponent(new URLSearchParams(location.search).get('session')!):''),{cache:'no-store'});if(!r.ok)throw Error();const config:StudyConfig=await r.json();if(!!config.testMode!==isTestRoute)throw Error('The selected environment is unavailable. No gameplay has been recorded.');useRecording.setState({config});if(config.version!==RESEARCH_VERSION)throw Error('The game has been updated. Reload this page before joining.');
    const saved=storage.get(participantKey(config.session));
-   if(saved&&JSON.parse(saved).withdrawn)throw Error('These research records were withdrawn. Please ask the tutor about this study code.');
+   if(saved&&JSON.parse(saved).withdrawn){useRecording.setState({inactive:true,participant:null,choice:'pending',phase:'playing',error:''});return;}
    if(!config.open){
     if(saved){const v=JSON.parse(saved);if(v.declined&&config.participation==='voluntary'){useRecording.setState({choice:'outside-session',phase:storage.get('rd-finish:'+config.session)?'finished':'playing'});return;}if(v.token&&v.noticeVersion===config.noticeVersion){
-     const response=await fetch('/api/research/enrol',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:v.token,noticeVersion:config.noticeVersion,session:config.session,...(config.participation==='voluntary'?{gameplayConsent:true}:{})})});
+     const response=await fetch(researchApi('enrol'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:v.token,noticeVersion:config.noticeVersion,session:config.session,...(config.participation==='voluntary'?{gameplayConsent:true}:{})})});
      if(response.ok){activate({...await response.json(),token:v.token});await flush();}
     }}
     useRecording.setState({participant:null,choice:'outside-session'});return;
    }
    if(saved){const v=JSON.parse(saved);if(v.declined&&config.participation==='voluntary'){useRecording.setState({choice:'outside-session',phase:storage.get('rd-finish:'+config.session)?'finished':'playing'});return;}if(v.token&&v.noticeVersion===config.noticeVersion){
-    const response=await fetch('/api/research/enrol',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:v.token,noticeVersion:config.noticeVersion,session:config.session,...(config.participation==='voluntary'?{gameplayConsent:true}:{})})});
-    if(response.ok){const p=await response.json();activate({...p,token:v.token});}else if(response.status===410){const ended=await response.json();if(ended.withdrawn)clearPendingForWithdrawal(ended.participantId);throw Error('This study code is no longer active. Please ask the researcher for help.');}else throw Error('Could not restore recording. Retry the connection.');
+    const response=await fetch(researchApi('enrol'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:v.token,noticeVersion:config.noticeVersion,session:config.session,...(config.participation==='voluntary'?{gameplayConsent:true}:{})})});
+    if(response.ok){const p=await response.json();activate({...p,token:v.token});}else if(response.status===410){const ended=await response.json();if(ended.withdrawn)clearPendingForWithdrawal(ended.participantId);useRecording.setState({inactive:true,participant:null,choice:'pending',phase:'playing',error:''});return;}else throw Error('Could not restore recording. Retry the connection.');
    }}
   }catch(e){useRecording.setState({error:e instanceof Error&&e.message?e.message:'Study recording could not connect. Retry the connection before continuing.'});}
   finally{useRecording.setState({ready:true});}
@@ -78,8 +79,8 @@ export async function joinStudy(){
  const key=participantKey(config.session);const saved=storage.get(key);let previous=saved?JSON.parse(saved):null;
  const credential=previous?.token||token;
  try{storage.set(key,JSON.stringify({token:credential,noticeVersion:config.noticeVersion,session:config.session,...(config.participation==='voluntary'?{gameplayConsent:true}:{})}));}catch{throw Error('This browser cannot retain your study code. Enable browser storage or ask the tutor for help.');}
- const r=await fetch('/api/research/enrol',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:credential,noticeVersion:config.noticeVersion,session:config.session,...(config.participation==='voluntary'?{gameplayConsent:true}:{})})});
- const body=await r.json();if(!r.ok)throw Error(body.error||'Could not join the study');activate({...body,token:credential});
+ const r=await fetch(researchApi('enrol'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:credential,noticeVersion:config.noticeVersion,session:config.session,...(config.participation==='voluntary'?{gameplayConsent:true}:{})})});
+ const body=await r.json();if(!r.ok){if(r.status===410&&(body.withdrawn||body.participantId)){if(body.withdrawn)clearPendingForWithdrawal(body.participantId);useRecording.setState({inactive:true,participant:null,choice:'pending',phase:'playing',error:''});return;}throw Error(body.error||'Could not join the study');}activate({...body,token:credential});
 }
 export function retryInitialise(){initialising=null;useRecording.setState({ready:false,error:''});void initialiseResearch();}
 let finishPromise:Promise<void>|null=null;
@@ -88,6 +89,7 @@ function recordLifecycle(){if(lifecycle)return;lifecycle=true;
  window.addEventListener('storage',e=>{const config=useRecording.getState().config;if(config&&e.key==='rd-finish:'+config.session&&e.newValue)useRecording.setState({phase:'finished'});});
  document.addEventListener('visibilitychange',()=>record('page_visibility',{visible:document.visibilityState==='visible'}));
  window.addEventListener('pagehide',()=>record('page_exit'));
+ window.addEventListener('offline',()=>useRecording.setState({error:'You are offline. Gameplay is saved on this device and will upload when you reconnect.'}));
  window.addEventListener('online',()=>{void flush().then(()=>{if(useRecording.getState().phase==='finished')void finalisePlaying().catch(()=>{});});});
  setInterval(()=>{void flush().then(()=>{if(useRecording.getState().phase==='finished')void finalisePlaying().catch(()=>{});});},3000);
 }
@@ -106,7 +108,7 @@ export function finalisePlaying():Promise<void>{
  const raw=storage.get('rd-finish:'+config.session);if(!raw)return;const finish=JSON.parse(raw);
  if(storage.get('rd-finish-ack:'+config.session)===finish.id)return;
  await flush();if(count())throw Error('Gameplay records are still waiting to save');
- const response=await fetch('/api/research/finish',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+participant.token},body:raw});
+ const response=await fetch(researchApi('finish'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+participant.token},body:raw});
  const data=await response.json();if(!response.ok){if(response.status===410&&data.withdrawn)clearPendingForWithdrawal();throw Error(data.error||'Could not confirm the end of play');}storage.set('rd-finish-ack:'+config.session,finish.id);
  })().finally(()=>{finishPromise=null;});return finishPromise;
 }
@@ -118,8 +120,15 @@ export function clearPendingForWithdrawal(id?:string){
  const pid=id||participant?.id;if(pid){const keys=[];for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith('rd-outbox:'+config.session+':'+pid+':'))keys.push(key);}for(const key of keys)localStorage.removeItem(key);}
  localStorage.removeItem('rd-questionnaire:'+config.session);
  localStorage.removeItem('rd-questionnaire:'+config.session+':skipped');
- storage.set(participantKey(config.session),JSON.stringify({token:participant?.token,noticeVersion:config.noticeVersion,withdrawn:true}));
+ storage.set(participantKey(config.session),JSON.stringify({id:pid,noticeVersion:config.noticeVersion,withdrawn:true}));
  useRecording.setState({pending:0,error:'These research records were withdrawn.',phase:'finished'});
 }
 
 export function chooseUnrecorded(){const config=useRecording.getState().config;if(!config||config.participation!=='voluntary')return;storage.set(participantKey(config.session),JSON.stringify({declined:true}));useRecording.setState({choice:'outside-session'});}
+
+// Retire only this classroom/test registration; never clear unrelated browser storage.
+export function startNewBrowserSession(){
+ const {config}=useRecording.getState();if(!config)return;
+ for(const key of [participantKey(config.session),'rd-finish:'+config.session,'rd-finish-ack:'+config.session,'rd-questionnaire:'+config.session,'rd-questionnaire:'+config.session+':skipped'])localStorage.removeItem(key);
+ window.location.reload();
+}
