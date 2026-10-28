@@ -21,10 +21,10 @@ export default function Questionnaire(){
    save({...draft,queued:false,submittedAt:result.submittedAt,respondentCode:person.code});
   }catch(e){setError((e instanceof Error?e.message:'Could not connect')+' Your response has not been confirmed. Keep this tab open and retry when connected.');}finally{setBusy(false);}
  };
- useEffect(()=>{if(draft.queued&&!draft.submittedAt){const retry=()=>void submit();window.addEventListener('online',retry);return()=>window.removeEventListener('online',retry);}},[draft,busy]);
+ useEffect(()=>{if(draft.queued&&!draft.submittedAt&&!busy){const retry=()=>{if(navigator.onLine)void submit();};window.addEventListener('online',retry);const timer=window.setInterval(retry,5000);return()=>{window.removeEventListener('online',retry);window.clearInterval(timer);};}},[draft,busy]);
  useEffect(()=>{void finalisePlaying().catch(()=>{});if(draft.agreed){void fetch('/api/research/questionnaire/status',{headers:{Authorization:'Bearer '+draft.token}}).then(async r=>{if(r.status===410){clearPendingForWithdrawal();setDraft({...draft,answers:['','','','',''],queued:false,withdrawn:true});}}).catch(()=>{});}},[]);
  useEffect(()=>{if(recordsWithdrawn)setDraft(d=>({...d,answers:['','','','',''],queued:false,withdrawn:true}));},[recordsWithdrawn]);
- const skip=()=>{localStorage.setItem(key+':skipped','true');localStorage.removeItem(key);setSkipped(true);};
+ const skip=()=>{localStorage.setItem(key+':skipped','true');localStorage.removeItem(key);setDraft(d=>({...d,queued:false,answers:['','','','','']}));setSkipped(true);};
  return <main className="study-entry"><article className="study-sheet">
   <h1>{draft.withdrawn?'Records withdrawn':draft.submittedAt?'Response saved':skipped?'Playing session finished':'Your playing session'}</h1>
   {draft.withdrawn?<p>Your pending answers have been cleared from this device. Please ask the researcher about any record request.</p>:draft.submittedAt?<><p>Your questionnaire has been received.</p>{participant?<p>Keep your study code <strong>{participant.code}</strong> for any discussion with the researcher.</p>:<p>Keep your questionnaire reference <strong>{draft.respondentCode}</strong> for any discussion with the researcher.</p>}</>:skipped?<p>No questionnaire response was submitted.</p>:<>

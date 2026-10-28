@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { reconstruct, describe, actions, metricLabels, SCORE_METRIC_KEYS } from './game.mjs';
 
-const VERSION=process.env.RELEASE_VERSION || 'research-2026-10-28-v2';
+const VERSION=process.env.RELEASE_VERSION || 'research-2026-10-28-v3';
 // The operational rules and programmed observations are unchanged in these releases.
 const COMPATIBLE_VERSIONS=new Set([VERSION,'research-2026-10-28-v1','research-2026-10-28-v2']);
 const SESSION=process.env.STUDY_SESSION || 'rd-2026-10-28';

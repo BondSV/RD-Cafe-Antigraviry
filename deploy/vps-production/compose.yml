@@ -23,6 +23,7 @@ services:
     restart: unless-stopped
     env_file: ./research.env
     environment:
+      SQLITE_TMPDIR: /data/sqlite-tmp
       RELEASE_VERSION: ${RELEASE_VERSION:?Set RELEASE_VERSION}
     volumes:
       - ./research-data:/data
