@@ -247,9 +247,7 @@ html[data-input="keyboard"] :is(.study-primary,.bg-accent-blue):focus { outline-
 .research-answer summary { cursor:pointer; font-weight:600; }
 .research-answer-text { white-space:pre-wrap; overflow-wrap:anywhere; }
 
-/* Recording controls occupy the existing header; player codes appear after play. */
-.turn-label { display:flex; align-items:center; gap:8px; white-space:nowrap; }
-.study-finish-inline { font-family:inherit; font-size:11px; font-weight:500; padding:4px 6px; min-height:32px; color:#173865; text-decoration:underline; text-underline-offset:3px; border-radius:4px; }
+/* Player codes appear after play; only recording problems need an extra notice. */
 .study-recording-error { flex-shrink:0; display:flex; align-items:center; gap:12px; padding:8px 16px; background:#fff1ef; color:#922b21; font-size:12px; }
 .study-recording-error button { flex-shrink:0; min-height:32px; text-decoration:underline; }
 .study-test-note { color:#173865; }

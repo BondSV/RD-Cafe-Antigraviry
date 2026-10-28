@@ -95,7 +95,7 @@ function recordLifecycle(){if(lifecycle)return;lifecycle=true;
 }
 
 export function finishPlaying(){
- const config=useRecording.getState().config;if(!config||useRecording.getState().phase!=='playing')return;
+ const config=useRecording.getState().config;if(!config||useRecording.getState().phase!=='playing'||actionIds.length!==7)return;
  if(!window.confirm('Finish your whole playing session? You can try more runs with Play Again until you finish. Afterwards you will see the post-session questionnaire.'))return;
  if(!runId)beginRun();
  storage.set('rd-finish:'+config.session,JSON.stringify({id:crypto.randomUUID(),runId,clientAt:new Date().toISOString(),actions:[...actionIds]}));

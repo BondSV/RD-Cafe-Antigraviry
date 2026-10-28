@@ -61,6 +61,7 @@ export function setupQuestionnaire(db,defaults){
    reconstruct(b.actions);
    const run=db.prepare('SELECT * FROM runs WHERE id=? AND participant_id=?').get(b.runId,p.id);
    if(!run||run.action_count!==b.actions.length)throw Error('Gameplay records are still saving. Retry finishing when connected.');
+   if(run.action_count!==7||!db.prepare("SELECT id FROM events WHERE run_id=? AND type='summary_shown' LIMIT 1").get(b.runId))throw Error('Complete all seven turns and view the final results before finishing.');
    const last=db.prepare("SELECT data FROM events WHERE run_id=? AND type='action_committed' ORDER BY rowid DESC LIMIT 1").get(b.runId);const ids=last?JSON.parse(last.data).snapshot.actionsTaken:[];
    if(JSON.stringify(ids)!==JSON.stringify(b.actions))throw Error('Gameplay records are still saving');
    const stamp=now();db.prepare('INSERT INTO session_finishes VALUES(?,?,?,?,?,?)').run(b.id,p.id,p.session,stamp,b.clientAt,JSON.stringify({runId:b.runId,actions:b.actions,reason:'explicit_finish_playing'}));send(res,200,{finishedAt:stamp,id:b.id});return true;
@@ -77,7 +78,7 @@ export function setupQuestionnaire(db,defaults){
     if(p&&!p.stopped&&!db.prepare('SELECT id FROM session_finishes WHERE participant_id=?').get(p.id))throw Error('Finish the playing session before the questionnaire');
     const context=b.finishContext;if(!p&&(!context||typeof context.clientAt!=='string'||!Number.isFinite(Date.parse(context.clientAt))))throw Error('Explicit finish context is required');
     if(p&&db.prepare('SELECT id FROM respondents WHERE session=? AND participant_id=?').get(s.id,p.id)){send(res,409,{error:'A questionnaire credential already exists for this session. Please ask the researcher if it has been lost.'});return true;}
-    const played=p?db.prepare('SELECT DISTINCT version FROM events WHERE participant_id=? ORDER BY version').all(p.id).map(e=>e.version).join(','):(['research-2026-10-28-v1','research-2026-10-28-v2','research-2026-10-28-v3','research-2026-10-28-v4',defaults.version].includes(b.gameVersion)?b.gameVersion:defaults.version);
+    const played=p?db.prepare('SELECT DISTINCT version FROM events WHERE participant_id=? ORDER BY version').all(p.id).map(e=>e.version).join(','):(['research-2026-10-28-v1','research-2026-10-28-v2','research-2026-10-28-v3','research-2026-10-28-v4','research-2026-10-28-v5',defaults.version].includes(b.gameVersion)?b.gameVersion:defaults.version);
     const stamp=now();db.prepare('INSERT INTO respondents(id,token_hash,session,participant_id,condition,assignment_basis,game_version,consent_version,consented_at,test,final_contribution_at,finish_context) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').run(randomUUID(),hash(b.token),s.id,p?.id||null,p?.condition||'control',p?'balanced_random':'unrecorded_practice',played||defaults.version,b.consentVersion,stamp,p?.test||b.test===true?1:0,stamp,JSON.stringify(p?{source:'recorded_finish'}:{clientAt:context.clientAt,reason:'explicit_finish_playing',source:'unrecorded_play'}));
     r=db.prepare('SELECT * FROM respondents WHERE token_hash=?').get(hash(b.token));
    }

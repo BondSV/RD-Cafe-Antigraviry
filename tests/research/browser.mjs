@@ -24,7 +24,7 @@ try{
  const failedContext=await browser.newContext({viewport:{width:390,height:844}});const failedPage=await failedContext.newPage();await failedPage.route('**/api/research/config',route=>route.abort());await failedPage.goto(base);await failedPage.getByRole('button',{name:'Retry connection'}).waitFor();assert.equal(await failedPage.getByRole('button',{name:'Start Simulation',exact:true}).count(),0);assert.equal(await failedPage.getByRole('button',{name:'Play without recording'}).count(),0);await failedContext.close();checks.push('Connection failure cannot silently enter unrecorded play');
  for(const condition of ['control','preview']){
   const {p,page,context}=await openStudy(condition,{width:1365,height:900});
-  await page.getByRole('button',{name:'Start Simulation',exact:true}).click();assert.equal(await page.locator('.study-bar').count(),0);assert.equal(await page.getByText(p.code,{exact:false}).count(),0);await page.getByRole('button',{name:'Staff & Processes',exact:true}).click();
+  await page.getByRole('button',{name:'Start Simulation',exact:true}).click();assert.equal(await page.locator('.study-bar').count(),0);assert.equal(await page.getByRole('button',{name:'Finish playing',exact:true}).count(),0);assert.equal(await page.getByText(p.code,{exact:false}).count(),0);await page.getByRole('button',{name:'Staff & Processes',exact:true}).click();
   await choose(page,'Hire a part-time barista',condition==='preview');await screenshot(page,condition+'-candidate-desktop');
   if(condition==='preview'){await page.keyboard.press('Tab');const outline=await page.evaluate(()=>({mode:document.documentElement.dataset.input,style:getComputedStyle(document.activeElement).outlineStyle}));assert.equal(outline.mode,'keyboard');assert.equal(outline.style,'dotted');}
   await page.getByRole('button',{name:'Choose another',exact:true}).click();
@@ -36,7 +36,7 @@ try{
    else await page.getByRole('button',{name:'Continue',exact:true}).click();
   }
   await page.getByRole('heading',{name:'Intervention Timeline',exact:true}).waitFor();assert.equal(await page.getByText('Waste Control',{exact:true}).count(),1);assert.equal(await page.getByText('Orders Completed per Hour',{exact:true}).count(),0);
-  await screenshot(page,condition+'-summary');await page.waitForFunction(()=>!Object.keys(localStorage).some(k=>k.startsWith('rd-outbox:')));
+  assert.equal(await page.getByRole('button',{name:'Finish playing',exact:true}).count(),1);assert.equal(await page.getByRole('button',{name:'Play Again',exact:true}).count(),1);await screenshot(page,condition+'-summary');await page.waitForFunction(()=>!Object.keys(localStorage).some(k=>k.startsWith('rd-outbox:')));
   await page.getByRole('button',{name:'Play Again',exact:true}).click();await page.getByRole('button',{name:'Staff & Processes',exact:true}).click();await choose(page,'Hire a part-time barista',condition==='preview');await page.getByRole('button',{name:'Choose another',exact:true}).click();
   await page.reload();await page.getByRole('button',{name:'Start Simulation',exact:true}).waitFor();assert.equal(await page.getByText(p.code,{exact:false}).count(),0);const restored=await api('enrol',{token:p.token,noticeVersion:p.noticeVersion,session:p.session});assert.equal(restored.id,p.id);assert.equal(restored.condition,p.condition);
   await page.getByRole('button',{name:'Start Simulation',exact:true}).click();await page.getByRole('button',{name:'Staff & Processes',exact:true}).click();await choose(page,'Hire a part-time barista',condition==='preview');

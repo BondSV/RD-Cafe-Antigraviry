@@ -7,10 +7,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { reconstruct, describe, actions, metricLabels, SCORE_METRIC_KEYS } from './game.mjs';
 
-const VERSION=process.env.RELEASE_VERSION || 'research-2026-10-28-v5';
+const VERSION=process.env.RELEASE_VERSION || 'research-2026-10-28-v6';
 const TEST_MODE=process.env.RESEARCH_TEST_MODE==='1';
 // The operational rules and programmed observations are unchanged in these releases.
-const COMPATIBLE_VERSIONS=new Set([VERSION,'research-2026-10-28-v1','research-2026-10-28-v2','research-2026-10-28-v3','research-2026-10-28-v4']);
+const COMPATIBLE_VERSIONS=new Set([VERSION,'research-2026-10-28-v1','research-2026-10-28-v2','research-2026-10-28-v3','research-2026-10-28-v4','research-2026-10-28-v5']);
 const SESSION=TEST_MODE?'rd-test-preview':(process.env.STUDY_SESSION || 'rd-2026-10-28');
 const CLOSES=TEST_MODE?null:(process.env.STUDY_CLOSES || '2026-10-29T00:00:00Z');
 const KEY=process.env.RESEARCH_ADMIN_KEY || '';
@@ -165,7 +165,7 @@ const server=http.createServer(async(req,res)=>{
       saved.prediction=describe(reconstruct([...state.actionsTaken,data.actionId]));
      }
      db.prepare('INSERT INTO events VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').run(e.id,p.id,e.runId,e.pageId,e.seq,e.elapsedMs,e.clientAt,now(),e.type,e.version,JSON.stringify(saved),inputHash);
-     const status=e.type==='summary_shown'?'completed':e.type==='run_restarted'?(state.actionsTaken.length===7?'completed':'restarted'):state.actionsTaken.length===7?'decisions_complete':run.status;
+     const status=e.type==='summary_shown'?'completed':e.type==='run_restarted'?(state.actionsTaken.length===7?'completed':'restarted'):run.status==='completed'?'completed':state.actionsTaken.length===7?'decisions_complete':run.status;
      db.prepare('UPDATE runs SET updated_at=?,action_count=?,status=? WHERE id=?').run(now(),state.actionsTaken.length,status,e.runId);
     }
     db.exec('COMMIT');return send(res,200,{accepted:b.events.map(e=>e.id)});
